@@ -1,0 +1,15 @@
+# ignore build folders
+build/
+bin/
+
+# ignore gradle folder
+.gradle/
+
+# ignore eclipse folders and settings
+.settings/
+.project
+.classpath
+
+# ignore IntelliJ idea folders and settings
+.idea/
+*.iml
