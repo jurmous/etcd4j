@@ -1,8 +1,8 @@
-Mousio-jetcd is a client library for etcd, a highly available keystore. This library is based on 
-Netty 4.1 and JDK 8. It supports all key based etcd requests, can be secured with SSL, and supports
-defining multiple connection URLs and retries. It is completely async and works with Netty based 
-Promises to retrieve the results. It also supports the etcd wait functionality to wait for future
-changes.
+Etcd4j is a client library for etcd, a highly available keystore. This library is based on 
+Netty 4.1 and JDK 8. It supports all key based etcd requests, can be secured with SSL and supports
+defining multiple connection URLs and retries. It is completely async and works with Promises to
+retrieve the results. It also supports the etcd wait functionality to wait for future changes. 
+It will reconnect those wait requests if the server closes the connection.
 
 Code examples
 =============
