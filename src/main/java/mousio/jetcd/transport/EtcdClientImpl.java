@@ -17,6 +17,7 @@ public interface EtcdClientImpl extends Closeable {
    * @param request to send
    * @param <R>     Type of response
    * @return A Promise
+   * @throws java.io.IOException if IO failure while sending
    */
   public <R> EtcdResponsePromise<R> send(EtcdRequest<R> request) throws IOException;
 
