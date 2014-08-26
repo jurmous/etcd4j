@@ -181,6 +181,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
    *
    * @param uri         to send request to
    * @param etcdRequest to send
+   * @param <R>         Response type
    * @return HttpRequest
    * @throws IOException if request could not be created
    */
