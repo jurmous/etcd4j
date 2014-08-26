@@ -21,11 +21,19 @@ public class EtcdResponsePromise<T> {
 
   List<IsSimplePromiseResponseHandler<T>> handlers;
 
+  private final GenericFutureListener<Promise<T>> promiseHandler = (GenericFutureListener<Promise<T>>) this::handlePromise;
+
   /**
-   * @param promise netty promise to set up promise with
+   * Attach Netty Promise
+   *
+   * @param promise netty promise to set up response promise with
    */
   public void attachNettyPromise(Promise<T> promise) {
-    promise.addListener((GenericFutureListener<Promise<T>>) this::handlePromise);
+    promise.addListener(promiseHandler);
+    if (this.promise != null) {
+      this.promise.removeListener(promiseHandler);
+      this.promise.cancel(true);
+    }
     this.promise = promise;
   }
 
@@ -102,7 +110,11 @@ public class EtcdResponsePromise<T> {
    */
   public T get() throws IOException, EtcdException {
     if (!promise.isDone()) {
-      promise.awaitUninterruptibly();
+      Promise<T> listeningPromise = this.promise;
+      listeningPromise.awaitUninterruptibly();
+      if (listeningPromise != this.promise) {
+        return this.get();
+      }
 
       this.handlePromise(promise);
     }
@@ -123,6 +135,15 @@ public class EtcdResponsePromise<T> {
    */
   public T getNow() {
     return response;
+  }
+
+  /**
+   * Get internal Netty Promise
+   *
+   * @return Netty Promise
+   */
+  public Promise<T> getNettyPromise() {
+    return promise;
   }
 
   /**

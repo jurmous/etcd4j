@@ -14,7 +14,6 @@ import mousio.jetcd.promises.EtcdResponsePromise;
 import mousio.jetcd.requests.EtcdKeyRequest;
 import mousio.jetcd.requests.EtcdRequest;
 import mousio.jetcd.requests.EtcdVersionRequest;
-import mousio.jetcd.responses.EtcdKeysResponse;
 
 import java.io.IOException;
 import java.net.URI;
@@ -73,12 +72,35 @@ public class EtcdNettyClient implements EtcdClientImpl {
       etcdRequest.setPromise(responsePromise);
     }
 
+    connect(etcdRequest);
+
+    return etcdRequest.getPromise();
+  }
+
+  /**
+   * Connect
+   *
+   * @param request to connect with
+   * @param <R>     Type of response
+   * @throws IOException if connection fails
+   */
+  public <R> void connect(EtcdRequest<R> request) throws IOException {
+    connect(request, request.getUri());
+  }
+
+  /**
+   * Connect
+   *
+   * @param request to request with
+   * @param url     relative url to read resource at
+   * @param <R>     Type of response
+   * @throws IOException if request could not be sent.
+   */
+  public <R> void connect(EtcdRequest<R> request, String url) throws IOException {
     final ConnectionCounter counter = new ConnectionCounter();
     counter.uriIndex = lastWorkingUriIndex;
 
-    connect(etcdRequest, counter);
-
-    return etcdRequest.getPromise();
+    connect(request, counter, url);
   }
 
   /**
@@ -86,43 +108,72 @@ public class EtcdNettyClient implements EtcdClientImpl {
    *
    * @param etcdRequest to request with
    * @param counter     for retries
+   * @param url         relative url to read resource at
    * @param <R>         Type of response
    * @throws IOException if request could not be sent.
    */
-  protected <R> void connect(EtcdRequest<R> etcdRequest, ConnectionCounter counter) throws IOException {
+  protected <R> void connect(EtcdRequest<R> etcdRequest, ConnectionCounter counter, String url) throws IOException {
     // Start the connection attempt.
     ChannelFuture connectFuture = bootstrap.clone()
         .connect(uris[counter.uriIndex].getHost(), uris[counter.uriIndex].getPort());
 
     Channel channel = connectFuture.channel();
-    DefaultPromise<R> p = new DefaultPromise<>(connectFuture.channel().eventLoop());
-    etcdRequest.getPromise().attachNettyPromise(p);
+    etcdRequest.getPromise().attachNettyPromise(
+        new DefaultPromise<>(connectFuture.channel().eventLoop())
+    );
 
-    connectFuture.awaitUninterruptibly();
-
-    if (!connectFuture.isSuccess()) {
-      counter.uriIndex++;
-      if (counter.uriIndex >= uris.length) {
-        if (counter.retryCount >= 3) {
-          etcdRequest.getPromise().setException(connectFuture.cause());
-          return;
+    connectFuture.addListener((ChannelFuture f) -> {
+      if (!f.isSuccess()) {
+        counter.uriIndex++;
+        if (counter.uriIndex >= uris.length) {
+          if (counter.retryCount >= 3) {
+            etcdRequest.getPromise().setException(f.cause());
+            return;
+          }
+          counter.retryCount++;
+          counter.uriIndex = 0;
         }
-        counter.retryCount++;
-        counter.uriIndex = 0;
+
+        connect(etcdRequest, counter, url);
+        return;
       }
 
-      connect(etcdRequest, counter);
-      return;
+      lastWorkingUriIndex = counter.uriIndex;
+
+      modifyPipeLine(etcdRequest, f.channel().pipeline());
+
+      HttpRequest httpRequest = createHttpRequest(url, etcdRequest);
+
+      // send request
+      channel.writeAndFlush(httpRequest);
+    });
+  }
+
+  /**
+   * Modify the pipeline for the request
+   *
+   * @param req      to process
+   * @param pipeline to modify
+   * @param <R>      Type of Response
+   */
+  @SuppressWarnings("unchecked")
+  private <R> void modifyPipeLine(EtcdRequest<R> req, ChannelPipeline pipeline) {
+    if (req instanceof EtcdKeyRequest) {
+      pipeline.addLast(
+          new EtcdKeyResponseHandler(this, (EtcdKeyRequest) req)
+      );
+    } else if (req instanceof EtcdVersionRequest) {
+      pipeline.addLast(new SimpleChannelInboundHandler<FullHttpResponse>() {
+        @Override
+        protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse msg) throws Exception {
+          ((Promise<String>) ((EtcdVersionRequest) req).getPromise())
+              .setSuccess(
+                  msg.content().toString(Charset.defaultCharset()));
+        }
+      });
+    } else {
+      throw new RuntimeException("Unknown request type " + req.getClass().getName());
     }
-
-    lastWorkingUriIndex = counter.uriIndex;
-
-    modifyPipeLine(etcdRequest, p, channel.pipeline());
-
-    HttpRequest httpRequest = createHttpRequest(etcdRequest.getUri(), etcdRequest);
-
-    // send request
-    channel.writeAndFlush(httpRequest);
   }
 
   /**
@@ -135,38 +186,13 @@ public class EtcdNettyClient implements EtcdClientImpl {
    */
   public static <R> HttpRequest createHttpRequest(String uri, EtcdRequest<R> etcdRequest) throws IOException {
     HttpRequest httpRequest = new DefaultHttpRequest(HttpVersion.HTTP_1_1, etcdRequest.getMethod(), uri);
+    httpRequest.headers().add("Connection", "keep-alive");
     try {
       httpRequest = setRequestParameters(etcdRequest, httpRequest);
     } catch (Exception e) {
       throw new IOException(e);
     }
     return httpRequest;
-  }
-
-  /**
-   * Modify the pipeline for the request
-   *
-   * @param req             to process
-   * @param responsePromise Promise for the response
-   * @param pipeline        to modify
-   * @param <R>             Type of Response
-   */
-  @SuppressWarnings("unchecked")
-  private <R> void modifyPipeLine(EtcdRequest<R> req, Promise<R> responsePromise, ChannelPipeline pipeline) {
-    if (req instanceof EtcdKeyRequest) {
-      pipeline.addLast(new EtcdKeyResponseHandler((Promise<EtcdKeysResponse>) responsePromise));
-    } else if (req instanceof EtcdVersionRequest) {
-      pipeline.addLast(new SimpleChannelInboundHandler<FullHttpResponse>() {
-        @Override
-        protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse msg) throws Exception {
-          ((Promise<String>) responsePromise)
-              .setSuccess(
-                  msg.content().toString(Charset.defaultCharset()));
-        }
-      });
-    } else {
-      throw new RuntimeException("Unknown request type " + req.getClass().getName());
-    }
   }
 
   /**
