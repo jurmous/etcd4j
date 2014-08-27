@@ -98,8 +98,9 @@ public class EtcdResponsePromise<T> {
    * Get the response
    *
    * @return the response
-   * @throws IOException   on fail (Will be ReadTimeoutException if timeout occurred)
-   * @throws EtcdException on etcd fail
+   * @throws IOException      on fail (Will be ReadTimeoutException if timeout occurred)
+   * @throws EtcdException    on etcd fail
+   * @throws TimeoutException on Timeout
    */
   public T get() throws IOException, EtcdException, TimeoutException {
     if (!promise.isDone()) {
