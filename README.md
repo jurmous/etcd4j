@@ -1,4 +1,4 @@
-Etcd4j is a client library for etcd, a highly available keystore. This library is based on 
+Etcd4j is a client library for [etcd](https://github.com/coreos/etcd), a highly available keystore. This library is based on 
 Netty 4.1 and JDK 8. It supports all key based etcd requests, can be secured with SSL and supports
 defining multiple connection URLs and retries. It is completely async and works with Promises to
 retrieve the results. It also supports the etcd wait functionality to wait for future changes. 
@@ -13,14 +13,14 @@ Maven
 <dependency>
   <groupId>org.mousio</groupId>
   <artifactId>etcd4j</artifactId>
-  <version>0.4.0</version>
+  <version>0.4.1</version>
 </dependency>
 ```
 
 Gradle
 ------
 ```
-compile 'org.mousio:etcd4j:0.4.0'
+compile 'org.mousio:etcd4j:0.4.1'
 ```
 
 Manually
