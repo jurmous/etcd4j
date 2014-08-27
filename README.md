@@ -4,6 +4,29 @@ defining multiple connection URLs and retries. It is completely async and works 
 retrieve the results. It also supports the etcd wait functionality to wait for future changes. 
 It will reconnect those wait requests if the server closes the connection.
 
+Download
+========
+
+Maven
+-----
+```xml
+<dependency>
+  <groupId>org.mousio</groupId>
+  <artifactId>etcd4j</artifactId>
+  <version>0.4.0</version>
+</dependency>
+```
+
+Gradle
+------
+```
+compile 'org.mousio:etcd4j:0.4.0'
+```
+
+Manually
+--------
+Visit [etcd4j Github releases page](https://github.com/jurmous/etcd4j/releases)
+
 Code examples
 =============
 

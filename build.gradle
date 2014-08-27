@@ -1,7 +1,17 @@
 apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
 sourceCompatibility = 1.8
-version = '0.4.0-SNAPSHOT'
+group = 'org.mousio'
+version = '0.4.0'
+
+project.ext {
+    mavenDeployUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/';
+}
+if (version.endsWith("-SNAPSHOT")) {
+    mavenDeployUrl = 'https://oss.sonatype.org/content/repositories/snapshots/';
+}
 
 repositories {
     mavenCentral()
@@ -11,4 +21,64 @@ dependencies {
     compile 'io.netty:netty-codec-http:4.1.0.Beta3'
     compile 'com.fasterxml.jackson.core:jackson-core:2.4.2'
     testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+artifacts {
+    archives jar
+    archives javadocJar
+    archives sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: mavenDeployUrl) {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            pom.project {
+                name 'etcd4j'
+                packaging 'jar'
+                description 'etcd4j is a Java/Netty based etcd client'
+                url 'https://github.com/jurmous/etcd4j'
+
+                scm {
+                    url 'scm:git@github.com:jurmous/etcd4j.git'
+                    connection 'scm:git@github.com:jurmous/etcd4j.git'
+                    developerConnection 'scm:git@github.com:jurmous/etcd4j.git'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'jurmous'
+                        name 'Jurriaan Mous'
+                    }
+                }
+            }
+        }
+    }
 }
