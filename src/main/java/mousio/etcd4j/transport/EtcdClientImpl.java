@@ -1,7 +1,7 @@
-package mousio.jetcd.transport;
+package mousio.etcd4j.transport;
 
-import mousio.jetcd.promises.EtcdResponsePromise;
-import mousio.jetcd.requests.EtcdRequest;
+import mousio.etcd4j.promises.EtcdResponsePromise;
+import mousio.etcd4j.requests.EtcdRequest;
 
 import java.io.Closeable;
 import java.io.IOException;

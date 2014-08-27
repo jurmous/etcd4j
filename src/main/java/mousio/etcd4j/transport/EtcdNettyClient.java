@@ -1,4 +1,4 @@
-package mousio.jetcd.transport;
+package mousio.etcd4j.transport;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
@@ -11,10 +11,10 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Promise;
-import mousio.jetcd.promises.EtcdResponsePromise;
-import mousio.jetcd.requests.EtcdKeyRequest;
-import mousio.jetcd.requests.EtcdRequest;
-import mousio.jetcd.requests.EtcdVersionRequest;
+import mousio.etcd4j.promises.EtcdResponsePromise;
+import mousio.etcd4j.requests.EtcdKeyRequest;
+import mousio.etcd4j.requests.EtcdRequest;
+import mousio.etcd4j.requests.EtcdVersionRequest;
 
 import java.io.IOException;
 import java.net.URI;

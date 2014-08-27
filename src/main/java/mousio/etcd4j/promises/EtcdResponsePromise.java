@@ -1,8 +1,8 @@
-package mousio.jetcd.promises;
+package mousio.etcd4j.promises;
 
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
-import mousio.jetcd.responses.EtcdException;
+import mousio.etcd4j.responses.EtcdException;
 
 import java.io.IOException;
 import java.util.Arrays;

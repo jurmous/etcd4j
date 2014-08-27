@@ -1,4 +1,4 @@
-package mousio.jetcd.responses;
+package mousio.etcd4j.responses;
 
 /**
  * Exception on etcd failures

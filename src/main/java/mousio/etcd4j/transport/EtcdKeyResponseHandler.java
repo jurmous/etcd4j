@@ -1,13 +1,13 @@
-package mousio.jetcd.transport;
+package mousio.etcd4j.transport;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.util.concurrent.Promise;
-import mousio.jetcd.requests.EtcdKeyRequest;
-import mousio.jetcd.responses.EtcdKeysResponse;
-import mousio.jetcd.responses.EtcdKeysResponseParser;
+import mousio.etcd4j.requests.EtcdKeyRequest;
+import mousio.etcd4j.responses.EtcdKeysResponse;
+import mousio.etcd4j.responses.EtcdKeysResponseParser;
 
 /**
  * Handles etcd responses

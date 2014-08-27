@@ -1,8 +1,8 @@
-package mousio.jetcd.requests;
+package mousio.etcd4j.requests;
 
 import io.netty.handler.codec.http.HttpMethod;
-import mousio.jetcd.promises.EtcdResponsePromise;
-import mousio.jetcd.transport.EtcdClientImpl;
+import mousio.etcd4j.promises.EtcdResponsePromise;
+import mousio.etcd4j.transport.EtcdClientImpl;
 
 import java.io.IOException;
 

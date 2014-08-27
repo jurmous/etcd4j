@@ -1,4 +1,4 @@
-package mousio.jetcd.responses;
+package mousio.etcd4j.responses;
 
 import java.time.ZonedDateTime;
 import java.util.List;

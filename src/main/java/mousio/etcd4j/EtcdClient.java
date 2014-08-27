@@ -1,9 +1,9 @@
-package mousio.jetcd;
+package mousio.etcd4j;
 
 import io.netty.handler.ssl.SslContext;
-import mousio.jetcd.requests.*;
-import mousio.jetcd.responses.EtcdException;
-import mousio.jetcd.transport.EtcdNettyClient;
+import mousio.etcd4j.requests.*;
+import mousio.etcd4j.responses.EtcdException;
+import mousio.etcd4j.transport.EtcdNettyClient;
 
 import java.io.Closeable;
 import java.io.IOException;

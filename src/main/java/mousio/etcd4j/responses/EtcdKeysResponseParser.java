@@ -1,4 +1,4 @@
-package mousio.jetcd.responses;
+package mousio.etcd4j.responses;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -41,7 +41,7 @@ public class EtcdKeysResponseParser {
    *
    * @param content to parse
    * @return EtcdResponse if found in response
-   * @throws mousio.jetcd.responses.EtcdException if exception was found in response
+   * @throws mousio.etcd4j.responses.EtcdException if exception was found in response
    * @throws java.io.IOException                  if Json parsing or parser creation fails
    */
   public static EtcdKeysResponse parse(ByteBuf content) throws EtcdException, IOException {

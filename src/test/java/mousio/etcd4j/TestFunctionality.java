@@ -1,9 +1,9 @@
-package mousio.jetcd;
+package mousio.etcd4j;
 
-import mousio.jetcd.promises.EtcdResponsePromise;
-import mousio.jetcd.responses.EtcdException;
-import mousio.jetcd.responses.EtcdKeyAction;
-import mousio.jetcd.responses.EtcdKeysResponse;
+import mousio.etcd4j.promises.EtcdResponsePromise;
+import mousio.etcd4j.responses.EtcdException;
+import mousio.etcd4j.responses.EtcdKeyAction;
+import mousio.etcd4j.responses.EtcdKeysResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

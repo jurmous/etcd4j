@@ -1,11 +1,11 @@
-package mousio.jetcd.responses;
+package mousio.etcd4j.responses;
 
 import io.netty.buffer.Unpooled;
 import org.junit.Test;
 
 import java.time.ZonedDateTime;
 
-import static mousio.jetcd.responses.EtcdKeysResponseParser.parse;
+import static mousio.etcd4j.responses.EtcdKeysResponseParser.parse;
 import static org.junit.Assert.*;
 
 /**
