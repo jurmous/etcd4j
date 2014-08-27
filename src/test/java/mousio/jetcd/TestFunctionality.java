@@ -11,6 +11,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.*;
 
@@ -41,7 +42,7 @@ public class TestFunctionality {
    * Simple value tests
    */
   @Test
-  public void testKey() throws IOException, EtcdException {
+  public void testKey() throws IOException, EtcdException, TimeoutException {
     EtcdKeysResponse response = etcd.put("etcd4j_test/foo", "bar").send().get();
     assertEquals(EtcdKeyAction.set, response.action);
 
@@ -67,7 +68,7 @@ public class TestFunctionality {
    * Directory tests
    */
   @Test
-  public void testDir() throws IOException, EtcdException {
+  public void testDir() throws IOException, EtcdException, TimeoutException {
     EtcdKeysResponse r = etcd.putDir("etcd4j_test/foo_dir").send().get();
     assertEquals(r.action, EtcdKeyAction.set);
 
@@ -89,7 +90,7 @@ public class TestFunctionality {
    * In order key tests
    */
   @Test
-  public void testInOrderKeys() throws IOException, EtcdException {
+  public void testInOrderKeys() throws IOException, EtcdException, TimeoutException {
     EtcdKeysResponse r = etcd.post("etcd4j_test/queue", "Job1").send().get();
     assertEquals(r.action, EtcdKeyAction.create);
 
@@ -111,7 +112,7 @@ public class TestFunctionality {
    * In order key tests
    */
   @Test
-  public void testWait() throws IOException, EtcdException, InterruptedException {
+  public void testWait() throws IOException, EtcdException, InterruptedException, TimeoutException {
     EtcdResponsePromise<EtcdKeysResponse> p = etcd.get("etcd4j_test/test").waitForChange().send();
 
     // Ensure the change is received after the listen command is received.
@@ -119,7 +120,7 @@ public class TestFunctionality {
       @Override public void run() {
         try {
           etcd.put("etcd4j_test/test", "changed").send().get();
-        } catch (IOException | EtcdException e) {
+        } catch (IOException | EtcdException | TimeoutException e) {
           fail();
         }
       }

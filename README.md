@@ -53,6 +53,8 @@ try{
   // Do something with the exception returned by etcd
 }catch(IOException e){
   // Exception happened in the retrieval. Do something with it.
+}catch(TimeoutException e){
+  // Timeout happened. Do something
 }
 ```
 
@@ -78,6 +80,8 @@ their values
     // Do something with response
   }catch(EtcdException e){
     // Do something with the exception returned by etcd
+  }catch(IOException | TimeoutException e){
+    // Handle other types of exceptions
   }
   
   // or listen to it async
@@ -88,6 +92,43 @@ their values
       System.out.println(response.node.value);
     }
   });
+```
+
+Set timeout on requests
+-----------------------
+It is possible to set a timeout on all requests. By default there is no timeout.
+
+```Java
+
+// Timeout of 1 second on a put value
+EtcdKeysResponsePromise putPromise = client.putValue("foo", "bar").timeout(1, TimeUnit.SECONDS).send();
+
+try{
+  EtcdKeysResponse r = putPromise.get();
+}catch(TimeoutException e){
+  //Handle timeout
+}catch(Exception e){
+  handle other types of exceptions
+}
+
+
+EtcdKeysGetRequest getRequest = client.get("foo").waitForChange().timeout(2, TimeUnit.MINUTES);
+
+try{
+  r = getRequest.send().get();
+}catch(TimeoutException | IOException e){
+  try{
+    // Retry again once
+    r = getRequest.send().get();
+  }catch(TimeoutException | IOException e){
+    // Fails again... Maybe wait a bit longer or give up 
+  }catch(Exception e){
+    // Handle other types of exceptions
+  }
+}catch(Exception e){
+  // Handle other types of exceptions
+}
+
 ```
 
 Put examples

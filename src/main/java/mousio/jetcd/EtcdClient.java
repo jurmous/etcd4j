@@ -8,6 +8,7 @@ import mousio.jetcd.transport.EtcdNettyClient;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Etcd client.
@@ -45,7 +46,7 @@ public class EtcdClient implements Closeable {
   public String getVersion() {
     try {
       return new EtcdVersionRequest(this.client).send().get();
-    } catch (IOException | EtcdException e) {
+    } catch (IOException | EtcdException | TimeoutException e) {
       return null;
     }
   }

@@ -3,11 +3,13 @@ package mousio.jetcd.requests;
 import io.netty.handler.codec.http.HttpMethod;
 import mousio.jetcd.transport.EtcdClientImpl;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * An Etcd Key Get Request
  */
 public class EtcdKeyGetRequest extends EtcdKeyRequest {
-  private boolean shouldWait = false;
+  private boolean wait = false;
 
   /**
    * Constructs an EtcdKeysGetRequest
@@ -35,7 +37,7 @@ public class EtcdKeyGetRequest extends EtcdKeyRequest {
    * @return Itself for chaining
    */
   public EtcdKeyGetRequest waitForChange() {
-    this.shouldWait = true;
+    this.wait = true;
     this.requestParams.put("wait", "true");
     return this;
   }
@@ -82,7 +84,17 @@ public class EtcdKeyGetRequest extends EtcdKeyRequest {
     return this;
   }
 
+  /**
+   * Get if command should be waiting
+   *
+   * @return true if it should wait
+   */
   public boolean shouldBeWaiting() {
-    return this.shouldWait;
+    return this.wait;
+  }
+
+  @Override public EtcdKeyGetRequest timeout(int timeout, TimeUnit unit) {
+    super.timeout(timeout, unit);
+    return this;
   }
 }

@@ -3,6 +3,8 @@ package mousio.jetcd.requests;
 import io.netty.handler.codec.http.HttpMethod;
 import mousio.jetcd.transport.EtcdClientImpl;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * An Etcd Key Delete Request
  */
@@ -58,6 +60,11 @@ public class EtcdKeyDeleteRequest extends EtcdKeyRequest {
    */
   public EtcdKeyDeleteRequest recursive() {
     this.requestParams.put("recursive", "true");
+    return this;
+  }
+
+  @Override public EtcdKeyDeleteRequest timeout(int timeout, TimeUnit unit) {
+    super.timeout(timeout, unit);
     return this;
   }
 }

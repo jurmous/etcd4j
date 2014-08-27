@@ -8,6 +8,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Promise;
 import mousio.jetcd.promises.EtcdResponsePromise;
@@ -158,6 +159,16 @@ public class EtcdNettyClient implements EtcdClientImpl {
    */
   @SuppressWarnings("unchecked")
   private <R> void modifyPipeLine(EtcdRequest<R> req, ChannelPipeline pipeline) {
+    if (req.getTimeout() != -1) {
+      pipeline.addFirst(new ChannelHandlerAdapter() {
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+          req.getPromise().getNettyPromise().setFailure(cause);
+        }
+      });
+      pipeline.addFirst(new ReadTimeoutHandler(req.getTimeout(), req.getTimeoutUnit()));
+    }
+
     if (req instanceof EtcdKeyRequest) {
       pipeline.addLast(
           new EtcdKeyResponseHandler(this, (EtcdKeyRequest) req)

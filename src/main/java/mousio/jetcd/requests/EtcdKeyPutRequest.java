@@ -3,6 +3,8 @@ package mousio.jetcd.requests;
 import io.netty.handler.codec.http.HttpMethod;
 import mousio.jetcd.transport.EtcdClientImpl;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * An Etcd Key Put Request
  */
@@ -81,6 +83,11 @@ public class EtcdKeyPutRequest extends EtcdKeyRequest {
    */
   public EtcdKeyPutRequest prevValue(String value) {
     this.requestParams.put("prevValue", value);
+    return this;
+  }
+
+  @Override public EtcdKeyPutRequest timeout(int timeout, TimeUnit unit) {
+    super.timeout(timeout,unit);
     return this;
   }
 }

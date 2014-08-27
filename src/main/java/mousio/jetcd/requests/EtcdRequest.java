@@ -6,6 +6,7 @@ import mousio.jetcd.transport.EtcdClientImpl;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Request to Etcd
@@ -17,6 +18,8 @@ public abstract class EtcdRequest<R> {
 
   protected final HttpMethod method;
   private EtcdResponsePromise<R> promise;
+  private int timeout = -1;
+  private TimeUnit timeoutUnit = TimeUnit.SECONDS;
 
   /**
    * Constructor
@@ -78,5 +81,36 @@ public abstract class EtcdRequest<R> {
    */
   public EtcdResponsePromise<R> getPromise() {
     return promise;
+  }
+
+  /**
+   * Get the timeout for request
+   *
+   * @return timeout in milliseconds
+   */
+  public int getTimeout() {
+    return timeout;
+  }
+
+  /**
+   * Set timeout for request
+   *
+   * @param timeout in unit
+   * @param unit    time unit for timeout
+   * @return Itself for chaining
+   */
+  public EtcdRequest timeout(int timeout, TimeUnit unit) {
+    this.timeout = timeout;
+    this.timeoutUnit = unit;
+    return this;
+  }
+
+  /**
+   * Get timeout unit
+   *
+   * @return Unit of timeout
+   */
+  public TimeUnit getTimeoutUnit() {
+    return timeoutUnit;
   }
 }
