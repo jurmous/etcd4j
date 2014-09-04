@@ -113,7 +113,8 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @param <R>         Type of response
    * @throws IOException if request could not be sent.
    */
-  protected <R> void connect(EtcdRequest<R> etcdRequest, ConnectionCounter counter, String url) throws IOException {
+  protected <R> void connect(EtcdRequest<R> etcdRequest, ConnectionCounter counter, String url)
+      throws IOException {
     // Start the connection attempt.
     ChannelFuture connectFuture = bootstrap.clone()
         .connect(uris[counter.uriIndex].getHost(), uris[counter.uriIndex].getPort());
@@ -128,7 +129,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
         counter.uriIndex++;
         if (counter.uriIndex >= uris.length) {
           if (counter.retryCount >= 3) {
-            etcdRequest.getPromise().setException(f.cause());
+            etcdRequest.getPromise().getNettyPromise().setFailure(f.cause());
             return;
           }
           counter.retryCount++;
