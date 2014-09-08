@@ -10,7 +10,6 @@ import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.concurrent.DefaultPromise;
-import io.netty.util.concurrent.Promise;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.requests.EtcdKeyRequest;
 import mousio.etcd4j.requests.EtcdRequest;
@@ -178,7 +177,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
       pipeline.addLast(new SimpleChannelInboundHandler<FullHttpResponse>() {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse msg) throws Exception {
-          ((Promise<String>) ((EtcdVersionRequest) req).getPromise())
+          (((EtcdVersionRequest) req).getPromise()).getNettyPromise()
               .setSuccess(
                   msg.content().toString(Charset.defaultCharset()));
         }
