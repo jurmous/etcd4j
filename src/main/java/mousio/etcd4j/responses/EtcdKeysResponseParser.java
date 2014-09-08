@@ -5,9 +5,9 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +42,7 @@ public class EtcdKeysResponseParser {
    * @param content to parse
    * @return EtcdResponse if found in response
    * @throws mousio.etcd4j.responses.EtcdException if exception was found in response
-   * @throws java.io.IOException                  if Json parsing or parser creation fails
+   * @throws java.io.IOException                   if Json parsing or parser creation fails
    */
   public static EtcdKeysResponse parse(ByteBuf content) throws EtcdException, IOException {
     JsonParser parser = factory.createParser(new ByteBufInputStream(content));
@@ -202,30 +202,5 @@ public class EtcdKeysResponseParser {
     }
 
     return nodes;
-  }
-
-  /**
-   * Reader for a ByteBuf
-   */
-  public static class ByteBufInputStream extends InputStream {
-
-    private final ByteBuf byteBuf;
-
-    /**
-     * Constructor
-     *
-     * @param content to parse
-     */
-    public ByteBufInputStream(ByteBuf content) {
-      this.byteBuf = content;
-    }
-
-    @Override public int read() throws IOException {
-      if (this.byteBuf.isReadable()) {
-        return this.byteBuf.readByte();
-      } else {
-        return -1;
-      }
-    }
   }
 }
