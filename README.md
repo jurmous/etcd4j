@@ -189,9 +189,9 @@ You need to read out the returned promises to see the response
 etcd.get("foo").send();
 
 // Get all nodes and all nodes below it recursively
-etcd.getAll().isRecursive().send();
+etcd.getAll().recursive().send();
 // Gets directory foo_dir and all nodes below it recursively
-etcd.getDir("foo_dir").isRecursive().send();
+etcd.getDir("foo_dir").recursive().send();
 
 // Wait for next change on foo
 EtcdResponsePromise promise = etcd.get("foo").waitForChange().send();
