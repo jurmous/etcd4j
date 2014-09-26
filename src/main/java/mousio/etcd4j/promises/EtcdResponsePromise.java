@@ -95,7 +95,9 @@ public class EtcdResponsePromise<T> {
   }
 
   /**
-   * Get the response
+   * Get the response. (Blocking)
+   * <p>
+   * Use addListener to fetch the value in a non blocking way.
    *
    * @return the response
    * @throws IOException      on fail (Will be ReadTimeoutException if timeout occurred)
@@ -129,7 +131,8 @@ public class EtcdResponsePromise<T> {
   }
 
   /**
-   * Get the result now even if it is not loaded
+   * Get the result now even if it is not loaded yet by the promise.
+   * Use get() to ensure in a blocking way that the value is loaded.
    *
    * @return the result
    */
