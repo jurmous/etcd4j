@@ -1,6 +1,7 @@
 package mousio.etcd4j.requests;
 
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.transport.EtcdClientImpl;
 
@@ -20,6 +21,7 @@ public abstract class EtcdRequest<R> {
   private EtcdResponsePromise<R> promise;
   private int timeout = -1;
   private TimeUnit timeoutUnit = TimeUnit.SECONDS;
+  private HttpRequest httpRequest;
 
   /**
    * Constructor
@@ -112,5 +114,24 @@ public abstract class EtcdRequest<R> {
    */
   public TimeUnit getTimeoutUnit() {
     return timeoutUnit;
+  }
+
+  /**
+   * Set the used HTTPRequest
+   * (For debugging and warnings)
+   *
+   * @param httpRequest set http request
+   */
+  public void setHttpRequest(HttpRequest httpRequest) {
+    this.httpRequest = httpRequest;
+  }
+
+  /**
+   * Get the used HTTP request
+   *
+   * @return http request
+   */
+  public HttpRequest getHttpRequest() {
+    return httpRequest;
   }
 }

@@ -59,6 +59,10 @@ public class TestFunctionality {
     response = etcd.get("etcd4j_test/foo").send().get();
     assertEquals("bar3", response.node.value);
 
+    // Test redirect
+    response = etcd.get("/etcd4j_test/foo").send().get();
+    assertEquals("bar3", response.node.value);
+
     response = etcd.delete("etcd4j_test/foo").send().get();
     assertEquals(EtcdKeyAction.delete, response.action);
   }
@@ -73,6 +77,10 @@ public class TestFunctionality {
     assertEquals(r.action, EtcdKeyAction.set);
 
     r = etcd.getDir("etcd4j_test/foo_dir").send().get();
+    assertEquals(r.action, EtcdKeyAction.get);
+
+    // Test redirect
+    r = etcd.getDir("/etcd4j_test/foo_dir").send().get();
     assertEquals(r.action, EtcdKeyAction.get);
 
     r = etcd.put("etcd4j_test/foo_dir/foo", "bar").send().get();

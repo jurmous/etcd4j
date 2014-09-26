@@ -201,7 +201,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
     HttpRequest httpRequest = new DefaultHttpRequest(HttpVersion.HTTP_1_1, etcdRequest.getMethod(), uri);
     httpRequest.headers().add("Connection", "keep-alive");
     try {
-      httpRequest = setRequestParameters(etcdRequest, httpRequest);
+      httpRequest = setRequestParameters(uri, etcdRequest, httpRequest);
     } catch (Exception e) {
       throw new IOException(e);
     }
@@ -211,12 +211,13 @@ public class EtcdNettyClient implements EtcdClientImpl {
   /**
    * Set parameters on request
    *
+   * @param uri
    * @param etcdRequest to send
    * @param httpRequest to send
    * @return Http Request
    * @throws Exception on fail
    */
-  private static HttpRequest setRequestParameters(EtcdRequest<?> etcdRequest, HttpRequest httpRequest) throws Exception {
+  private static HttpRequest setRequestParameters(String uri, EtcdRequest<?> etcdRequest, HttpRequest httpRequest) throws Exception {
     // Set possible key value pairs
     Map<String, String> keyValuePairs = etcdRequest.getRequestParams();
     if (keyValuePairs != null && !keyValuePairs.isEmpty()) {
@@ -237,9 +238,14 @@ public class EtcdNettyClient implements EtcdClientImpl {
           getLocation += entry.getKey() + "=" + entry.getValue();
         }
 
-        httpRequest.setUri(etcdRequest.getUri().concat("?").concat(getLocation));
+        if (!uri.contains("?")) {
+          httpRequest.setUri(uri.concat("?").concat(getLocation));
+        } else {
+          httpRequest.setUri(uri);
+        }
       }
     }
+    etcdRequest.setHttpRequest(httpRequest);
     return httpRequest;
   }
 

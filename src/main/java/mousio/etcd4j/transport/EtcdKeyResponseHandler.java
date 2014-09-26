@@ -40,6 +40,7 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
           || response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT)) {
         if (response.headers().contains("Location")) {
           this.client.connect(this.request, response.headers().get("Location"));
+          System.out.println("WARNING: redirect for " + this.request.getHttpRequest().uri() + " to " + response.headers().get("Location"));
           return;
         } else {
           this.promise.setFailure(new Exception("Missing Location header on redirect"));
