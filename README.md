@@ -6,7 +6,8 @@ It will reconnect those wait requests if the server closes the connection.
 
 Etcd version support
 ====================
-This project currently supports etcd 0.4+.
+This project currently supports etcd 0.3 which first supports the v2 api and any above. It supports
+all the key space features in 0.4.x.
 
 Download
 ========
@@ -102,6 +103,7 @@ their values
   EtcdKeysResponsePromise promise1 = client.putValue("foo", "bar").send();
   EtcdKeysResponsePromise promise2 = client.putValue("foo", "bar").send();
   
+  // Call the promise in a blocking way
   try{
     EtcdKeysResponse response = promise1.get();
     // Do something with response
