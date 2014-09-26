@@ -160,12 +160,6 @@ public class EtcdNettyClient implements EtcdClientImpl {
   @SuppressWarnings("unchecked")
   private <R> void modifyPipeLine(EtcdRequest<R> req, ChannelPipeline pipeline) {
     if (req.getTimeout() != -1) {
-      pipeline.addFirst(new ChannelHandlerAdapter() {
-        @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-          req.getPromise().getNettyPromise().setFailure(cause);
-        }
-      });
       pipeline.addFirst(new ReadTimeoutHandler(req.getTimeout(), req.getTimeoutUnit()));
     }
 
@@ -185,6 +179,13 @@ public class EtcdNettyClient implements EtcdClientImpl {
     } else {
       throw new RuntimeException("Unknown request type " + req.getClass().getName());
     }
+
+    pipeline.addLast(new ChannelHandlerAdapter() {
+      @Override
+      public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        req.getPromise().getNettyPromise().setFailure(cause);
+      }
+    });
   }
 
   /**
