@@ -211,7 +211,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
   /**
    * Set parameters on request
    *
-   * @param uri
+   * @param uri         to connect to
    * @param etcdRequest to send
    * @param httpRequest to send
    * @return Http Request
