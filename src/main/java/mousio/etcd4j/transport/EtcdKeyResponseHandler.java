@@ -8,6 +8,7 @@ import io.netty.util.concurrent.Promise;
 import mousio.etcd4j.requests.EtcdKeyRequest;
 import mousio.etcd4j.responses.EtcdKeysResponse;
 import mousio.etcd4j.responses.EtcdKeysResponseParser;
+import mousio.etcd4j.responses.PrematureDisconnection;
 
 /**
  * Handles etcd responses
@@ -60,6 +61,12 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
     // Catches both parsed EtcdExceptions and parsing exceptions
     catch (Exception e) {
       this.promise.setFailure(e);
+    }
+  }
+
+  @Override public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+    if (!promise.isDone()) {
+      promise.setFailure(new PrematureDisconnection());
     }
   }
 }
