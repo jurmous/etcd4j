@@ -1,5 +1,5 @@
 Etcd4j is a client library for [etcd](https://github.com/coreos/etcd), a highly available keystore. This library is based on 
-Netty 4.1 and JDK 8. It supports all key based etcd requests, can be secured with SSL and supports
+Netty 4.1 and Java 7. It supports all key based etcd requests, can be secured with SSL and supports
 defining multiple connection URLs and retries. It is completely async and works with promises to
 retrieve the results. It also supports the etcd wait functionality to wait for future changes.
 
@@ -112,7 +112,7 @@ their values
     // Handle other types of exceptions
   }
   
-  // or listen to it async
+  // or listen to it async (Java 8 lambda construction)
   promise2.addListener(promise -> {
     // getNow() returns null on exception
     EtcdKeysResponse response = promise.getNow();
@@ -183,6 +183,7 @@ try {
 
 // Async version with a get with waitForChange:
 EtcdResponsePromise promise = etcd.get("foo").waitForChange().send();
+// Java 8 lambda construction
 promise.addListener(promise -> {
   try {
     EtcdKeysResponse key = response.get();
@@ -236,6 +237,7 @@ etcd.getDir("foo_dir").recursive().send();
 
 // Wait for next change on foo
 EtcdResponsePromise promise = etcd.get("foo").waitForChange().send();
+// Java 8 lambda construction
 promise.addListener(promise -> {
   // do something with change
 });
