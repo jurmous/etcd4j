@@ -21,8 +21,17 @@ public class EtcdResponsePromise<T> {
   protected Throwable exception;
 
   List<IsSimplePromiseResponseHandler<T>> handlers;
-  private final GenericFutureListener<Promise<T>> promiseHandler = (GenericFutureListener<Promise<T>>) this::handlePromise;
+  private final GenericFutureListener<Promise<T>> promiseHandler;
 
+  public EtcdResponsePromise() {
+      promiseHandler = new GenericFutureListener<Promise<T>>() {
+        @Override
+        public void operationComplete(Promise<T> future) throws Exception {
+            handlePromise(future);
+        }
+    };
+  }
+  
   /**
    * Attach Netty Promise
    *

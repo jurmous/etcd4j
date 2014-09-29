@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'signing'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.7
 group = 'org.mousio'
 version = '0.4.5'
 
