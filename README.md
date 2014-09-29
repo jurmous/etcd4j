@@ -1,8 +1,7 @@
 Etcd4j is a client library for [etcd](https://github.com/coreos/etcd), a highly available keystore. This library is based on 
 Netty 4.1 and JDK 8. It supports all key based etcd requests, can be secured with SSL and supports
 defining multiple connection URLs and retries. It is completely async and works with promises to
-retrieve the results. It also supports the etcd wait functionality to wait for future changes. 
-It will reconnect those wait requests if the server closes the connection.
+retrieve the results. It also supports the etcd wait functionality to wait for future changes.
 
 Etcd version support
 ====================
@@ -160,6 +159,47 @@ try{
 
 ```
 
+Handle disconnects
+------------------
+
+If you want to handle disconnects you need to catch the PrematureDisconnectException.
+(Issue #4 tracks possible future built in retry handling)
+
+```Java
+
+// Wait for next change on foo
+EtcdResponsePromise promise = etcd.get("foo").send();
+try {
+  EtcdKeysResponse key = response.get();
+} catch (PrematureDisconnectException e) {
+  // Handle Premature Disconnect exception.
+} catch (IOException e) {
+  e.printStackTrace();
+} catch (EtcdException e) {
+  e.printStackTrace();
+} catch (TimeoutException e) {
+  e.printStackTrace();
+}
+
+// Async version with a get with waitForChange:
+EtcdResponsePromise promise = etcd.get("foo").waitForChange().send();
+promise.addListener(promise -> {
+  try {
+    EtcdKeysResponse key = response.get();
+  } catch (PrematureDisconnectException e) {
+    // Handle Premature Disconnect exception.
+  } catch (IOException e) {
+    e.printStackTrace();
+  } catch (EtcdException e) {
+    e.printStackTrace();
+  } catch (TimeoutException e) {
+    e.printStackTrace();
+  }
+});
+
+
+```
+
 Put examples
 ------------
 You need to read out the returned promises to see the response
@@ -183,7 +223,8 @@ etcd.put("foo","bar4").prevIndex(2).send();
 
 Get examples
 ------------
-You need to read out the returned promises to see the response
+You need to read out the returned promises to see the response.
+
 ```Java
 // Simple key fetch
 etcd.get("foo").send();
