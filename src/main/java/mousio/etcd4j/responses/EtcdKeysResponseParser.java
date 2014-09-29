@@ -7,9 +7,10 @@ import com.fasterxml.jackson.core.JsonToken;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -162,7 +163,7 @@ public class EtcdKeysResponseParser {
           node.dir = parser.nextBooleanValue();
           break;
         case EXPIRATION:
-          node.expiration = ZonedDateTime.parse(parser.nextTextValue());
+          node.expiration = convertDate(parser.nextTextValue());
           break;
         case TTL:
           node.ttl = parser.nextIntValue(0);
@@ -179,6 +180,17 @@ public class EtcdKeysResponseParser {
     }
 
     return node;
+  }
+
+  /**
+   * Converts an ISO8601 date to Java date
+   *
+   * @param date as string to convert
+   * @return converted Date
+   * @throws IOException if date was of wrong type
+   */
+  protected static Date convertDate(String date) throws IOException {
+    return DatatypeConverter.parseDateTime(date).getTime();
   }
 
   /**

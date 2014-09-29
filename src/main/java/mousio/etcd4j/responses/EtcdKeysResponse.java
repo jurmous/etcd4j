@@ -1,6 +1,6 @@
 package mousio.etcd4j.responses;
 
-import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -32,9 +32,8 @@ public class EtcdKeysResponse {
     public Integer createdIndex;
     public Integer modifiedIndex;
     public String value;
-    public ZonedDateTime expiration;
+    public Date expiration;
     public Integer ttl;
     public List<EtcdNode> nodes;
   }
-
 }

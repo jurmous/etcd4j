@@ -3,8 +3,7 @@ package mousio.etcd4j.responses;
 import io.netty.buffer.Unpooled;
 import org.junit.Test;
 
-import java.time.ZonedDateTime;
-
+import static mousio.etcd4j.responses.EtcdKeysResponseParser.convertDate;
 import static mousio.etcd4j.responses.EtcdKeysResponseParser.parse;
 import static org.junit.Assert.*;
 
@@ -129,7 +128,7 @@ public class EtcdKeysResponseParserTest {
     assertEquals(5, action.node.modifiedIndex.intValue());
     assertEquals("bar", action.node.value);
     assertEquals(5, action.node.ttl.intValue());
-    assertEquals(ZonedDateTime.parse("2013-12-04T12:01:21.874888581-08:00"), action.node.expiration);
+    assertEquals(convertDate("2013-12-04T12:01:21.874888581-08:00"), action.node.expiration);
   }
 
   @Test
@@ -181,7 +180,7 @@ public class EtcdKeysResponseParserTest {
     assertEquals(5, action.prevNode.modifiedIndex.intValue());
     assertEquals("bar", action.prevNode.value);
     assertEquals(3, action.prevNode.ttl.intValue());
-    assertEquals(ZonedDateTime.parse("2013-12-04T12:01:21.874888581-08:00"), action.prevNode.expiration);
+    assertEquals(convertDate("2013-12-04T12:01:21.874888581-08:00"), action.prevNode.expiration);
   }
 
   @Test
@@ -275,7 +274,9 @@ public class EtcdKeysResponseParserTest {
     assertEquals(8, action.prevNode.createdIndex.intValue());
     assertEquals("/dir", action.prevNode.key);
     assertEquals(17, action.prevNode.modifiedIndex.intValue());
-    assertEquals(ZonedDateTime.parse("2013-12-11T10:39:35.689275857-08:00"), action.prevNode.expiration);
+
+    assertEquals(convertDate("2013-12-11T10:39:35.689275857-08:00"), action.prevNode.expiration);
+
     assertTrue(action.prevNode.dir);
   }
 
