@@ -23,15 +23,18 @@ public class EtcdResponsePromise<T> {
   List<IsSimplePromiseResponseHandler<T>> handlers;
   private final GenericFutureListener<Promise<T>> promiseHandler;
 
+  /**
+   * Constructor
+   */
   public EtcdResponsePromise() {
-      promiseHandler = new GenericFutureListener<Promise<T>>() {
-        @Override
-        public void operationComplete(Promise<T> future) throws Exception {
-            handlePromise(future);
-        }
+    promiseHandler = new GenericFutureListener<Promise<T>>() {
+      @Override
+      public void operationComplete(Promise<T> future) throws Exception {
+        handlePromise(future);
+      }
     };
   }
-  
+
   /**
    * Attach Netty Promise
    *
@@ -105,7 +108,7 @@ public class EtcdResponsePromise<T> {
 
   /**
    * Get the response. (Blocking)
-   * <p>
+   * <p/>
    * Use addListener to fetch the value in a non blocking way.
    *
    * @return the response

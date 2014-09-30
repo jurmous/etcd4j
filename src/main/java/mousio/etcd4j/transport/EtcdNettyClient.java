@@ -1,40 +1,26 @@
 package mousio.etcd4j.transport;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerAdapter;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.DefaultHttpRequest;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpClientCodec;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
+import mousio.etcd4j.promises.EtcdResponsePromise;
+import mousio.etcd4j.requests.EtcdKeyRequest;
+import mousio.etcd4j.requests.EtcdRequest;
+import mousio.etcd4j.requests.EtcdVersionRequest;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Map;
-
-import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.requests.EtcdKeyRequest;
-import mousio.etcd4j.requests.EtcdRequest;
-import mousio.etcd4j.requests.EtcdVersionRequest;
 
 /**
  * Netty client for the requests and responses
@@ -141,35 +127,34 @@ public class EtcdNettyClient implements EtcdClientImpl {
     );
 
     connectFuture.addListener(new GenericFutureListener<ChannelFuture>() {
+      @Override
+      public void operationComplete(ChannelFuture f) throws Exception {
+        if (!f.isSuccess()) {
+          counter.uriIndex++;
+          if (counter.uriIndex >= uris.length) {
+            if (counter.retryCount >= 3) {
+              etcdRequest.getPromise().getNettyPromise().setFailure(f.cause());
+              return;
+            }
+            counter.retryCount++;
+            counter.uriIndex = 0;
+          }
 
-        @Override
-        public void operationComplete(ChannelFuture f) throws Exception {
-            if (!f.isSuccess()) {
-                counter.uriIndex++;
-                if (counter.uriIndex >= uris.length) {
-                  if (counter.retryCount >= 3) {
-                    etcdRequest.getPromise().getNettyPromise().setFailure(f.cause());
-                    return;
-                  }
-                  counter.retryCount++;
-                  counter.uriIndex = 0;
-                }
-
-                connect(etcdRequest, counter, url);
-                return;
-              }
-
-              lastWorkingUriIndex = counter.uriIndex;
-
-              modifyPipeLine(etcdRequest, f.channel().pipeline());
-
-              HttpRequest httpRequest = createHttpRequest(url, etcdRequest);
-
-              // send request
-              channel.writeAndFlush(httpRequest);
+          connect(etcdRequest, counter, url);
+          return;
         }
+
+        lastWorkingUriIndex = counter.uriIndex;
+
+        modifyPipeLine(etcdRequest, f.channel().pipeline());
+
+        HttpRequest httpRequest = createHttpRequest(url, etcdRequest);
+
+        // send request
+        channel.writeAndFlush(httpRequest);
+      }
     });
-    
+
   }
 
   /**
