@@ -1,4 +1,4 @@
-package mousio.etcd4j.responses;
+package mousio.client.exceptions;
 
 import java.io.IOException;
 

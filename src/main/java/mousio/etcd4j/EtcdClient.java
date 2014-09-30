@@ -1,6 +1,8 @@
 package mousio.etcd4j;
 
 import io.netty.handler.ssl.SslContext;
+import mousio.client.retry.RetryPolicy;
+import mousio.client.retry.RetryWithExponentialBackOff;
 import mousio.etcd4j.requests.*;
 import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.transport.EtcdNettyClient;
@@ -15,6 +17,7 @@ import java.util.concurrent.TimeoutException;
  */
 public class EtcdClient implements Closeable {
   private final EtcdNettyClient client;
+  private RetryPolicy retryHandler = new RetryWithExponentialBackOff(20, -1, 10000);
 
   /**
    * Constructor
@@ -45,7 +48,7 @@ public class EtcdClient implements Closeable {
    */
   public String getVersion() {
     try {
-      return new EtcdVersionRequest(this.client).send().get();
+      return new EtcdVersionRequest(this.client, retryHandler).send().get();
     } catch (IOException | EtcdException | TimeoutException e) {
       return null;
     }
@@ -60,7 +63,7 @@ public class EtcdClient implements Closeable {
    * @return EtcdKeysRequest
    */
   public EtcdKeyPutRequest put(String key, String value) {
-    return new EtcdKeyPutRequest(client, key).value(value);
+    return new EtcdKeyPutRequest(client, key, retryHandler).value(value);
   }
 
   /**
@@ -70,7 +73,7 @@ public class EtcdClient implements Closeable {
    * @return EtcdKeysRequest
    */
   public EtcdKeyPutRequest putDir(String dir) {
-    return new EtcdKeyPutRequest(client, dir).isDir();
+    return new EtcdKeyPutRequest(client, dir, retryHandler).isDir();
   }
 
   /**
@@ -81,7 +84,7 @@ public class EtcdClient implements Closeable {
    * @return EtcdKeysRequest
    */
   public EtcdKeyPostRequest post(String key, String value) {
-    return new EtcdKeyPostRequest(client, key).value(value);
+    return new EtcdKeyPostRequest(client, key, retryHandler).value(value);
   }
 
   /**
@@ -91,7 +94,7 @@ public class EtcdClient implements Closeable {
    * @return EtcdKeysRequest
    */
   public EtcdKeyRequest delete(String key) {
-    return new EtcdKeyDeleteRequest(client, key);
+    return new EtcdKeyDeleteRequest(client, key, retryHandler);
   }
 
   /**
@@ -101,7 +104,7 @@ public class EtcdClient implements Closeable {
    * @return EtcdKeysRequest
    */
   public EtcdKeyDeleteRequest deleteDir(String dir) {
-    return new EtcdKeyDeleteRequest(client, dir).dir();
+    return new EtcdKeyDeleteRequest(client, dir, retryHandler).dir();
   }
 
   /**
@@ -111,7 +114,7 @@ public class EtcdClient implements Closeable {
    * @return EtcdKeysRequest
    */
   public EtcdKeyGetRequest get(String key) {
-    return new EtcdKeyGetRequest(client, key);
+    return new EtcdKeyGetRequest(client, key, retryHandler);
   }
 
   /**
@@ -121,7 +124,7 @@ public class EtcdClient implements Closeable {
    * @return EtcdKeysGetRequest
    */
   public EtcdKeyGetRequest getDir(String dir) {
-    return new EtcdKeyGetRequest(client, dir).dir();
+    return new EtcdKeyGetRequest(client, dir, retryHandler).dir();
   }
 
   /**
@@ -130,12 +133,22 @@ public class EtcdClient implements Closeable {
    * @return EtcdKeysRequest
    */
   public EtcdKeyGetRequest getAll() {
-    return new EtcdKeyGetRequest(client);
+    return new EtcdKeyGetRequest(client, retryHandler);
   }
 
   @Override public void close() throws IOException {
     if (client != null) {
       client.close();
     }
+  }
+
+  /**
+   * Set the retry handler.
+   * Default is an exponential backoff with start of 20ms.
+   *
+   * @param retryHandler to set
+   */
+  public void setRetryHandler(RetryPolicy retryHandler) {
+    this.retryHandler = retryHandler;
   }
 }

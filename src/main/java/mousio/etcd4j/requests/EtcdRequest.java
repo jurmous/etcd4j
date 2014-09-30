@@ -2,6 +2,7 @@ package mousio.etcd4j.requests;
 
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
+import mousio.client.retry.RetryPolicy;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.transport.EtcdClientImpl;
 
@@ -18,20 +19,27 @@ public abstract class EtcdRequest<R> {
   protected final EtcdClientImpl clientImpl;
 
   protected final HttpMethod method;
+
+  protected RetryPolicy retryPolicy;
+
   private EtcdResponsePromise<R> promise;
+
   private int timeout = -1;
   private TimeUnit timeoutUnit = TimeUnit.SECONDS;
   private HttpRequest httpRequest;
+  private String url;
 
   /**
    * Constructor
    *
-   * @param clientImpl implementation of client to handle request
-   * @param method     http method to use for Request
+   * @param clientImpl  implementation of client to handle request
+   * @param method      http method to use for Request
+   * @param retryPolicy Handles retries on fails
    */
-  protected EtcdRequest(EtcdClientImpl clientImpl, HttpMethod method) {
+  protected EtcdRequest(EtcdClientImpl clientImpl, HttpMethod method, RetryPolicy retryPolicy) {
     this.clientImpl = clientImpl;
     this.method = method;
+    this.retryPolicy = retryPolicy;
   }
 
   /**
@@ -133,5 +141,47 @@ public abstract class EtcdRequest<R> {
    */
   public HttpRequest getHttpRequest() {
     return httpRequest;
+  }
+
+  /**
+   * Set a specific retry policy for this request
+   *
+   * @param retryPolicy to set for this request
+   * @return self for chaining.
+   */
+  public EtcdRequest setRetryPolicy(RetryPolicy retryPolicy) {
+    this.retryPolicy = retryPolicy;
+    return this;
+  }
+
+  /**
+   * Get the current Retry handler
+   *
+   * @return retry handler
+   */
+  public RetryPolicy getRetryPolicy() {
+    return retryPolicy;
+  }
+
+  /**
+   * Get current URL of request
+   *
+   * @return current url
+   */
+  public String getUrl() {
+    if (this.url != null) {
+      return this.url;
+    } else {
+      return this.getUri();
+    }
+  }
+
+  /**
+   * Set current URL
+   *
+   * @param url to set
+   */
+  public void setUrl(String url) {
+    this.url = url;
   }
 }

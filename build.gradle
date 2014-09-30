@@ -19,7 +19,31 @@ repositories {
     mavenCentral()
 }
 
+sourceSets {
+    client {
+        java {
+            srcDir 'src/client/java'
+        }
+    }
+    main {
+        java {
+            compileClasspath += client.output
+            runtimeClasspath += client.output
+            srcDir 'src/main/java'
+        }
+    }
+    test {
+        java {
+            compileClasspath += client.output
+            runtimeClasspath += client.output
+            srcDir 'src/test/java'
+        }
+    }
+}
+
 dependencies {
+    clientCompile netty
+    clientCompile slf4j
     compile netty
     compile 'com.fasterxml.jackson.core:jackson-core:2.4.2'
     compile slf4j

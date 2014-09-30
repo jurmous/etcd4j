@@ -5,10 +5,10 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.util.concurrent.Promise;
+import mousio.client.exceptions.PrematureDisconnectException;
 import mousio.etcd4j.requests.EtcdKeyRequest;
 import mousio.etcd4j.responses.EtcdKeysResponse;
 import mousio.etcd4j.responses.EtcdKeysResponseParser;
-import mousio.etcd4j.responses.PrematureDisconnectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,8 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
       } else if (response.status().equals(HttpResponseStatus.MOVED_PERMANENTLY)
           || response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT)) {
         if (response.headers().contains("Location")) {
-          this.client.connect(this.request, response.headers().get("Location"));
+          this.request.setUrl(response.headers().get("Location"));
+          this.client.connect(this.request);
           logger.warn("redirect for " + this.request.getHttpRequest().uri() + " to " + response.headers().get("Location"));
           return;
         } else {
@@ -70,7 +71,7 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
 
   @Override public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
     if (!promise.isDone()) {
-      promise.setFailure(new PrematureDisconnectException());
+      this.request.getPromise().handleRetry(new PrematureDisconnectException());
     }
   }
 }

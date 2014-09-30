@@ -12,6 +12,8 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
+import mousio.client.ConnectionState;
+import mousio.client.retry.RetryHandler;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.requests.EtcdKeyRequest;
 import mousio.etcd4j.requests.EtcdRequest;
@@ -22,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -72,58 +75,51 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @param etcdRequest Etcd Request to send
    * @return Promise for the request.
    */
-  public <R> EtcdResponsePromise<R> send(EtcdRequest<R> etcdRequest) throws IOException {
+  public <R> EtcdResponsePromise<R> send(final EtcdRequest<R> etcdRequest) throws IOException {
+    final ConnectionState connectionState = new ConnectionState(uris);
+    connectionState.uriIndex = lastWorkingUriIndex;
+
     if (etcdRequest.getPromise() == null) {
-      EtcdResponsePromise<R> responsePromise = new EtcdResponsePromise<>();
+      EtcdResponsePromise<R> responsePromise = new EtcdResponsePromise<>(etcdRequest.getRetryPolicy(), connectionState, new RetryHandler() {
+        @Override public void doRetry() throws IOException {
+          connect(etcdRequest, connectionState);
+        }
+      });
       etcdRequest.setPromise(responsePromise);
     }
 
-    connect(etcdRequest);
+    connectionState.startTime = new Date().getTime();
+    connect(etcdRequest, connectionState);
 
     return etcdRequest.getPromise();
-  }
-
-  /**
-   * Connect
-   *
-   * @param request to connect with
-   * @param <R>     Type of response
-   * @throws IOException if connection fails
-   */
-  public <R> void connect(EtcdRequest<R> request) throws IOException {
-    connect(request, request.getUri());
-  }
-
-  /**
-   * Connect
-   *
-   * @param request to request with
-   * @param url     relative url to read resource at
-   * @param <R>     Type of response
-   * @throws IOException if request could not be sent.
-   */
-  public <R> void connect(EtcdRequest<R> request, String url) throws IOException {
-    final ConnectionCounter counter = new ConnectionCounter();
-    counter.uriIndex = lastWorkingUriIndex;
-
-    connect(request, counter, url);
   }
 
   /**
    * Connect to server
    *
    * @param etcdRequest to request with
-   * @param counter     for retries
-   * @param url         relative url to read resource at
    * @param <R>         Type of response
    * @throws IOException if request could not be sent.
    */
   @SuppressWarnings("unchecked")
-  protected <R> void connect(final EtcdRequest<R> etcdRequest, final ConnectionCounter counter, final String url)
+  protected <R> void connect(final EtcdRequest<R> etcdRequest) throws IOException {
+    this.connect(etcdRequest, etcdRequest.getPromise().getConnectionState());
+  }
+
+  /**
+   * Connect to server
+   *
+   * @param etcdRequest     to request with
+   * @param connectionState for retries
+   * @param <R>             Type of response
+   * @throws IOException if request could not be sent.
+   */
+  @SuppressWarnings("unchecked")
+  protected <R> void connect(final EtcdRequest<R> etcdRequest, final ConnectionState connectionState)
       throws IOException {
     // Start the connection attempt.
-    ChannelFuture connectFuture = bootstrap.clone()
-        .connect(uris[counter.uriIndex].getHost(), uris[counter.uriIndex].getPort());
+    final ChannelFuture connectFuture = bootstrap.clone()
+        .connect(uris[connectionState.uriIndex].getHost(), uris[connectionState.uriIndex].getPort());
 
     final Channel channel = connectFuture.channel();
     etcdRequest.getPromise().attachNettyPromise(
@@ -134,32 +130,22 @@ public class EtcdNettyClient implements EtcdClientImpl {
       @Override
       public void operationComplete(ChannelFuture f) throws Exception {
         if (!f.isSuccess()) {
-          counter.uriIndex++;
-          if (counter.uriIndex >= uris.length) {
-            if (counter.retryCount >= 3) {
-              etcdRequest.getPromise().getNettyPromise().setFailure(f.cause());
-              return;
-            }
-            counter.retryCount++;
-            counter.uriIndex = 0;
-          }
-
-          connect(etcdRequest, counter, url);
+          etcdRequest.getPromise().handleRetry(f.cause());
           return;
         }
+
         logger.info("Connected to " + channel.remoteAddress().toString());
 
-        lastWorkingUriIndex = counter.uriIndex;
+        lastWorkingUriIndex = connectionState.uriIndex;
 
         modifyPipeLine(etcdRequest, f.channel().pipeline());
 
-        HttpRequest httpRequest = createHttpRequest(url, etcdRequest);
+        HttpRequest httpRequest = createHttpRequest(etcdRequest.getUrl(), etcdRequest);
 
         // send request
         channel.writeAndFlush(httpRequest);
       }
     });
-
   }
 
   /**
@@ -266,13 +252,5 @@ public class EtcdNettyClient implements EtcdClientImpl {
    */
   public void close() {
     eventLoopGroup.shutdownGracefully();
-  }
-
-  /**
-   * Counts connection retries and current connection index
-   */
-  protected class ConnectionCounter {
-    public int uriIndex;
-    public int retryCount;
   }
 }

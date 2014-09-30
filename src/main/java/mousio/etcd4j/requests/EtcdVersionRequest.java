@@ -1,6 +1,7 @@
 package mousio.etcd4j.requests;
 
 import io.netty.handler.codec.http.HttpMethod;
+import mousio.client.retry.RetryPolicy;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.transport.EtcdClientImpl;
 
@@ -14,14 +15,20 @@ public class EtcdVersionRequest extends EtcdRequest<String> {
   /**
    * Constructor
    *
-   * @param clientImpl the client to handle this request
+   * @param clientImpl   the client to handle this request
+   * @param retryHandler handles retries
    */
-  public EtcdVersionRequest(EtcdClientImpl clientImpl) {
-    super(clientImpl, HttpMethod.GET);
+  public EtcdVersionRequest(EtcdClientImpl clientImpl, RetryPolicy retryHandler) {
+    super(clientImpl, HttpMethod.GET, retryHandler);
   }
 
   @Override public EtcdResponsePromise<String> send() throws IOException {
     return clientImpl.send(this);
+  }
+
+  @Override public EtcdVersionRequest setRetryPolicy(RetryPolicy retryPolicy) {
+    super.setRetryPolicy(retryPolicy);
+    return this;
   }
 
   @Override public String getUri() {

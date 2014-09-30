@@ -1,12 +1,12 @@
 package mousio.etcd4j.promises;
 
-import io.netty.util.concurrent.GenericFutureListener;
-import io.netty.util.concurrent.Promise;
+import mousio.client.ConnectionState;
+import mousio.client.promises.ResponsePromise;
+import mousio.client.retry.RetryHandler;
+import mousio.client.retry.RetryPolicy;
 import mousio.etcd4j.responses.EtcdException;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -14,96 +14,17 @@ import java.util.concurrent.TimeoutException;
  *
  * @param <T> Type of response contained
  */
-public class EtcdResponsePromise<T> {
-  protected Promise<T> promise;
-
-  protected T response;
-  protected Throwable exception;
-
-  List<IsSimplePromiseResponseHandler<T>> handlers;
-  private final GenericFutureListener<Promise<T>> promiseHandler;
+public class EtcdResponsePromise<T> extends ResponsePromise<T> {
 
   /**
    * Constructor
-   */
-  public EtcdResponsePromise() {
-    promiseHandler = new GenericFutureListener<Promise<T>>() {
-      @Override
-      public void operationComplete(Promise<T> future) throws Exception {
-        handlePromise(future);
-      }
-    };
-  }
-
-  /**
-   * Attach Netty Promise
    *
-   * @param promise netty promise to set up response promise with
+   * @param retryPolicy     the policy for retries
+   * @param connectionState which contains current connection details
+   * @param retryHandler    handler for retries
    */
-  public void attachNettyPromise(Promise<T> promise) {
-    promise.addListener(promiseHandler);
-    if (this.promise != null) {
-      this.promise.removeListener(promiseHandler);
-      this.promise.cancel(true);
-    }
-    this.promise = promise;
-  }
-
-  /**
-   * Add a promise to do when Response comes in
-   *
-   * @param listener to add
-   */
-  public void addListener(IsSimplePromiseResponseHandler<T> listener) {
-    if (handlers == null) {
-      handlers = Arrays.asList(listener);
-    } else {
-      handlers.add(listener);
-    }
-  }
-
-  /**
-   * Remove a listener
-   *
-   * @param listener to remove
-   */
-  public void removeListener(IsSimplePromiseResponseHandler<T> listener) {
-    if (handlers != null) {
-      handlers.remove(listener);
-    }
-  }
-
-  /**
-   * Handle the promise
-   *
-   * @param promise to handle
-   */
-  protected void handlePromise(Promise<T> promise) {
-    if (!promise.isSuccess()) {
-      this.setException(promise.cause());
-    } else {
-      this.response = promise.getNow();
-      if (handlers != null) {
-        for (IsSimplePromiseResponseHandler<T> h : handlers) {
-          h.onResponse(this);
-        }
-      }
-    }
-  }
-
-  /**
-   * Sets exception
-   *
-   * @param exception to set.
-   */
-  public void setException(Throwable exception) {
-    this.exception = exception;
-
-    if (handlers != null) {
-      for (IsSimplePromiseResponseHandler<T> h : handlers) {
-        h.onResponse(this);
-      }
-    }
+  public EtcdResponsePromise(RetryPolicy retryPolicy, ConnectionState connectionState, RetryHandler retryHandler) {
+    super(retryPolicy, connectionState, retryHandler);
   }
 
   /**
@@ -116,15 +37,9 @@ public class EtcdResponsePromise<T> {
    * @throws EtcdException    on etcd fail
    * @throws TimeoutException on Timeout
    */
-  public T get() throws IOException, EtcdException, TimeoutException {
-    if (!promise.isDone()) {
-      Promise<T> listeningPromise = this.promise;
-      listeningPromise.awaitUninterruptibly();
-      if (listeningPromise != this.promise) {
-        return this.get();
-      }
-
-      this.handlePromise(promise);
+  @Override public T get() throws IOException, EtcdException, TimeoutException {
+    if (!waitForPromiseSuccess()) {
+      return this.get();
     }
 
     if (response != null) {
@@ -140,38 +55,5 @@ public class EtcdResponsePromise<T> {
         throw new IOException(this.exception);
       }
     }
-  }
-
-  /**
-   * Get the result now even if it is not loaded yet by the promise.
-   * Use get() to ensure in a blocking way that the value is loaded.
-   *
-   * @return the result
-   */
-  public T getNow() {
-    return response;
-  }
-
-  /**
-   * Get internal Netty Promise
-   *
-   * @return Netty Promise
-   */
-  public Promise<T> getNettyPromise() {
-    return promise;
-  }
-
-  /**
-   * Response listener
-   *
-   * @param <T> Type contained
-   */
-  public interface IsSimplePromiseResponseHandler<T> {
-    /**
-     * Fired on response
-     *
-     * @param response with result
-     */
-    public void onResponse(EtcdResponsePromise<T> response);
   }
 }

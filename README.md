@@ -1,6 +1,6 @@
 Etcd4j is a client library for [etcd](https://github.com/coreos/etcd), a highly available keystore. This library is based on 
 Netty 4.1 and Java 7. It supports all key based etcd requests, can be secured with SSL and supports
-defining multiple connection URLs and retries. It is completely async and works with promises to
+defining multiple connection URLs and custom retry policies. It is completely async and works with promises to
 retrieve the results. It also supports the etcd wait functionality to wait for future changes.
 
 Etcd version support
@@ -159,44 +159,25 @@ try{
 
 ```
 
-Handle disconnects
+Set a Retry Policy
 ------------------
-
-If you want to handle disconnects you need to catch the PrematureDisconnectException.
-(Issue #4 tracks possible future built in retry handling)
+By default etcd4j will retry with an exponential back-off algorithm starting with a 20ms interval and
+ will back off to a 10000 ms interval. It will also retry indefinitely.
+There are more settings on the exponential backoff algorithm to set a retry limit but there are also
+some alternative policies like retries with timeout, with a max retry count or just retry once.
+Check the ```mousio.retry``` package for more details.
 
 ```Java
 
-// Wait for next change on foo
-EtcdResponsePromise promise = etcd.get("foo").send();
-try {
-  EtcdKeysResponse key = response.get();
-} catch (PrematureDisconnectException e) {
-  // Handle Premature Disconnect exception.
-} catch (IOException e) {
-  e.printStackTrace();
-} catch (EtcdException e) {
-  e.printStackTrace();
-} catch (TimeoutException e) {
-  e.printStackTrace();
-}
+// Set the retry policy for all requests on a etcd client connection
+// Will retry with an interval of 200ms with timeout of a total of 20000ms
+etcd.setRetryHandler(new RetryWithTimeout(200, 20000));
 
-// Async version with a get with waitForChange:
-EtcdResponsePromise promise = etcd.get("foo").waitForChange().send();
-// Java 8 lambda construction
-promise.addListener(promise -> {
-  try {
-    EtcdKeysResponse key = response.get();
-  } catch (PrematureDisconnectException e) {
-    // Handle Premature Disconnect exception.
-  } catch (IOException e) {
-    e.printStackTrace();
-  } catch (EtcdException e) {
-    e.printStackTrace();
-  } catch (TimeoutException e) {
-    e.printStackTrace();
-  }
-});
+// Set the retry policy for only one request
+// Will retry 2 times with an interval of 300ms
+EtcdKeysResponse response = etcd.get("foo").setRetryPolicy(new RetryNTimes(300, 2)).send().get();
+```
+
 Logging
 -------
 
