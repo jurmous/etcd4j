@@ -16,6 +16,8 @@ import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.requests.EtcdKeyRequest;
 import mousio.etcd4j.requests.EtcdRequest;
 import mousio.etcd4j.requests.EtcdVersionRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -26,6 +28,8 @@ import java.util.Map;
  * Netty client for the requests and responses
  */
 public class EtcdNettyClient implements EtcdClientImpl {
+  private static final Logger logger = LoggerFactory.getLogger(EtcdNettyClient.class);
+
   private final Bootstrap bootstrap;
   private final NioEventLoopGroup eventLoopGroup;
 
@@ -143,6 +147,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
           connect(etcdRequest, counter, url);
           return;
         }
+        logger.info("Connected to " + channel.remoteAddress().toString());
 
         lastWorkingUriIndex = counter.uriIndex;
 

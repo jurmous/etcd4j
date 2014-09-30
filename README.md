@@ -197,8 +197,27 @@ promise.addListener(promise -> {
     e.printStackTrace();
   }
 });
+Logging
+-------
 
+The framework logs its connects, retries and warnings with slf4j. (Simple Logging Facade for Java)
 
+You need to add a binding to your own logging framework to see the logs.
+
+If you want to see the logs in the console use the simple binding.
+
+Maven
+```xml
+<dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-simple</artifactId>
+    <version>1.7.7</version>
+</dependency>
+```
+
+Gradle
+```
+compile 'org.slf4j:slf4j-simple:1.7.7'
 ```
 
 Put examples

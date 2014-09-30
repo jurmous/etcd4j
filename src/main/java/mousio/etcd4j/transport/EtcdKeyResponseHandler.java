@@ -9,11 +9,15 @@ import mousio.etcd4j.requests.EtcdKeyRequest;
 import mousio.etcd4j.responses.EtcdKeysResponse;
 import mousio.etcd4j.responses.EtcdKeysResponseParser;
 import mousio.etcd4j.responses.PrematureDisconnectException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Handles etcd responses
  */
 public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttpResponse> {
+  private static final Logger logger = LoggerFactory.getLogger(EtcdKeyResponseHandler.class);
+
   private final Promise<EtcdKeysResponse> promise;
   private final EtcdNettyClient client;
   private final EtcdKeyRequest request;
@@ -41,7 +45,7 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
           || response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT)) {
         if (response.headers().contains("Location")) {
           this.client.connect(this.request, response.headers().get("Location"));
-          System.out.println("WARNING: redirect for " + this.request.getHttpRequest().uri() + " to " + response.headers().get("Location"));
+          logger.warn("redirect for " + this.request.getHttpRequest().uri() + " to " + response.headers().get("Location"));
           return;
         } else {
           this.promise.setFailure(new Exception("Missing Location header on redirect"));
