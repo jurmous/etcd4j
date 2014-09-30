@@ -74,8 +74,9 @@ Sending a request and retrieve values from response
 ```Java
 try{
   EtcdKeysResponse response = client.putValue("foo", "bar").send().get();
-  
-  // Do something with response
+
+  // Prints out: bar
+  System.out.println(response.node.value);
 }catch(EtcdException e){
   // Do something with the exception returned by etcd
 }catch(IOException e){
