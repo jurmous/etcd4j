@@ -41,7 +41,7 @@ Setting up a client which connects to default 127.0.0.1:4001 URL. (auto closes N
 ```Java
 try(EtcdClient etcd = new EtcdClient()){
   // Logs etcd version
-  System.out.log(etcd.getVersion());
+  System.out.println(etcd.getVersion());
 }
 ```
 
@@ -51,7 +51,7 @@ try(EtcdClient etcd = new EtcdClient(
     URI.create("http://123.45.67.89:8001"),
     URI.create("http://123.45.67.90:8001"))){
   // Logs etcd version
-  System.out.log(etcd.getVersion());
+  System.out.println(etcd.getVersion());
 }
 ```
 
@@ -63,7 +63,7 @@ try(EtcdClient etcd = new EtcdClient(sslContext,
     URI.create("https://123.45.67.89:8001"),
     URI.create("https://123.45.67.90:8001"))){
   // Logs etcd version
-  System.out.log(etcd.getVersion());
+  System.out.println(etcd.getVersion());
 }
 ```
 
