@@ -50,6 +50,14 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }
 
+task jarClient(type: Jar) {
+    classifier = 'client'
+    from sourceSets.client.output
+    manifest {
+        attributes 'Implementation-Title': baseName, 'Implementation-Version': version
+    }
+}
+
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from 'build/docs/javadoc'
@@ -64,6 +72,7 @@ artifacts {
     archives jar
     archives javadocJar
     archives sourcesJar
+    archives jarClient
 }
 
 signing {
