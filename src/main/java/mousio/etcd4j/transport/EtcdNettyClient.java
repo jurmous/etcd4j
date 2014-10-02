@@ -117,9 +117,18 @@ public class EtcdNettyClient implements EtcdClientImpl {
   @SuppressWarnings("unchecked")
   protected <R> void connect(final EtcdRequest<R> etcdRequest, final ConnectionState connectionState)
       throws IOException {
+    
+    URI uri = uris[connectionState.uriIndex];
+    
+    // when we are called from a redirect, the url in the request contains also host and port!
+    String requestUrl = etcdRequest.getUrl();
+    if(requestUrl.contains("://")){
+        uri = URI.create(requestUrl);
+    }
+
     // Start the connection attempt.
     final ChannelFuture connectFuture = bootstrap.clone()
-        .connect(uris[connectionState.uriIndex].getHost(), uris[connectionState.uriIndex].getPort());
+        .connect(uri.getHost(), uri.getPort());
 
     final Channel channel = connectFuture.channel();
     etcdRequest.getPromise().attachNettyPromise(
