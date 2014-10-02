@@ -4,7 +4,7 @@ apply plugin: 'signing'
 
 sourceCompatibility = 1.7
 group = 'org.mousio'
-version = '0.4.7'
+version = '0.4.8-SNAPSHOT'
 
 project.ext {
     mavenDeployUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/';
