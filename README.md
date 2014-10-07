@@ -164,9 +164,9 @@ Set a Retry Policy
 ------------------
 By default etcd4j will retry with an exponential back-off algorithm starting with a 20ms interval and
  will back off to a 10000 ms interval. It will also retry indefinitely.
-There are more settings on the exponential backoff algorithm to set a retry limit but there are also
+There are more settings on the exponential backoff algorithm to set a retry limit and there are also
 some alternative policies like retries with timeout, with a max retry count or just retry once.
-Check the ```mousio.retry``` package for more details.
+Check the ```mousio.client.retry``` package for more details.
 
 ```Java
 
