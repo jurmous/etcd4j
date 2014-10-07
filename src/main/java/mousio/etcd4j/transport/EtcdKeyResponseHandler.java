@@ -59,9 +59,16 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
     }
 
     try {
-      this.promise.setSuccess(
-          EtcdKeysResponseParser.parse(response.content())
-      );
+      EtcdKeysResponse etcdKeysResponse = EtcdKeysResponseParser.parse(response.content());
+      String etcdIndex = response.headers().get("X-Etcd-Index");
+      if (etcdIndex != null) {
+        try {
+          etcdKeysResponse.etcdIndex = Integer.parseInt(etcdIndex); 
+        } catch (Exception e) {
+          logger.error("could not parse X-Etcd-Index header", e);
+        }
+      }
+      this.promise.setSuccess(etcdKeysResponse);
     }
     // Catches both parsed EtcdExceptions and parsing exceptions
     catch (Exception e) {

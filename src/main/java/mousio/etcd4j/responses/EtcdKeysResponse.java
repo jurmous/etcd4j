@@ -10,6 +10,7 @@ public class EtcdKeysResponse {
 
   public final EtcdKeyAction action;
   public final EtcdNode node;
+  public Integer etcdIndex;
   public EtcdNode prevNode;
 
   /**
