@@ -151,10 +151,10 @@ public class EtcdKeysResponseParser {
           node.key = parser.nextTextValue();
           break;
         case CREATEDINDEX:
-          node.createdIndex = parser.nextIntValue(0);
+          node.createdIndex = parser.nextLongValue(0);
           break;
         case MODIFIEDINDEX:
-          node.modifiedIndex = parser.nextIntValue(0);
+          node.modifiedIndex = parser.nextLongValue(0);
           break;
         case VALUE:
           node.value = parser.nextTextValue();
@@ -166,7 +166,7 @@ public class EtcdKeysResponseParser {
           node.expiration = convertDate(parser.nextTextValue());
           break;
         case TTL:
-          node.ttl = parser.nextIntValue(0);
+          node.ttl = parser.nextLongValue(0);
           break;
         case NODES:
           parser.nextToken();

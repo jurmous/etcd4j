@@ -63,7 +63,7 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
       String etcdIndex = response.headers().get("X-Etcd-Index");
       if (etcdIndex != null) {
         try {
-          etcdKeysResponse.etcdIndex = Integer.parseInt(etcdIndex); 
+          etcdKeysResponse.etcdIndex = Long.parseLong(etcdIndex);
         } catch (Exception e) {
           logger.error("could not parse X-Etcd-Index header", e);
         }

@@ -10,7 +10,7 @@ public class EtcdKeysResponse {
 
   public final EtcdKeyAction action;
   public final EtcdNode node;
-  public Integer etcdIndex;
+  public Long etcdIndex;
   public EtcdNode prevNode;
 
   /**
@@ -30,11 +30,11 @@ public class EtcdKeysResponse {
   public static class EtcdNode {
     public String key;
     public boolean dir = false;
-    public Integer createdIndex;
-    public Integer modifiedIndex;
+    public Long createdIndex;
+    public Long modifiedIndex;
     public String value;
     public Date expiration;
-    public Integer ttl;
+    public Long ttl;
     public List<EtcdNode> nodes;
   }
 }

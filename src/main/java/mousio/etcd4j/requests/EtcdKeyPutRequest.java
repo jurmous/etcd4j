@@ -71,7 +71,7 @@ public class EtcdKeyPutRequest extends EtcdKeyRequest {
    * @param prevIndex to set on key
    * @return Itself for chaining
    */
-  public EtcdKeyPutRequest prevIndex(int prevIndex) {
+  public EtcdKeyPutRequest prevIndex(long prevIndex) {
     this.requestParams.put("prevIndex", prevIndex + "");
     return this;
   }
