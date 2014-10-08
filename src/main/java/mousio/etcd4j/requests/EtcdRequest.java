@@ -24,7 +24,7 @@ public abstract class EtcdRequest<R> {
 
   private EtcdResponsePromise<R> promise;
 
-  private int timeout = -1;
+  private long timeout = -1l;
   private TimeUnit timeoutUnit = TimeUnit.SECONDS;
   private HttpRequest httpRequest;
   private String url;
@@ -98,7 +98,7 @@ public abstract class EtcdRequest<R> {
    *
    * @return timeout in milliseconds
    */
-  public int getTimeout() {
+  public long getTimeout() {
     return timeout;
   }
 
@@ -109,7 +109,7 @@ public abstract class EtcdRequest<R> {
    * @param unit    time unit for timeout
    * @return Itself for chaining
    */
-  public EtcdRequest timeout(int timeout, TimeUnit unit) {
+  public EtcdRequest timeout(long timeout, TimeUnit unit) {
     this.timeout = timeout;
     this.timeoutUnit = unit;
     return this;

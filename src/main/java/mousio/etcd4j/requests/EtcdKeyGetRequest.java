@@ -96,7 +96,7 @@ public class EtcdKeyGetRequest extends EtcdKeyRequest {
     return this.wait;
   }
 
-  @Override public EtcdKeyGetRequest timeout(int timeout, TimeUnit unit) {
+  @Override public EtcdKeyGetRequest timeout(long timeout, TimeUnit unit) {
     super.timeout(timeout, unit);
     return this;
   }

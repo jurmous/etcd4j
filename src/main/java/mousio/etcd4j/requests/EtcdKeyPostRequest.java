@@ -45,7 +45,7 @@ public class EtcdKeyPostRequest extends EtcdKeyRequest {
     return this;
   }
 
-  @Override public EtcdKeyPostRequest timeout(int timeout, TimeUnit unit) {
+  @Override public EtcdKeyPostRequest timeout(long timeout, TimeUnit unit) {
     super.timeout(timeout, unit);
     return this;
   }

@@ -65,7 +65,7 @@ public class EtcdKeyDeleteRequest extends EtcdKeyRequest {
     return this;
   }
 
-  @Override public EtcdKeyDeleteRequest timeout(int timeout, TimeUnit unit) {
+  @Override public EtcdKeyDeleteRequest timeout(long timeout, TimeUnit unit) {
     super.timeout(timeout, unit);
     return this;
   }
