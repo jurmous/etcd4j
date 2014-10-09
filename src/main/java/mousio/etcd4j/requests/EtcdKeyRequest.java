@@ -37,6 +37,9 @@ public class EtcdKeyRequest extends EtcdRequest<EtcdKeysResponse> {
    * @return EtcdKeysRequest for chaining
    */
   public EtcdKeyRequest setKey(String key) {
+    if (key.startsWith("/")){
+      key = key.substring(1);
+    }
     this.key = key;
     return this;
   }
