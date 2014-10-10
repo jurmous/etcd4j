@@ -59,7 +59,7 @@ public class TestFunctionality {
     response = etcd.get("etcd4j_test/foo").send().get();
     assertEquals("bar3", response.node.value);
 
-    // Test redirect
+    // Test slash before key
     response = etcd.get("/etcd4j_test/foo").send().get();
     assertEquals("bar3", response.node.value);
 
@@ -79,7 +79,7 @@ public class TestFunctionality {
     r = etcd.getDir("etcd4j_test/foo_dir").send().get();
     assertEquals(r.action, EtcdKeyAction.get);
 
-    // Test redirect
+    // Test slash before key
     r = etcd.getDir("/etcd4j_test/foo_dir").send().get();
     assertEquals(r.action, EtcdKeyAction.get);
 
