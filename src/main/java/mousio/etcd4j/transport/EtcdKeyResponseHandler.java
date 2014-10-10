@@ -37,6 +37,17 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
 
   @Override
   protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse response) throws Exception {
+    readResponse(response);
+    ctx.close();
+  }
+
+  /**
+   * Read response from the server
+   *
+   * @param response to read
+   * @throws IOException if reconnection fails
+   */
+  private void readResponse(FullHttpResponse response) throws IOException {
     if (!response.content().isReadable()) {
       if (response.status().equals(HttpResponseStatus.OK)) {
         this.client.connect(this.request);
