@@ -12,6 +12,8 @@ import mousio.etcd4j.responses.EtcdKeysResponseParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 /**
  * Handles etcd responses
  */
@@ -48,6 +50,8 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
    * @throws IOException if reconnection fails
    */
   private void readResponse(FullHttpResponse response) throws IOException {
+    logger.info("Received " + response.status().code() + " for " + this.request.getMethod().name() + " " + this.request.getUri());
+
     if (!response.content().isReadable()) {
       if (response.status().equals(HttpResponseStatus.OK)) {
         this.client.connect(this.request);
@@ -79,6 +83,7 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
           logger.error("could not parse X-Etcd-Index header", e);
         }
       }
+
       this.promise.setSuccess(etcdKeysResponse);
     }
     // Catches both parsed EtcdExceptions and parsing exceptions
