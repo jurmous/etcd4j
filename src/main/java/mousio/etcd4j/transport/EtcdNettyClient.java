@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.concurrent.DefaultPromise;
+import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
 import mousio.client.ConnectionState;
@@ -26,6 +27,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 
 /**
  * Netty client for the requests and responses
@@ -139,11 +141,25 @@ public class EtcdNettyClient implements EtcdClientImpl {
 
     connectFuture.addListener(new GenericFutureListener<ChannelFuture>() {
       @Override
-      public void operationComplete(ChannelFuture f) throws Exception {
+      public void operationComplete(final ChannelFuture f) throws Exception {
         if (!f.isSuccess()) {
           etcdRequest.getPromise().handleRetry(f.cause());
           return;
         }
+
+        // Handle already cancelled promises
+        if (etcdRequest.getPromise().getNettyPromise().isCancelled()) {
+          f.channel().close();
+          etcdRequest.getPromise().getNettyPromise().setFailure(new CancellationException());
+          return;
+        }
+
+        // Close channel when promise is satisfied or cancelled later
+        etcdRequest.getPromise().getNettyPromise().addListener(new GenericFutureListener<Future<? super R>>() {
+          @Override public void operationComplete(Future<? super R> future) throws Exception {
+            f.channel().close();
+          }
+        });
 
         logger.info("Connected to " + channel.remoteAddress().toString());
 

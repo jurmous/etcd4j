@@ -12,8 +12,6 @@ import mousio.etcd4j.responses.EtcdKeysResponseParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 /**
  * Handles etcd responses
  */
@@ -39,17 +37,6 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
 
   @Override
   protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse response) throws Exception {
-    readResponse(response);
-    ctx.close();
-  }
-
-  /**
-   * Read response from the server
-   *
-   * @param response to read
-   * @throws IOException if reconnection fails
-   */
-  private void readResponse(FullHttpResponse response) throws IOException {
     logger.info("Received " + response.status().code() + " for " + this.request.getMethod().name() + " " + this.request.getUri());
 
     if (!response.content().isReadable()) {

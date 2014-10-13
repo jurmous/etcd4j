@@ -215,6 +215,13 @@ public class ResponsePromise<T> {
   }
 
   /**
+   * Cancel the request
+   */
+  public void cancel() {
+    promise.cancel(true);
+  }
+
+  /**
    * Response listener
    *
    * @param <T> Type contained
