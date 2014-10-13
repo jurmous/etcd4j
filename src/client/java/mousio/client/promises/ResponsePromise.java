@@ -16,6 +16,8 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * A Response promise
+ *
+ * @param <T> Type of object returned by promise
  */
 public class ResponsePromise<T> {
   private static final Logger logger = LoggerFactory.getLogger(ResponsePromise.class);
@@ -58,10 +60,10 @@ public class ResponsePromise<T> {
    */
   public void attachNettyPromise(Promise<T> promise) {
     promise.addListener(promiseHandler);
-    Promise oldPromise = this.promise;
+    Promise<T> oldPromise = this.promise;
 
     this.promise = promise;
-    
+
     if (oldPromise != null) {
       oldPromise.removeListener(promiseHandler);
       oldPromise.cancel(true);
