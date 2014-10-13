@@ -69,6 +69,18 @@ public class TestFunctionality {
 
 
   /**
+   * Tests redirect by sending a key with too many slashes.
+   */
+  @Test
+  public void testRedirect() throws IOException, EtcdException, TimeoutException {
+    EtcdKeysResponse response = etcd.put("etcd4j_test/redirect", "bar").send().get();
+
+    // Test redirect with a double slash
+    response = etcd.get("//etcd4j_test/redirect").send().get();
+    assertEquals("bar", response.node.value);
+  }
+
+  /**
    * Directory tests
    */
   @Test

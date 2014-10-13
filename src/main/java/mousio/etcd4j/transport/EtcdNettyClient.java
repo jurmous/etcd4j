@@ -135,6 +135,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
         .connect(uri.getHost(), uri.getPort());
 
     final Channel channel = connectFuture.channel();
+
     etcdRequest.getPromise().attachNettyPromise(
         (Promise<R>) new DefaultPromise<>(connectFuture.channel().eventLoop())
     );
@@ -154,10 +155,15 @@ public class EtcdNettyClient implements EtcdClientImpl {
           return;
         }
 
+        final Promise listenedToPromise = etcdRequest.getPromise().getNettyPromise();
+
         // Close channel when promise is satisfied or cancelled later
-        etcdRequest.getPromise().getNettyPromise().addListener(new GenericFutureListener<Future<? super R>>() {
-          @Override public void operationComplete(Future<? super R> future) throws Exception {
-            f.channel().close();
+        listenedToPromise.addListener(new GenericFutureListener<Future<?>>() {
+          @Override public void operationComplete(Future<?> future) throws Exception {
+            // Only close if it was not redirected to new promise
+            if (etcdRequest.getPromise().getNettyPromise() == listenedToPromise) {
+              f.channel().close();
+            }
           }
         });
 
@@ -179,7 +185,6 @@ public class EtcdNettyClient implements EtcdClientImpl {
         });
       }
     });
-
   }
 
   /**

@@ -58,11 +58,14 @@ public class ResponsePromise<T> {
    */
   public void attachNettyPromise(Promise<T> promise) {
     promise.addListener(promiseHandler);
-    if (this.promise != null) {
-      this.promise.removeListener(promiseHandler);
-      this.promise.cancel(true);
-    }
+    Promise oldPromise = this.promise;
+
     this.promise = promise;
+    
+    if (oldPromise != null) {
+      oldPromise.removeListener(promiseHandler);
+      oldPromise.cancel(true);
+    }
   }
 
   /**
