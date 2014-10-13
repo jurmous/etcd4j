@@ -124,10 +124,10 @@ public class EtcdNettyClient implements EtcdClientImpl {
 
     URI uri = uris[connectionState.uriIndex];
 
-    // when we are called from a redirect, the url in the request contains also host and port!
-    String requestUrl = etcdRequest.getUrl();
-    if (requestUrl.contains("://")) {
-      uri = URI.create(requestUrl);
+    // when we are called from a redirect, the url in the request may also contain host and port!
+    URI requestUri = URI.create(etcdRequest.getUrl());
+    if (requestUri.getHost() != null && requestUri.getPort() > -1) {
+        uri = requestUri;
     }
 
     // Start the connection attempt.
