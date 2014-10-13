@@ -222,6 +222,15 @@ public class ResponsePromise<T> {
   }
 
   /**
+   * Get exception
+   *
+   * @return the exception if set. Or null if no exception present
+   */
+  public Throwable getException() {
+    return exception;
+  }
+
+  /**
    * Response listener
    *
    * @param <T> Type contained
