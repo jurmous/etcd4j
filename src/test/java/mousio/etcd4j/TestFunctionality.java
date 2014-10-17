@@ -25,6 +25,7 @@ public class TestFunctionality {
 
   @Before
   public void setUp() throws Exception {
+    System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "DEBUG");
     this.etcd = new EtcdClient();
   }
 

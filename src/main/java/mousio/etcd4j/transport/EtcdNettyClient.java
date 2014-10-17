@@ -48,7 +48,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @param uri        to connect to
    */
   public EtcdNettyClient(final SslContext sslContext, final URI... uri) {
-    logger.info("Setting up Netty client");
+    logger.info("Setting up Etcd4j Netty client");
 
     this.eventLoopGroup = new NioEventLoopGroup();
 
@@ -127,7 +127,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
     // when we are called from a redirect, the url in the request may also contain host and port!
     URI requestUri = URI.create(etcdRequest.getUrl());
     if (requestUri.getHost() != null && requestUri.getPort() > -1) {
-        uri = requestUri;
+      uri = requestUri;
     }
 
     // Start the connection attempt.
@@ -167,7 +167,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
           }
         });
 
-        logger.info("Connected to " + channel.remoteAddress().toString());
+        logger.debug("Connected to " + channel.remoteAddress().toString());
 
         lastWorkingUriIndex = connectionState.uriIndex;
 
@@ -180,7 +180,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
 
         channel.closeFuture().addListener(new ChannelFutureListener() {
           @Override public void operationComplete(ChannelFuture future) throws Exception {
-            logger.info("Connection closed for request " + etcdRequest.getMethod().name() + " " + etcdRequest.getUri());
+            logger.debug("Connection closed for request " + etcdRequest.getMethod().name() + " " + etcdRequest.getUri());
           }
         });
       }
@@ -290,7 +290,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * Close netty
    */
   public void close() {
-    logger.info("Shutting down Netty client");
+    logger.info("Shutting down Etcd4j Netty client");
     eventLoopGroup.shutdownGracefully();
   }
 }

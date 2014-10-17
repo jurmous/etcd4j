@@ -199,7 +199,7 @@ public class ResponsePromise<T> {
   public void handleRetry(Throwable cause) {
     if (this.retryPolicy.shouldRetry(this.connectionState)) {
       connectionState.retryCount += 1;
-      logger.info(String.format("Retry %s to send command", connectionState.retryCount));
+      logger.debug(String.format("Retry %s to send command", connectionState.retryCount));
       this.retryPolicy.retry(connectionState, retryHandler, new ConnectionFailHandler() {
         @Override public void catchException(IOException exception) {
           handleRetry(exception);
