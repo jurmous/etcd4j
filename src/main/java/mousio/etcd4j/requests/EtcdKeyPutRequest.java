@@ -59,9 +59,22 @@ public class EtcdKeyPutRequest extends EtcdKeyRequest {
    * Set that previous value should exist
    *
    * @return Itself for chaining
+   * @deprecated As of release 0.4.13 replaced by {@link #prevExist(boolean)}
    */
+  @Deprecated
   public EtcdKeyPutRequest prevExist() {
     this.requestParams.put("prevExist", "true");
+    return this;
+  }
+
+  /**
+   * Set that previous value should exist
+   *
+   * @param prevExists boolean to indicate if previous value should or should not exist.
+   * @return Itself for chaining
+   */
+  public EtcdKeyPutRequest prevExist(boolean prevExists) {
+    this.requestParams.put("prevExist", String.valueOf(prevExists));
     return this;
   }
 

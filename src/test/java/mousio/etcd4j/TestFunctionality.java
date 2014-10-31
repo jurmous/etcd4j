@@ -47,7 +47,10 @@ public class TestFunctionality {
     EtcdKeysResponse response = etcd.put("etcd4j_test/foo", "bar").send().get();
     assertEquals(EtcdKeyAction.set, response.action);
 
-    response = etcd.put("etcd4j_test/foo", "bar1").ttl(40).prevExist().send().get();
+    response = etcd.put("etcd4j_test/foo2", "bar").prevExist(false).send().get();
+    assertEquals(EtcdKeyAction.create, response.action);
+
+    response = etcd.put("etcd4j_test/foo", "bar1").ttl(40).prevExist(true).send().get();
     assertEquals(EtcdKeyAction.update, response.action);
     assertNotNull(response.node.expiration);
 
