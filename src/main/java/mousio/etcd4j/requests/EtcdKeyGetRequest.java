@@ -88,6 +88,17 @@ public class EtcdKeyGetRequest extends EtcdKeyRequest {
   }
 
   /**
+   * Set if operation is consistent
+   * (Etcd will use the master to be sure of latest value)
+   *
+   * @return Itself for chaining
+   */
+  public EtcdKeyGetRequest consistent() {
+    this.requestParams.put("consistent", "true");
+    return this;
+  }
+
+  /**
    * Get if command should be waiting
    *
    * @return true if it should wait

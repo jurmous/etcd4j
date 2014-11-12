@@ -63,6 +63,10 @@ public class TestFunctionality {
     response = etcd.get("etcd4j_test/foo").send().get();
     assertEquals("bar3", response.node.value);
 
+    // Test consistent
+    response = etcd.get("etcd4j_test/foo").consistent().send().get();
+    assertEquals("bar3", response.node.value);
+
     // Test slash before key
     response = etcd.get("/etcd4j_test/foo").send().get();
     assertEquals("bar3", response.node.value);
