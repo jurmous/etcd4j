@@ -39,43 +39,50 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
   protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse response) throws Exception {
     logger.debug("Received " + response.status().code() + " for " + this.request.getMethod().name() + " " + this.request.getUri());
 
-    if (!response.content().isReadable()) {
-      if (response.status().equals(HttpResponseStatus.OK)) {
+    if (response.status().equals(HttpResponseStatus.OK)
+        || response.status().equals(HttpResponseStatus.ACCEPTED)
+        || response.status().equals(HttpResponseStatus.CREATED)) {
+      if (!response.content().isReadable()) {
         this.client.connect(this.request);
         return;
-      } else if (response.status().equals(HttpResponseStatus.MOVED_PERMANENTLY)
-          || response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT)) {
-        if (response.headers().contains("Location")) {
-          this.request.setUrl(response.headers().get("Location"));
-          this.client.connect(this.request);
-          logger.warn("redirect for " + this.request.getHttpRequest().uri() + " to " + response.headers().get("Location"));
-          return;
-        } else {
-          this.promise.setFailure(new Exception("Missing Location header on redirect"));
-          return;
+      }
+      try {
+        EtcdKeysResponse etcdKeysResponse = EtcdKeysResponseParser.parse(response.content());
+        String etcdIndex = response.headers().get("X-Etcd-Index");
+
+        if (etcdIndex != null) {
+          try {
+            etcdKeysResponse.etcdIndex = Long.parseLong(etcdIndex);
+          } catch (Exception e) {
+            logger.error("could not parse X-Etcd-Index header", e);
+          }
         }
+
+        this.promise.setSuccess(etcdKeysResponse);
+      }
+      // Catches both parsed EtcdExceptions and parsing exceptions
+      catch (Exception e) {
+        this.promise.setFailure(e);
+      }
+    } else if (response.status().equals(HttpResponseStatus.NOT_FOUND)) {
+      try {
+        EtcdKeysResponse etcdKeysResponse = EtcdKeysResponseParser.parse(response.content());
+      }
+      // Catches both parsed EtcdExceptions and parsing exceptions
+      catch (Exception e) {
+        this.promise.setFailure(e);
+      }
+    } else if (response.status().equals(HttpResponseStatus.MOVED_PERMANENTLY)
+        || response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT)) {
+      if (response.headers().contains("Location")) {
+        this.request.setUrl(response.headers().get("Location"));
+        this.client.connect(this.request);
+        logger.warn("redirect for " + this.request.getHttpRequest().uri() + " to " + response.headers().get("Location"));
       } else {
-        this.promise.setFailure(new Exception(response.status().toString()));
-        return;
+        this.promise.setFailure(new Exception("Missing Location header on redirect"));
       }
-    }
-
-    try {
-      EtcdKeysResponse etcdKeysResponse = EtcdKeysResponseParser.parse(response.content());
-      String etcdIndex = response.headers().get("X-Etcd-Index");
-      if (etcdIndex != null) {
-        try {
-          etcdKeysResponse.etcdIndex = Long.parseLong(etcdIndex);
-        } catch (Exception e) {
-          logger.error("could not parse X-Etcd-Index header", e);
-        }
-      }
-
-      this.promise.setSuccess(etcdKeysResponse);
-    }
-    // Catches both parsed EtcdExceptions and parsing exceptions
-    catch (Exception e) {
-      this.promise.setFailure(e);
+    } else {
+      this.promise.setFailure(new Exception(response.status().toString()));
     }
   }
 
