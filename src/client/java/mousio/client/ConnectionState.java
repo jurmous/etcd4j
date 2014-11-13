@@ -10,6 +10,7 @@ public class ConnectionState {
   public long startTime;
   public final URI[] uris;
   public int uriIndex;
+  public int msBeforeRetry = 0;
 
   /**
    * Constructor

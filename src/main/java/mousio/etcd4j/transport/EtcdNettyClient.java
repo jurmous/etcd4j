@@ -144,6 +144,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
       @Override
       public void operationComplete(final ChannelFuture f) throws Exception {
         if (!f.isSuccess()) {
+          logger.debug(String.format("Connection failed to " + connectionState.uris[connectionState.uriIndex]));
           etcdRequest.getPromise().handleRetry(f.cause());
           return;
         }

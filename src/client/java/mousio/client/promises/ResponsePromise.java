@@ -6,8 +6,6 @@ import mousio.client.ConnectionState;
 import mousio.client.retry.ConnectionFailHandler;
 import mousio.client.retry.RetryHandler;
 import mousio.client.retry.RetryPolicy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -20,8 +18,6 @@ import java.util.concurrent.TimeoutException;
  * @param <T> Type of object returned by promise
  */
 public class ResponsePromise<T> {
-  private static final Logger logger = LoggerFactory.getLogger(ResponsePromise.class);
-
   private final RetryPolicy retryPolicy;
   private final ConnectionState connectionState;
   private final RetryHandler retryHandler;
@@ -197,15 +193,13 @@ public class ResponsePromise<T> {
    * @param cause of last connect fail
    */
   public void handleRetry(Throwable cause) {
-    if (this.retryPolicy.shouldRetry(this.connectionState)) {
-      connectionState.retryCount += 1;
-      logger.debug(String.format("Retry %s to send command", connectionState.retryCount));
+    try {
       this.retryPolicy.retry(connectionState, retryHandler, new ConnectionFailHandler() {
         @Override public void catchException(IOException exception) {
           handleRetry(exception);
         }
       });
-    } else {
+    } catch (RetryPolicy.RetryCancelled retryCancelled) {
       this.getNettyPromise().setFailure(cause);
     }
   }

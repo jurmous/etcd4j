@@ -9,8 +9,6 @@ public class RetryWithExponentialBackOff extends RetryPolicy {
   private final int maxRetryCount;
   private final int maxDelay;
 
-  protected int currentDelay = 0;
-
   /**
    * Constructor
    *
@@ -18,10 +16,6 @@ public class RetryWithExponentialBackOff extends RetryPolicy {
    */
   public RetryWithExponentialBackOff(int startMsBeforeRetry) {
     this(startMsBeforeRetry, -1, -1);
-  }
-
-  @Override public int getRetryTimeInMs() {
-    return this.currentDelay;
   }
 
   /**
@@ -37,19 +31,19 @@ public class RetryWithExponentialBackOff extends RetryPolicy {
     this.maxDelay = maxDelay;
   }
 
-  @Override public boolean shouldRetry(ConnectionState connectionState) {
-    if (this.maxRetryCount != -1 && connectionState.retryCount >= this.maxRetryCount) {
+  @Override public boolean shouldRetry(ConnectionState state) {
+    if (this.maxRetryCount != -1 && state.retryCount >= this.maxRetryCount) {
       return false;
     }
 
-    if (currentDelay == 0) {
-      currentDelay = this.msBeforeRetry;
+    if (state.msBeforeRetry == 0) {
+      state.msBeforeRetry = this.startRetryTime;
     } else if (maxDelay == -1) {
-      currentDelay *= 2;
-    } else if (currentDelay < maxDelay) {
-      currentDelay *= 2;
-      if (currentDelay > maxDelay) {
-        currentDelay = maxDelay;
+      state.msBeforeRetry *= 2;
+    } else if (state.msBeforeRetry < maxDelay) {
+      state.msBeforeRetry *= 2;
+      if (state.msBeforeRetry > maxDelay) {
+        state.msBeforeRetry = maxDelay;
       }
     }
 

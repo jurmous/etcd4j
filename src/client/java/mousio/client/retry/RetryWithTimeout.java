@@ -22,7 +22,6 @@ public class RetryWithTimeout extends RetryPolicy {
   }
 
   @Override public boolean shouldRetry(ConnectionState connectionState) {
-    System.out.println((new Date().getTime() - connectionState.startTime));
     return (new Date().getTime() - connectionState.startTime) < timeoutInMs;
   }
 }
