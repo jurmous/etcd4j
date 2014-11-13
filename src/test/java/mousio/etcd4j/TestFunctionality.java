@@ -60,15 +60,11 @@ public class TestFunctionality {
     response = etcd.put("etcd4j_test/foo", "bar3").prevIndex(response.node.modifiedIndex).send().get();
     assertEquals(EtcdKeyAction.compareAndSwap, response.action);
 
-    response = etcd.get("etcd4j_test/foo").send().get();
-    assertEquals("bar3", response.node.value);
-
-    // Test consistent
     response = etcd.get("etcd4j_test/foo").consistent().send().get();
     assertEquals("bar3", response.node.value);
 
     // Test slash before key
-    response = etcd.get("/etcd4j_test/foo").send().get();
+    response = etcd.get("/etcd4j_test/foo").consistent().send().get();
     assertEquals("bar3", response.node.value);
 
     response = etcd.delete("etcd4j_test/foo").send().get();
@@ -84,7 +80,7 @@ public class TestFunctionality {
     EtcdKeysResponse response = etcd.put("etcd4j_test/redirect", "bar").send().get();
 
     // Test redirect with a double slash
-    response = etcd.get("//etcd4j_test/redirect").send().get();
+    response = etcd.get("//etcd4j_test/redirect").consistent().send().get();
     assertEquals("bar", response.node.value);
   }
 
@@ -96,7 +92,7 @@ public class TestFunctionality {
     EtcdKeysResponse r = etcd.putDir("etcd4j_test/foo_dir").send().get();
     assertEquals(r.action, EtcdKeyAction.set);
 
-    r = etcd.getDir("etcd4j_test/foo_dir").send().get();
+    r = etcd.getDir("etcd4j_test/foo_dir").consistent().send().get();
     assertEquals(r.action, EtcdKeyAction.get);
 
     // Test slash before key
@@ -125,10 +121,10 @@ public class TestFunctionality {
     r = etcd.post("etcd4j_test/queue", "Job2").ttl(20).send().get();
     assertEquals(r.action, EtcdKeyAction.create);
 
-    r = etcd.get("etcd4j_test/queue/" + r.node.createdIndex).send().get();
+    r = etcd.get("etcd4j_test/queue/" + r.node.createdIndex).consistent().send().get();
     assertEquals(r.node.value, "Job2");
 
-    r = etcd.get("etcd4j_test/queue").recursive().sorted().send().get();
+    r = etcd.get("etcd4j_test/queue").consistent().recursive().sorted().send().get();
     assertEquals(2, r.node.nodes.size());
     assertEquals("Job2", r.node.nodes.get(1).value);
 
@@ -162,7 +158,7 @@ public class TestFunctionality {
   public void tearDown() throws Exception {
     try {
       etcd.deleteDir("etcd4j_test").recursive().send().get();
-    } catch (EtcdException e) {
+    } catch (EtcdException | IOException e) {
       // ignore since not all tests create the directory
     }
     this.etcd.close();
