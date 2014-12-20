@@ -19,6 +19,7 @@ import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.requests.EtcdKeyRequest;
 import mousio.etcd4j.requests.EtcdRequest;
 import mousio.etcd4j.requests.EtcdVersionRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -259,7 +260,8 @@ public class EtcdNettyClient implements EtcdClientImpl {
     // Set possible key value pairs
     Map<String, String> keyValuePairs = etcdRequest.getRequestParams();
     if (keyValuePairs != null && !keyValuePairs.isEmpty()) {
-      if (etcdRequest.getMethod() == HttpMethod.POST) {
+      HttpMethod etcdRequestMethod = etcdRequest.getMethod();
+      if (etcdRequestMethod == HttpMethod.POST || etcdRequestMethod == HttpMethod.PUT) {
         HttpPostRequestEncoder bodyRequestEncoder = new HttpPostRequestEncoder(httpRequest, false);
         for (Map.Entry<String, String> entry : keyValuePairs.entrySet()) {
           bodyRequestEncoder.addBodyAttribute(entry.getKey(), entry.getValue());
