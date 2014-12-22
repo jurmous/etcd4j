@@ -5,8 +5,8 @@ retrieve the results. It also supports the etcd wait functionality to wait for f
 
 Etcd version support
 ====================
-This project currently supports etcd 0.3 which first supports the v2 api and any above. It supports
-all the key space features in etcd 0.4.x and 0.5.x
+This project supports any etcd client which supports the etcd v2 api. This is any etcd version up
+ from etcd 0.3 to 2.x
 
 Download
 ========
@@ -17,14 +17,14 @@ Maven
 <dependency>
   <groupId>org.mousio</groupId>
   <artifactId>etcd4j</artifactId>
-  <version>0.4.14</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
 Gradle
 ------
 ```
-compile 'org.mousio:etcd4j:0.4.14'
+compile 'org.mousio:etcd4j:2.0.0'
 ```
 
 Manually
