@@ -178,7 +178,15 @@ public class EtcdNettyClient implements EtcdClientImpl {
         HttpRequest httpRequest = createHttpRequest(etcdRequest.getUrl(), etcdRequest);
 
         // send request
-        channel.writeAndFlush(httpRequest);
+        channel.writeAndFlush(httpRequest).addListener(new ChannelFutureListener() {
+          @Override
+          public void operationComplete(ChannelFuture future) throws Exception {
+            if (!future.isSuccess()) {
+              etcdRequest.getPromise().setException(future.cause());
+              f.channel().close();
+            }
+          }
+        });
 
         channel.closeFuture().addListener(new ChannelFutureListener() {
           @Override public void operationComplete(ChannelFuture future) throws Exception {
