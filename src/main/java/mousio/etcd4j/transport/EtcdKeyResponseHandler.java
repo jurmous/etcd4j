@@ -79,7 +79,11 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
         this.client.connect(this.request);
         // Closing the connection which handled the previous request.
         ctx.close();
-        logger.warn("redirect for " + this.request.getHttpRequest().uri() + " to " + response.headers().get("Location"));
+        if (logger.isDebugEnabled()) {
+          logger.debug(
+              "redirect for " + this.request.getHttpRequest().uri() + " to " + response.headers()
+                  .get("Location"));
+        }
       } else {
         this.promise.setFailure(new Exception("Missing Location header on redirect"));
       }
