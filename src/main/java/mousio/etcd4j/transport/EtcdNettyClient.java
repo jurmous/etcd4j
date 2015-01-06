@@ -1,11 +1,25 @@
 package mousio.etcd4j.transport;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerAdapter;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.DefaultHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpClientCodec;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.timeout.ReadTimeoutHandler;
@@ -19,7 +33,6 @@ import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.requests.EtcdKeyRequest;
 import mousio.etcd4j.requests.EtcdRequest;
 import mousio.etcd4j.requests.EtcdVersionRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,7 +158,10 @@ public class EtcdNettyClient implements EtcdClientImpl {
       @Override
       public void operationComplete(final ChannelFuture f) throws Exception {
         if (!f.isSuccess()) {
-          logger.debug(String.format("Connection failed to " + connectionState.uris[connectionState.uriIndex]));
+          if (logger.isDebugEnabled()) {
+            logger.debug(String
+                .format("Connection failed to " + connectionState.uris[connectionState.uriIndex]));
+          }
           etcdRequest.getPromise().handleRetry(f.cause());
           return;
         }
@@ -169,7 +185,9 @@ public class EtcdNettyClient implements EtcdClientImpl {
           }
         });
 
-        logger.debug("Connected to " + channel.remoteAddress().toString());
+        if (logger.isDebugEnabled()) {
+          logger.debug("Connected to " + channel.remoteAddress().toString());
+        }
 
         lastWorkingUriIndex = connectionState.uriIndex;
 
@@ -190,7 +208,10 @@ public class EtcdNettyClient implements EtcdClientImpl {
 
         channel.closeFuture().addListener(new ChannelFutureListener() {
           @Override public void operationComplete(ChannelFuture future) throws Exception {
-            logger.debug("Connection closed for request " + etcdRequest.getMethod().name() + " " + etcdRequest.getUri());
+            if (logger.isDebugEnabled()) {
+              logger.debug("Connection closed for request " + etcdRequest.getMethod().name() + " "
+                  + etcdRequest.getUri());
+            }
           }
         });
       }

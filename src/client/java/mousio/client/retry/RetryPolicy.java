@@ -44,7 +44,9 @@ public abstract class RetryPolicy {
     state.uriIndex++;
     if (state.uriIndex >= state.uris.length) {
       if (this.shouldRetry(state)) {
-        logger.debug(String.format("Retry %s to send command", state.retryCount));
+        if (logger.isDebugEnabled()) {
+          logger.debug(String.format("Retry %s to send command", state.retryCount));
+        }
         state.retryCount += 1;
         state.uriIndex = 0;
         timer.newTimeout(new TimerTask() {

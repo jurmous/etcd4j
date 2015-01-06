@@ -37,7 +37,11 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
 
   @Override
   protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse response) throws Exception {
-    logger.debug("Received " + response.status().code() + " for " + this.request.getMethod().name() + " " + this.request.getUri());
+    if (logger.isDebugEnabled()) {
+      logger.debug(
+          "Received " + response.status().code() + " for " + this.request.getMethod().name() + " "
+              + this.request.getUri());
+    }
 
     if (response.status().equals(HttpResponseStatus.OK)
         || response.status().equals(HttpResponseStatus.ACCEPTED)
