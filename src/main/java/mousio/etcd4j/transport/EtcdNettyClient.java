@@ -1,6 +1,7 @@
 package mousio.etcd4j.transport;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -72,6 +73,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
     this.bootstrap = new Bootstrap();
     bootstrap.group(eventLoopGroup)
         .channel(NioSocketChannel.class)
+        .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 300)
         .handler(new ChannelInitializer<SocketChannel>() {
