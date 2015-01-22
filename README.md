@@ -17,14 +17,14 @@ Maven
 <dependency>
   <groupId>org.mousio</groupId>
   <artifactId>etcd4j</artifactId>
-  <version>2.1.0</version>
+  <version>2.1.1</version>
 </dependency>
 ```
 
 Gradle
 ------
 ```
-compile 'org.mousio:etcd4j:2.1.0'
+compile 'org.mousio:etcd4j:2.1.1'
 ```
 
 Manually
