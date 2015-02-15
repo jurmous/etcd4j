@@ -77,6 +77,9 @@ public class ResponsePromise<T> {
     } else {
       handlers.add(listener);
     }
+    if (response != null || exception != null) {
+      listener.onResponse(this);
+    }
   }
 
   /**
