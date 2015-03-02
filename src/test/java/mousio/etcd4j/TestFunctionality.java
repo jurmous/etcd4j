@@ -71,6 +71,24 @@ public class TestFunctionality {
     assertEquals(EtcdKeyAction.delete, response.action);
   }
 
+  /**
+   * Simple value tests
+   */
+  @Test
+  public void testError() throws IOException, TimeoutException {
+    try {
+      etcd.get("etcd4j_test/barf").send().get();
+    } catch (EtcdException e) {
+      assertEquals(100, e.errorCode);
+    }
+
+    try {
+      etcd.put("etcd4j_test/barf", "huh").prevExist(true).send().get();
+    } catch (EtcdException e) {
+      assertEquals(100, e.errorCode);
+    }
+  }
+
 
   /**
    * Tests redirect by sending a key with too many slashes.

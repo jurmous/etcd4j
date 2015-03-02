@@ -68,14 +68,6 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
       catch (Exception e) {
         this.promise.setFailure(e);
       }
-    } else if (response.status().equals(HttpResponseStatus.NOT_FOUND)) {
-      try {
-        EtcdKeysResponse etcdKeysResponse = EtcdKeysResponseParser.parse(response.content());
-      }
-      // Catches both parsed EtcdExceptions and parsing exceptions
-      catch (Exception e) {
-        this.promise.setFailure(e);
-      }
     } else if (response.status().equals(HttpResponseStatus.MOVED_PERMANENTLY)
         || response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT)) {
       if (response.headers().contains("Location")) {
@@ -92,7 +84,14 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
         this.promise.setFailure(new Exception("Missing Location header on redirect"));
       }
     } else {
-      this.promise.setFailure(new Exception(response.status().toString()));
+      try {
+        EtcdKeysResponse etcdKeysResponse = EtcdKeysResponseParser.parse(response.content());
+        this.promise.setSuccess(etcdKeysResponse);
+      }
+      // Catches both parsed EtcdExceptions and parsing exceptions
+      catch (Exception e) {
+        this.promise.setFailure(e);
+      }
     }
   }
 
