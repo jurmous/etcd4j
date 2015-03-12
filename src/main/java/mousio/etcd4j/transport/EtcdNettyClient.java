@@ -2,25 +2,11 @@ package mousio.etcd4j.transport;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerAdapter;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.DefaultHttpRequest;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpClientCodec;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.timeout.ReadTimeoutHandler;
@@ -137,7 +123,6 @@ public class EtcdNettyClient implements EtcdClientImpl {
   @SuppressWarnings("unchecked")
   protected <R> void connect(final EtcdRequest<R> etcdRequest, final ConnectionState connectionState)
       throws IOException {
-
     URI uri = uris[connectionState.uriIndex];
 
     // when we are called from a redirect, the url in the request may also contain host and port!
@@ -233,27 +218,30 @@ public class EtcdNettyClient implements EtcdClientImpl {
       pipeline.addFirst(new ReadTimeoutHandler(req.getTimeout(), req.getTimeoutUnit()));
     }
 
+    final AbstractEtcdResponseHandler handler;
+
     if (req instanceof EtcdKeyRequest) {
-      pipeline.addLast(
-          new EtcdKeyResponseHandler(this, (EtcdKeyRequest) req)
-      );
+      handler = new EtcdKeyResponseHandler(this, (EtcdKeyRequest) req);
     } else if (req instanceof EtcdVersionRequest) {
-      pipeline.addLast(new SimpleChannelInboundHandler<FullHttpResponse>() {
+      handler = new AbstractEtcdResponseHandler<EtcdVersionRequest, FullHttpResponse>(this, (EtcdVersionRequest) req) {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse msg) throws Exception {
           (((EtcdVersionRequest) req).getPromise()).getNettyPromise()
               .setSuccess(
                   msg.content().toString(Charset.defaultCharset()));
         }
-      });
+      };
     } else {
       throw new RuntimeException("Unknown request type " + req.getClass().getName());
     }
 
+    pipeline.addLast(handler);
+
     pipeline.addLast(new ChannelHandlerAdapter() {
       @Override
       public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        req.getPromise().getNettyPromise().setFailure(cause);
+        handler.retried(true);
+        req.getPromise().handleRetry(cause);
       }
     });
   }

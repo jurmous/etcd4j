@@ -1,11 +1,8 @@
 package mousio.etcd4j.transport;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.util.concurrent.Promise;
-import mousio.client.exceptions.PrematureDisconnectException;
 import mousio.etcd4j.requests.EtcdKeyRequest;
 import mousio.etcd4j.responses.EtcdKeysResponse;
 import mousio.etcd4j.responses.EtcdKeysResponseParser;
@@ -15,12 +12,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Handles etcd responses
  */
-public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttpResponse> {
+public class EtcdKeyResponseHandler extends AbstractEtcdResponseHandler<EtcdKeyRequest, FullHttpResponse> {
   private static final Logger logger = LoggerFactory.getLogger(EtcdKeyResponseHandler.class);
-
-  private final Promise<EtcdKeysResponse> promise;
-  private final EtcdNettyClient client;
-  private final EtcdKeyRequest request;
 
   /**
    * Constructor
@@ -30,9 +23,7 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
    */
   @SuppressWarnings("unchecked")
   public EtcdKeyResponseHandler(EtcdNettyClient etcdNettyClient, EtcdKeyRequest etcdKeyRequest) {
-    this.client = etcdNettyClient;
-    this.request = etcdKeyRequest;
-    this.promise = etcdKeyRequest.getPromise().getNettyPromise();
+    super(etcdNettyClient, etcdKeyRequest);
   }
 
   @Override
@@ -92,12 +83,6 @@ public class EtcdKeyResponseHandler extends SimpleChannelInboundHandler<FullHttp
       catch (Exception e) {
         this.promise.setFailure(e);
       }
-    }
-  }
-
-  @Override public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-    if (!promise.isDone()) {
-      this.request.getPromise().handleRetry(new PrematureDisconnectException());
     }
   }
 }

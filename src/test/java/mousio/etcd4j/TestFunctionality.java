@@ -1,5 +1,6 @@
 package mousio.etcd4j;
 
+import mousio.client.retry.RetryWithExponentialBackOff;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.responses.EtcdKeyAction;
@@ -11,6 +12,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.*;
@@ -27,6 +29,7 @@ public class TestFunctionality {
   public void setUp() throws Exception {
     System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "DEBUG");
     this.etcd = new EtcdClient();
+    this.etcd.setRetryHandler(new RetryWithExponentialBackOff(20, 4, -1));
   }
 
   /**
@@ -37,6 +40,16 @@ public class TestFunctionality {
   @Test
   public void testVersion() {
     assertTrue(etcd.getVersion().startsWith("etcd "));
+  }
+
+  @Test
+  public void testTimeout() throws IOException, EtcdException {
+    try {
+      etcd.put("etcd4j_test/fooTO", "bar").timeout(1, TimeUnit.MILLISECONDS).send().get();
+      fail();
+    } catch (TimeoutException e) {
+      // Should time out
+    }
   }
 
   /**
