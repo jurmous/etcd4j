@@ -45,6 +45,8 @@ public class RetryWithExponentialBackOff extends RetryPolicy {
       if (state.msBeforeRetry > maxDelay) {
         state.msBeforeRetry = maxDelay;
       }
+    } else {
+      return false;
     }
 
     return true;
