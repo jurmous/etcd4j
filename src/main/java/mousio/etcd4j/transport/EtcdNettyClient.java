@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Date;
@@ -258,6 +259,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
   public static <R> HttpRequest createHttpRequest(String uri, EtcdRequest<R> etcdRequest) throws IOException {
     HttpRequest httpRequest = new DefaultHttpRequest(HttpVersion.HTTP_1_1, etcdRequest.getMethod(), uri);
     httpRequest.headers().add("Connection", "keep-alive");
+    httpRequest.headers().add("Host", InetAddress.getLocalHost().getHostName());
     try {
       httpRequest = setRequestParameters(uri, etcdRequest, httpRequest);
     } catch (Exception e) {
