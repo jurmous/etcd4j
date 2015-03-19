@@ -71,7 +71,8 @@ public class EtcdNettyClient implements EtcdClientImpl {
               p.addLast(sslContext.newHandler(ch.alloc()));
             }
             p.addLast("codec", new HttpClientCodec());
-            p.addLast("aggregate", new HttpObjectAggregator(1024 * 100));
+            int maxFrameSize = Integer.parseInt(System.getProperty("mousio.etcd4j.maxFrameSize", Integer.toString(1024 * 100)));
+            p.addLast("aggregate", new HttpObjectAggregator(maxFrameSize));
           }
         });
   }
