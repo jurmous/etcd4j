@@ -22,6 +22,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Future;
@@ -93,6 +94,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
               p.addLast(sslContext.newHandler(ch.alloc()));
             }
             p.addLast("codec", new HttpClientCodec());
+            p.addLast("chunkedWriter", new ChunkedWriteHandler());
             int maxFrameSize = Integer.parseInt(System.getProperty("mousio.etcd4j.maxFrameSize", Integer.toString(1024 * 100)));
             p.addLast("aggregate", new HttpObjectAggregator(maxFrameSize));
           }
@@ -202,10 +204,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
 
         modifyPipeLine(etcdRequest, f.channel().pipeline());
 
-        HttpRequest httpRequest = createHttpRequest(etcdRequest.getUrl(), etcdRequest);
-
-        // send request
-        channel.writeAndFlush(httpRequest).addListener(new ChannelFutureListener() {
+        createAndSendHttpRequest(etcdRequest.getUrl(), etcdRequest, channel).addListener(new ChannelFutureListener() {
           @Override
           public void operationComplete(ChannelFuture future) throws Exception {
             if (!future.isSuccess()) {
@@ -273,42 +272,23 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @param etcdRequest to send
    * @param <R> Response type
    * @return HttpRequest
-   * @throws IOException if request could not be created
+   * @throws Exception
    */
-  public static <R> HttpRequest createHttpRequest(String uri, EtcdRequest<R> etcdRequest) throws IOException {
+  private <R> ChannelFuture createAndSendHttpRequest(String uri, EtcdRequest<R> etcdRequest, Channel channel) throws Exception {
     HttpRequest httpRequest = new DefaultHttpRequest(HttpVersion.HTTP_1_1, etcdRequest.getMethod(), uri);
     httpRequest.headers().add("Connection", "keep-alive");
     httpRequest.headers().add("Host", InetAddress.getLocalHost().getHostName());
-    try {
-      httpRequest = setRequestParameters(uri, etcdRequest, httpRequest);
-    } catch (Exception e) {
-      throw new IOException(e);
-    }
-    return httpRequest;
-  }
-
-  /**
-   * Set parameters on request
-   *
-   * @param uri to connect to
-   * @param etcdRequest to send
-   * @param httpRequest to send
-   * @return Http Request
-   * @throws Exception on fail
-   */
-  private static HttpRequest setRequestParameters(String uri, EtcdRequest<?> etcdRequest, HttpRequest httpRequest) throws Exception {
-    // Set possible key value pairs
+    HttpPostRequestEncoder bodyRequestEncoder = null;
     Map<String, String> keyValuePairs = etcdRequest.getRequestParams();
     if (keyValuePairs != null && !keyValuePairs.isEmpty()) {
       HttpMethod etcdRequestMethod = etcdRequest.getMethod();
       if (etcdRequestMethod == HttpMethod.POST || etcdRequestMethod == HttpMethod.PUT) {
-        HttpPostRequestEncoder bodyRequestEncoder = new HttpPostRequestEncoder(httpRequest, false);
+        bodyRequestEncoder = new HttpPostRequestEncoder(httpRequest, false);
         for (Map.Entry<String, String> entry : keyValuePairs.entrySet()) {
           bodyRequestEncoder.addBodyAttribute(entry.getKey(), entry.getValue());
         }
 
         httpRequest = bodyRequestEncoder.finalizeRequest();
-        bodyRequestEncoder.close();
       } else {
         String getLocation = "";
         for (Map.Entry<String, String> entry : keyValuePairs.entrySet()) {
@@ -326,7 +306,12 @@ public class EtcdNettyClient implements EtcdClientImpl {
       }
     }
     etcdRequest.setHttpRequest(httpRequest);
-    return httpRequest;
+    ChannelFuture future = channel.write(httpRequest);
+    if (bodyRequestEncoder != null && bodyRequestEncoder.isChunked()) {
+      future = channel.write(bodyRequestEncoder);
+    }
+    channel.flush();
+    return future;
   }
 
   /**

@@ -18,8 +18,7 @@ import java.util.concurrent.TimeoutException;
 import static org.junit.Assert.*;
 
 /**
- * Performs tests on a real server at local address.
- * All actions are performed in "etcd4j_test" dir
+ * Performs tests on a real server at local address. All actions are performed in "etcd4j_test" dir
  */
 public class TestFunctionality {
 
@@ -102,7 +101,6 @@ public class TestFunctionality {
     }
   }
 
-
   /**
    * Tests redirect by sending a key with too many slashes.
    */
@@ -172,7 +170,8 @@ public class TestFunctionality {
 
     // Ensure the change is received after the listen command is received.
     new Timer().schedule(new TimerTask() {
-      @Override public void run() {
+      @Override
+      public void run() {
         try {
           etcd.put("etcd4j_test/test", "changed").send().get();
         } catch (IOException | EtcdException | TimeoutException e) {
@@ -183,6 +182,17 @@ public class TestFunctionality {
 
     EtcdKeysResponse r = p.get();
     assertEquals("changed", r.node.value);
+  }
+
+  @Test(timeout = 1000)
+  public void testChunkedData() throws IOException, EtcdException, TimeoutException {
+    //creating very long key to force content to be chunked
+    StringBuilder stringBuilder = new StringBuilder(15000);
+    for (int i = 0; i < 15000; i++) {
+      stringBuilder.append("a");
+    }
+    EtcdKeysResponse response = etcd.put("etcd4j_test/foo", stringBuilder.toString()).send().get();
+    assertEquals(EtcdKeyAction.set, response.action);
   }
 
   @After
