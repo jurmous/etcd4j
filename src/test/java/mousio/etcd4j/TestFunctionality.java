@@ -184,6 +184,17 @@ public class TestFunctionality {
     EtcdKeysResponse r = p.get();
     assertEquals("changed", r.node.value);
   }
+  
+  @Test(timeout = 1000)
+  public void testChunkedData() throws IOException, EtcdException, TimeoutException {
+    //creating very long key to force content to be chunked
+    StringBuilder stringBuilder = new StringBuilder(15000);
+    for (int i = 0; i < 15000; i++) {
+      stringBuilder.append("a");
+    }
+    EtcdKeysResponse response = etcd.put("etcd4j_test/foo", stringBuilder.toString()).send().get();
+    assertEquals(EtcdKeyAction.set, response.action);
+  }
 
   @After
   public void tearDown() throws Exception {
