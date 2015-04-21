@@ -1,23 +1,17 @@
 package mousio.etcd4j;
 
 import io.netty.handler.ssl.SslContext;
+import mousio.client.retry.RetryPolicy;
+import mousio.client.retry.RetryWithExponentialBackOff;
+import mousio.etcd4j.requests.*;
+import mousio.etcd4j.responses.EtcdException;
+import mousio.etcd4j.transport.EtcdClientImpl;
+import mousio.etcd4j.transport.EtcdNettyClient;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.TimeoutException;
-
-import mousio.client.retry.RetryPolicy;
-import mousio.client.retry.RetryWithExponentialBackOff;
-import mousio.etcd4j.requests.EtcdKeyDeleteRequest;
-import mousio.etcd4j.requests.EtcdKeyGetRequest;
-import mousio.etcd4j.requests.EtcdKeyPostRequest;
-import mousio.etcd4j.requests.EtcdKeyPutRequest;
-import mousio.etcd4j.requests.EtcdKeyRequest;
-import mousio.etcd4j.requests.EtcdVersionRequest;
-import mousio.etcd4j.responses.EtcdException;
-import mousio.etcd4j.transport.EtcdClientImpl;
-import mousio.etcd4j.transport.EtcdNettyClient;
 
 /**
  * Etcd client.
@@ -48,6 +42,11 @@ public class EtcdClient implements Closeable {
     this.client = new EtcdNettyClient(sslContext, baseUri);
   }
 
+  /**
+   * Create a client with a custom implementation
+   *
+   * @param etcdClientImpl to create client with.
+   */
   public EtcdClient(EtcdClientImpl etcdClientImpl) {
     this.client = etcdClientImpl;
   }
@@ -160,52 +159,5 @@ public class EtcdClient implements Closeable {
    */
   public void setRetryHandler(RetryPolicy retryHandler) {
     this.retryHandler = retryHandler;
-  }
-
-  public static class Builder extends AbstractEtcdClientBuilder<Builder> {
-
-    public EtcdNettyClient.Builder usingNetty() {
-      EtcdNettyClient.Builder builder = new EtcdNettyClient.Builder();
-      if (sslContext != null) {
-        builder.usingSslContext(sslContext);
-      }
-      return builder.usingURIs(uris);
-    }
-
-    @Override
-    protected Builder self() {
-      return this;
-    }
-
-    @Override
-    public EtcdClient build() {
-      return new EtcdClient(sslContext, uris);
-    }
-  }
-
-  public static abstract class AbstractEtcdClientBuilder<T extends AbstractEtcdClientBuilder<T>> {
-
-    protected SslContext sslContext;
-    protected URI[] uris = new URI[] { URI.create("https://127.0.0.1:4001") };
-
-    protected abstract T self();
-
-    public abstract EtcdClient build();
-
-    public T usingSslContext(SslContext sslContext) {
-      if (sslContext == null) {
-        throw new IllegalArgumentException("Provided sslContext cannot be null");
-      }
-      this.sslContext = sslContext;
-      return self();
-    }
-
-    public T usingURIs(URI... uris) {
-      if (uris == null || uris.length == 0) {
-        throw new IllegalArgumentException("Provided URIs cannot be null or empty");
-      }
-      this.uris = uris;
-      return self();
-    }
   }
 }
