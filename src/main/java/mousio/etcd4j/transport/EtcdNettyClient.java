@@ -87,6 +87,15 @@ public class EtcdNettyClient implements EtcdClientImpl {
   }
 
   /**
+   * For tests
+   *
+   * @return the current bootstrap
+   */
+  protected Bootstrap getBootstrap() {
+    return bootstrap;
+  }
+
+  /**
    * Send a request and get a future.
    *
    * @param etcdRequest Etcd Request to send
