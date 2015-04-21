@@ -8,7 +8,7 @@ import mousio.client.retry.RetryHandler;
 import mousio.client.retry.RetryPolicy;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
@@ -73,7 +73,7 @@ public class ResponsePromise<T> {
    */
   public void addListener(IsSimplePromiseResponseHandler<T> listener) {
     if (handlers == null) {
-      handlers = Arrays.asList(listener);
+      handlers = Collections.singletonList(listener);
     } else {
       handlers.add(listener);
     }
@@ -243,6 +243,6 @@ public class ResponsePromise<T> {
      *
      * @param response with result
      */
-    public void onResponse(ResponsePromise<T> response);
+    void onResponse(ResponsePromise<T> response);
   }
 }

@@ -24,7 +24,7 @@ public abstract class EtcdRequest<R> {
 
   private EtcdResponsePromise<R> promise;
 
-  private long timeout = -1l;
+  private long timeout = -1L;
   private TimeUnit timeoutUnit = TimeUnit.SECONDS;
   private HttpRequest httpRequest;
   private String url;
