@@ -3,16 +3,13 @@ Netty 4.1 and Java 7. It supports all key based etcd requests, can be secured wi
 defining multiple connection URLs and custom retry policies. It is completely async and works with promises to
 retrieve the results. It also supports the etcd wait functionality to wait for future changes.
 
-Etcd version support
-====================
+# Etcd version support
 This project supports any etcd client which supports the etcd v2 api. This is any etcd version up
  from etcd 0.3 to 2.x
 
-Download
-========
+# Download
 
-Maven
------
+## Maven
 ```xml
 <dependency>
   <groupId>org.mousio</groupId>
@@ -21,21 +18,17 @@ Maven
 </dependency>
 ```
 
-Gradle
-------
+## Gradle
 ```
 compile 'org.mousio:etcd4j:2.3.2'
 ```
 
-Manually
---------
+## Manually
 Visit [etcd4j Github releases page](https://github.com/jurmous/etcd4j/releases)
 
-Code examples
-=============
+# Code examples
 
-Setup
------
+## Setup
 
 Setting up a client which connects to default 127.0.0.1:4001 URL. (auto closes Netty eventloop thanks to try-resource block)
 ```Java
@@ -67,8 +60,7 @@ try(EtcdClient etcd = new EtcdClient(sslContext,
 }
 ```
 
-Sending and retrieving
-----------------------
+## Sending and retrieving
 
 Sending a request and retrieve values from response
 ```Java
@@ -86,16 +78,14 @@ try{
 }
 ```
 
-Options
--------
+## Options
 
 You can set multiple options on the requests before sending to the server like ttl and prev exist.
 ```Java
   EtcdKeysResponsePromise promise = client.putValue("foo", "bar").ttl(50).prevExist().send();
 ```
 
-Promises
---------
+## Promises
 
 All requests return a Promise after sending. You can send multiple requests async before retrieving 
 their values
@@ -123,8 +113,80 @@ their values
   });
 ```
 
-Set timeout on requests
------------------------
+
+## Put examples
+You need to read out the returned promises to see the response
+```Java
+// Simple put
+etcd.put("foo","bar").send();
+
+// Put a new dir
+etcd.putDir("foo_dir").send();
+
+// Put with ttl and prevexists check
+etcd.put("foo","bar2").ttl(20).prevExist().send();
+
+// Put with prevValue check
+etcd.put("foo","bar3").prevValue("bar2").send();
+
+// Put with prevIndex check
+etcd.put("foo","bar4").prevIndex(2).send();
+
+```
+
+## Get examples
+You need to read out the returned promises to see the response.
+
+```Java
+// Simple key fetch
+etcd.get("foo").send();
+
+// Get all nodes and all nodes below it recursively
+etcd.getAll().recursive().send();
+// Gets directory foo_dir and all nodes below it recursively
+etcd.getDir("foo_dir").recursive().send();
+
+// Wait for next change on foo
+EtcdResponsePromise promise = etcd.get("foo").waitForChange().send();
+// Java 8 lambda construction
+promise.addListener(promise -> {
+  // do something with change
+});
+
+// Wait for change of foo with index 7
+etcd.get("foo").waitForChange(7).send();
+
+// Get all items recursively below queue as a sorted list
+etcd.get("queue").sorted().recursive().send();
+
+```
+
+## Delete examples
+You need to read out the returned promises to see the response
+```Java
+// Simple delete
+etcd.delete("foo").send();
+
+// Directory and all subcontents delete
+etcd.deleteDir("foo_dir").recursive().send();
+
+etcd.delete("foo").prevIndex(3).send();
+
+etcd.delete("foo").prevValue("bar4").send();
+
+```
+
+## Post examples
+You need to read out the returned promises to see the response
+```Java
+// Simple post
+etcd.post("queue","Job1").send();
+
+// Post with ttl check
+etcd.put("queue","Job2").ttl(20).send();
+```
+
+## Set timeout on requests
 It is possible to set a timeout on all requests. By default there is no timeout.
 
 ```Java
@@ -160,8 +222,7 @@ try{
 
 ```
 
-Set a Retry Policy
-------------------
+## Set a Retry Policy
 By default etcd4j will retry with an exponential back-off algorithm starting with a 20ms interval and
  will back off to a 10000 ms interval. It will also retry indefinitely.
 There are more settings on the exponential backoff algorithm to set a retry limit and there are also
@@ -179,8 +240,7 @@ etcd.setRetryHandler(new RetryWithTimeout(200, 20000));
 EtcdKeysResponse response = etcd.get("foo").setRetryPolicy(new RetryNTimes(300, 2)).send().get();
 ```
 
-Logging
--------
+# Logging
 
 The framework logs its connects, retries and warnings with slf4j. (Simple Logging Facade for Java)
 
@@ -202,78 +262,27 @@ Gradle
 compile 'org.slf4j:slf4j-simple:1.7.7'
 ```
 
-Put examples
-------------
-You need to read out the returned promises to see the response
+# Custom parameters on EtcdNettyClient
+
+It is possible to control some parameters on the Netty client of etcd4j. 
+
+You can set the following parameters in a config:
+
+* Netty Event Loop: You can set the Event Loop to use by the client so you can recycle existing 
+event loop groups or use for example Epoll based event loop groups. Be sure to change the socket 
+channel class if you not use a NioEventLoopGroup.
+* Socket channel class: You can set the socket channel class here. Default is NioSocketChannel.class
+* Connect timeout: The timeout of the Netty client itself.
+* Max Frame size: The max frame size of the packages.
+
+To create an Etcd client with a custom timeout and Netty event loop:
 ```Java
-// Simple put
-etcd.put("foo","bar").send();
+    EtcdNettyConfig config = new EtcdNettyConfig()
+        .setConnectTimeout(100)
+        .setEventLoopGroup(customEventLoop);
 
-// Put a new dir
-etcd.putDir("foo_dir").send();
-
-// Put with ttl and prevexists check
-etcd.put("foo","bar2").ttl(20).prevExist().send();
-
-// Put with prevValue check
-etcd.put("foo","bar3").prevValue("bar2").send();
-
-// Put with prevIndex check
-etcd.put("foo","bar4").prevIndex(2).send();
-
-```
-
-Get examples
-------------
-You need to read out the returned promises to see the response.
-
-```Java
-// Simple key fetch
-etcd.get("foo").send();
-
-// Get all nodes and all nodes below it recursively
-etcd.getAll().recursive().send();
-// Gets directory foo_dir and all nodes below it recursively
-etcd.getDir("foo_dir").recursive().send();
-
-// Wait for next change on foo
-EtcdResponsePromise promise = etcd.get("foo").waitForChange().send();
-// Java 8 lambda construction
-promise.addListener(promise -> {
-  // do something with change
-});
-
-// Wait for change of foo with index 7
-etcd.get("foo").waitForChange(7).send();
-
-// Get all items recursively below queue as a sorted list
-etcd.get("queue").sorted().recursive().send();
-
-```
-
-Delete examples
----------------
-You need to read out the returned promises to see the response
-```Java
-// Simple delete
-etcd.delete("foo").send();
-
-// Directory and all subcontents delete
-etcd.deleteDir("foo_dir").recursive().send();
-
-etcd.delete("foo").prevIndex(3).send();
-
-etcd.delete("foo").prevValue("bar4").send();
-
-```
-
-Post examples
-------------
-You need to read out the returned promises to see the response
-```Java
-// Simple post
-etcd.post("queue","Job1").send();
-
-// Post with ttl check
-etcd.put("queue","Job2").ttl(20).send();
+    // Set sslContext to null to not connect with ssl    
+    try(EtcdClient etcd = new EtcdClient(new EtcdNettyClient(config, sslContext, URI.create(uri)))){
+      // Use etcd client here
+    }
 ```
