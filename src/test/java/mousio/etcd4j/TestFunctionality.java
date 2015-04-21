@@ -106,10 +106,10 @@ public class TestFunctionality {
    */
   @Test
   public void testRedirect() throws IOException, EtcdException, TimeoutException {
-    EtcdKeysResponse response = etcd.put("etcd4j_test/redirect", "bar").send().get();
+    etcd.put("etcd4j_test/redirect", "bar").send().get();
 
     // Test redirect with a double slash
-    response = etcd.get("//etcd4j_test/redirect").consistent().send().get();
+    EtcdKeysResponse response = etcd.get("//etcd4j_test/redirect").consistent().send().get();
     assertEquals("bar", response.node.value);
   }
 
