@@ -273,7 +273,7 @@ event loop groups or use for example Epoll based event loop groups. Be sure to c
 channel class if you not use a NioEventLoopGroup. By default it will create a shared NioEventLoopGroup;
 * Socket channel class: You can set the socket channel class here. Default is NioSocketChannel.class
 * Connect timeout: The timeout of the Netty client itself. Default is 300ms
-* Max Frame size: The max frame size of the packages. Default is 10KB
+* Max Frame size: The max frame size of the packages. Default is 100KiB (100 * 1024)
 * Host name: The name which Host header will report. Default is the hostname attached to the 
 local ip in /etcd/hosts
 
