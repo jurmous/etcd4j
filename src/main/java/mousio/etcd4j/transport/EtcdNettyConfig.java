@@ -7,6 +7,9 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 /**
  * Settings for the etcd Netty client
  */
@@ -21,6 +24,8 @@ public class EtcdNettyConfig {
   private int connectTimeout = 300;
 
   private int maxFrameSize = 1024 * 100;
+
+  private String hostName;
 
   /**
    * Constructor
@@ -112,6 +117,33 @@ public class EtcdNettyConfig {
    */
   public EtcdNettyConfig setSocketChannelClass(Class<? extends SocketChannel> socketChannelClass) {
     this.socketChannelClass = socketChannelClass;
+    return this;
+  }
+
+  /**
+   * Get the local host name
+   *
+   * @return local host name
+   */
+  public String getHostName() {
+    if (hostName == null) {
+      try {
+        hostName = InetAddress.getLocalHost().getHostName();
+      } catch (UnknownHostException e) {
+        throw new RuntimeException("Host could not be determined for local machine. Please configure one");
+      }
+    }
+    return hostName;
+  }
+
+  /**
+   * Set the host name for the local machine.
+   *
+   * @param hostName name of local host
+   * @return itself for chaining
+   */
+  public EtcdNettyConfig setHostName(String hostName) {
+    this.hostName = hostName;
     return this;
   }
 }

@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Date;
@@ -40,6 +39,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
   private final URI[] uris;
 
   private final Bootstrap bootstrap;
+  private final String hostName;
 
   protected int lastWorkingUriIndex = 0;
 
@@ -84,6 +84,8 @@ public class EtcdNettyClient implements EtcdClientImpl {
             p.addLast("aggregate", new HttpObjectAggregator(config.getMaxFrameSize()));
           }
         });
+
+    this.hostName = config.getHostName();
   }
 
   /**
@@ -272,7 +274,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
   private <R> ChannelFuture createAndSendHttpRequest(String uri, EtcdRequest<R> etcdRequest, Channel channel) throws Exception {
     HttpRequest httpRequest = new DefaultHttpRequest(HttpVersion.HTTP_1_1, etcdRequest.getMethod(), uri);
     httpRequest.headers().add("Connection", "keep-alive");
-    httpRequest.headers().add("Host", InetAddress.getLocalHost().getHostName());
+    httpRequest.headers().add("Host", this.hostName);
 
     HttpPostRequestEncoder bodyRequestEncoder = null;
     Map<String, String> keyValuePairs = etcdRequest.getRequestParams();

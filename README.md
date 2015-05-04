@@ -270,15 +270,18 @@ You can set the following parameters in a config:
 
 * Netty Event Loop: You can set the Event Loop to use by the client so you can recycle existing 
 event loop groups or use for example Epoll based event loop groups. Be sure to change the socket 
-channel class if you not use a NioEventLoopGroup.
+channel class if you not use a NioEventLoopGroup. By default it will create a shared NioEventLoopGroup;
 * Socket channel class: You can set the socket channel class here. Default is NioSocketChannel.class
-* Connect timeout: The timeout of the Netty client itself.
-* Max Frame size: The max frame size of the packages.
+* Connect timeout: The timeout of the Netty client itself. Default is 300ms
+* Max Frame size: The max frame size of the packages. Default is 10KB
+* Host name: The name which Host header will report. Default is the hostname attached to the 
+local ip in /etcd/hosts
 
 To create an Etcd client with a custom timeout and Netty event loop:
 ```Java
     EtcdNettyConfig config = new EtcdNettyConfig()
         .setConnectTimeout(100)
+        .setHostName("www.example.net")
         .setEventLoopGroup(customEventLoop);
 
     // Set sslContext to null to not connect with ssl    

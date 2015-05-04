@@ -23,7 +23,8 @@ public class EtcdNettyClientTest {
         .setConnectTimeout(100)
         .setSocketChannelClass(NioSocketChannel.class)
         .setMaxFrameSize(1024 * 1024)
-        .setEventLoopGroup(evl);
+        .setEventLoopGroup(evl)
+        .setHostName("localhost");
 
     EtcdNettyClient client = new EtcdNettyClient(config, null, uri);
 
