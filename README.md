@@ -1,5 +1,7 @@
+This is a fork of org.mousio.etcd4j
+
 Etcd4j is a client library for [etcd](https://github.com/coreos/etcd), a highly available keystore. This library is based on 
-Netty 4.1 and Java 7. It supports all key based etcd requests, can be secured with SSL and supports
+Netty 4.1 and Java 8. It supports all key based etcd requests, can be secured with SSL and supports
 defining multiple connection URLs and custom retry policies. It is completely async and works with promises to
 retrieve the results. It also supports the etcd wait functionality to wait for future changes.
 
@@ -12,7 +14,7 @@ This project supports any etcd client which supports the etcd v2 api. This is an
 ## Maven
 ```xml
 <dependency>
-  <groupId>org.mousio</groupId>
+  <groupId>com.inscriptive</groupId>
   <artifactId>etcd4j</artifactId>
   <version>2.5.0</version>
 </dependency>
@@ -20,7 +22,7 @@ This project supports any etcd client which supports the etcd v2 api. This is an
 
 ## Gradle
 ```
-compile 'org.mousio:etcd4j:2.5.0'
+compile 'com.inscriptive:etcd4j:2.5.0'
 ```
 
 ## Manually
