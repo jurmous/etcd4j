@@ -5,7 +5,7 @@ apply plugin: 'idea'
 
 sourceCompatibility = 1.7
 group = 'org.mousio'
-version = '2.5.0'
+version = '2.6.0-SNAPSHOT'
 
 project.ext {
     mavenDeployUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/';
