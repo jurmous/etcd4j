@@ -44,7 +44,7 @@ dependencies {
     clientCompile 'org.slf4j:slf4j-api:1.7.12'
 
     compile sourceSets.client.compileClasspath
-    compile 'com.fasterxml.jackson.core:jackson-core:2.5.0'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.5.1'
     compile 'io.netty:netty-codec-http:4.1.0.Beta5'
     compile 'io.netty:netty-handler:4.1.0.Beta5'
     compile 'org.slf4j:slf4j-api:1.7.12'
