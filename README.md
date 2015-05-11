@@ -289,3 +289,9 @@ To create an Etcd client with a custom timeout and Netty event loop:
       // Use etcd client here
     }
 ```
+
+# Utils
+
+Etcd contains some utils that can make it easier to set up etcd4j.
+
+* mousio.client.util.SRV2URIs - A utility class to resolve DNS SRV addresses to a list of URIs. SRV addresses are also supported by [etcd itself](https://github.com/coreos/etcd/blob/master/Documentation/clustering.md#dns-discovery). 
