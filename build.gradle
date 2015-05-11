@@ -3,13 +3,9 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 apply plugin: 'idea'
 
-sourceCompatibility = 1.7
-group = 'org.mousio'
+sourceCompatibility = 1.8
+group = 'com.inscriptive'
 version = '2.5.0'
-
-project.ext {
-    mavenDeployUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/';
-}
 
 if (version.endsWith("-SNAPSHOT")) {
     mavenDeployUrl = 'https://oss.sonatype.org/content/repositories/snapshots/';
@@ -39,14 +35,14 @@ sourceSets {
 }
 
 dependencies {
-    clientCompile 'io.netty:netty-codec-http:4.1.0.Beta4'
-    clientCompile 'io.netty:netty-handler:4.1.0.Beta4'
+    clientCompile 'io.netty:netty-codec-http:4.1.0.Beta5'
+    clientCompile 'io.netty:netty-handler:4.1.0.Beta5'
     clientCompile 'org.slf4j:slf4j-api:1.7.12'
 
     compile sourceSets.client.compileClasspath
     compile 'com.fasterxml.jackson.core:jackson-core:2.5.0'
-    compile 'io.netty:netty-codec-http:4.1.0.Beta4'
-    compile 'io.netty:netty-handler:4.1.0.Beta4'
+    compile 'io.netty:netty-codec-http:4.1.0.Beta5'
+    compile 'io.netty:netty-handler:4.1.0.Beta5'
     compile 'org.slf4j:slf4j-api:1.7.12'
 
     testCompile sourceSets.main.compileClasspath
@@ -94,48 +90,4 @@ artifacts {
     archives javadocJar
     archives sourcesJar
     archives jarClient
-}
-
-signing {
-    sign configurations.archives
-}
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: mavenDeployUrl) {
-                authentication(userName: sonatypeUsername, password: sonatypePassword)
-            }
-
-            pom.project {
-                name 'etcd4j'
-                packaging 'jar'
-                description 'etcd4j is a Java/Netty based etcd client'
-                url 'https://github.com/jurmous/etcd4j'
-
-                scm {
-                    url 'scm:git@github.com:jurmous/etcd4j.git'
-                    connection 'scm:git@github.com:jurmous/etcd4j.git'
-                    developerConnection 'scm:git@github.com:jurmous/etcd4j.git'
-                }
-
-                licenses {
-                    license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                        distribution 'repo'
-                    }
-                }
-
-                developers {
-                    developer {
-                        id 'jurmous'
-                        name 'Jurriaan Mous'
-                    }
-                }
-            }
-        }
-    }
 }
