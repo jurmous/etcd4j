@@ -8,11 +8,15 @@ group = 'org.mousio'
 version = '2.6.0'
 
 project.ext {
-    mavenDeployUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/';
-}
+    isSnapshot = version.endsWith("-SNAPSHOT")
+    mavenDeployUrl = isSnapshot ?
+        'https://oss.sonatype.org/content/repositories/snapshots/' :
+        'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
-if (version.endsWith("-SNAPSHOT")) {
-    mavenDeployUrl = 'https://oss.sonatype.org/content/repositories/snapshots/';
+    nettyVersion = '4.1.0.Beta5'
+    jacksonVersion = '2.5.3'
+    slf4jVersion = '1.7.12'
+    junitVersion = '4.12'
 }
 
 repositories {
@@ -39,19 +43,21 @@ sourceSets {
 }
 
 dependencies {
-    clientCompile 'io.netty:netty-codec-http:4.1.0.Beta5'
-    clientCompile 'io.netty:netty-handler:4.1.0.Beta5'
-    clientCompile 'org.slf4j:slf4j-api:1.7.12'
+    clientCompile "io.netty:netty-codec-http:$nettyVersion"
+    clientCompile "io.netty:netty-handler:$nettyVersion"
+    clientCompile "org.slf4j:slf4j-api:$slf4jVersion"
 
     compile sourceSets.client.compileClasspath
-    compile 'com.fasterxml.jackson.core:jackson-core:2.5.1'
-    compile 'io.netty:netty-codec-http:4.1.0.Beta5'
-    compile 'io.netty:netty-handler:4.1.0.Beta5'
-    compile 'org.slf4j:slf4j-api:1.7.12'
+    compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
+    compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+    compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
+    compile "io.netty:netty-codec-http:$nettyVersion"
+    compile "io.netty:netty-handler:$nettyVersion"
+    compile "org.slf4j:slf4j-api:$slf4jVersion"
 
     testCompile sourceSets.main.compileClasspath
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    testCompile 'org.slf4j:slf4j-simple:1.7.12'
+    testCompile "junit:junit:$junitVersion"
+    testCompile "org.slf4j:slf4j-simple:$slf4jVersion"
 }
 
 javadoc {
