@@ -145,13 +145,15 @@ public class EtcdNettyClient implements EtcdClientImpl {
    */
   @SuppressWarnings("unchecked")
   protected <R> void connect(final EtcdRequest<R> etcdRequest, final ConnectionState connectionState) throws IOException {
-    URI uri = uris[connectionState.uriIndex];
+    final URI uri;
 
     // when we are called from a redirect, the url in the request may also
     // contain host and port!
     URI requestUri = URI.create(etcdRequest.getUrl());
     if (requestUri.getHost() != null && requestUri.getPort() > -1) {
       uri = requestUri;
+    }else{
+      uri = uris[connectionState.uriIndex];
     }
 
     // Start the connection attempt.
@@ -200,15 +202,16 @@ public class EtcdNettyClient implements EtcdClientImpl {
 
         modifyPipeLine(etcdRequest, f.channel().pipeline());
 
-        createAndSendHttpRequest(etcdRequest.getUrl(), etcdRequest, channel).addListener(new ChannelFutureListener() {
-          @Override
-          public void operationComplete(ChannelFuture future) throws Exception {
-            if (!future.isSuccess()) {
-              etcdRequest.getPromise().setException(future.cause());
-              f.channel().close();
-            }
-          }
-        });
+        createAndSendHttpRequest(uri.getHost(), etcdRequest.getUrl(), etcdRequest, channel)
+            .addListener(new ChannelFutureListener() {
+              @Override
+              public void operationComplete(ChannelFuture future) throws Exception {
+                if (!future.isSuccess()) {
+                  etcdRequest.getPromise().setException(future.cause());
+                  f.channel().close();
+                }
+              }
+            });
 
         channel.closeFuture().addListener(new ChannelFutureListener() {
           @Override
@@ -264,6 +267,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
   /**
    * Get HttpRequest belonging to etcdRequest
    *
+   * @param hostName    host name for http request
    * @param uri         to send request to
    * @param etcdRequest to send
    * @param channel     to send request on
@@ -271,10 +275,14 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @return HttpRequest
    * @throws Exception when creating or sending HTTP request fails
    */
-  private <R> ChannelFuture createAndSendHttpRequest(String uri, EtcdRequest<R> etcdRequest, Channel channel) throws Exception {
+  private <R> ChannelFuture createAndSendHttpRequest(String hostName, String uri, EtcdRequest<R> etcdRequest, Channel channel) throws Exception {
     HttpRequest httpRequest = new DefaultHttpRequest(HttpVersion.HTTP_1_1, etcdRequest.getMethod(), uri);
     httpRequest.headers().add("Connection", "keep-alive");
-    httpRequest.headers().add("Host", this.hostName);
+    if(this.hostName == null) {
+      httpRequest.headers().add("Host", hostName);
+    } else {
+      httpRequest.headers().add("Host", this.hostName);
+    }
 
     HttpPostRequestEncoder bodyRequestEncoder = null;
     Map<String, String> keyValuePairs = etcdRequest.getRequestParams();

@@ -16,7 +16,6 @@ import java.net.UnknownHostException;
 public class EtcdNettyConfig {
   private static final Logger logger = LoggerFactory.getLogger(EtcdNettyConfig.class);
 
-
   private EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
   private Class<? extends SocketChannel> socketChannelClass = NioSocketChannel.class;
@@ -126,13 +125,6 @@ public class EtcdNettyConfig {
    * @return local host name
    */
   public String getHostName() {
-    if (hostName == null) {
-      try {
-        hostName = InetAddress.getLocalHost().getHostName();
-      } catch (UnknownHostException e) {
-        throw new RuntimeException("Host could not be determined for local machine. Please configure one");
-      }
-    }
     return hostName;
   }
 
