@@ -162,7 +162,7 @@ public class EtcdKeysResponseParser {
    * Converts string to long
    *
    * @param s
-   * @return
+   * @return converted Long
    */
   private static Long convertLong(String s) {
     try {
