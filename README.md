@@ -14,13 +14,13 @@ This project supports any etcd client which supports the etcd v2 api. This is an
 <dependency>
   <groupId>org.mousio</groupId>
   <artifactId>etcd4j</artifactId>
-  <version>2.6.0</version>
+  <version>2.7.0</version>
 </dependency>
 ```
 
 ## Gradle
 ```
-compile 'org.mousio:etcd4j:2.6.0'
+compile 'org.mousio:etcd4j:2.7.0'
 ```
 
 ## Manually
@@ -274,8 +274,8 @@ channel class if you not use a NioEventLoopGroup. By default it will create a sh
 * Socket channel class: You can set the socket channel class here. Default is NioSocketChannel.class
 * Connect timeout: The timeout of the Netty client itself. Default is 300ms
 * Max Frame size: The max frame size of the packages. Default is 100KiB (100 * 1024)
-* Host name: The name which Host header will report. Default is the hostname attached to the 
-local ip in /etcd/hosts
+* Host name: The name which Host header will report. Default is hostname:port of the server which is 
+connected to.
 
 To create an Etcd client with a custom timeout and Netty event loop:
 ```Java
