@@ -102,7 +102,7 @@ public class EtcdClient implements Closeable {
    * @param key to delete
    * @return EtcdKeysRequest
    */
-  public EtcdKeyRequest delete(String key) {
+  public EtcdKeyDeleteRequest delete(String key) {
     return new EtcdKeyDeleteRequest(client, key, retryHandler);
   }
 
