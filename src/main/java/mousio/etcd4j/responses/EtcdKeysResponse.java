@@ -41,7 +41,7 @@ public final class EtcdKeysResponse {
       final Long etcdIndex,
       final Long raftIndex,
       final Long raftTerm) {
-    this.action = EtcdKeyAction.fromString(action);
+    this.action = EtcdKeyAction.valueOf(action);
     this.node = node;
     this.prevNode = prevNode;
 
