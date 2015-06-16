@@ -57,30 +57,30 @@ public class TestFunctionality {
   @Test
   public void testKey() throws IOException, EtcdException, TimeoutException {
     EtcdKeysResponse response = etcd.put("etcd4j_test/foo", "bar").send().get();
-    assertEquals(EtcdKeyAction.set, response.action);
+    assertEquals(EtcdKeyAction.set, response.action());
 
     response = etcd.put("etcd4j_test/foo2", "bar").prevExist(false).send().get();
-    assertEquals(EtcdKeyAction.create, response.action);
+    assertEquals(EtcdKeyAction.create, response.action());
 
     response = etcd.put("etcd4j_test/foo", "bar1").ttl(40).prevExist(true).send().get();
-    assertEquals(EtcdKeyAction.update, response.action);
-    assertNotNull(response.node.expiration);
+    assertEquals(EtcdKeyAction.update, response.action());
+    assertNotNull(response.node().expiration());
 
     response = etcd.put("etcd4j_test/foo", "bar2").prevValue("bar1").send().get();
-    assertEquals(EtcdKeyAction.compareAndSwap, response.action);
+    assertEquals(EtcdKeyAction.compareAndSwap, response.action());
 
-    response = etcd.put("etcd4j_test/foo", "bar3").prevIndex(response.node.modifiedIndex).send().get();
-    assertEquals(EtcdKeyAction.compareAndSwap, response.action);
+    response = etcd.put("etcd4j_test/foo", "bar3").prevIndex(response.node().modifiedIndex()).send().get();
+    assertEquals(EtcdKeyAction.compareAndSwap, response.action());
 
     response = etcd.get("etcd4j_test/foo").consistent().send().get();
-    assertEquals("bar3", response.node.value);
+    assertEquals("bar3", response.node().value());
 
     // Test slash before key
     response = etcd.get("/etcd4j_test/foo").consistent().send().get();
-    assertEquals("bar3", response.node.value);
+    assertEquals("bar3", response.node().value());
 
     response = etcd.delete("etcd4j_test/foo").send().get();
-    assertEquals(EtcdKeyAction.delete, response.action);
+    assertEquals(EtcdKeyAction.delete, response.action());
   }
 
   /**
@@ -91,13 +91,13 @@ public class TestFunctionality {
     try {
       etcd.get("etcd4j_test/barf").send().get();
     } catch (EtcdException e) {
-      assertEquals(100, e.errorCode);
+      assertEquals(100, e.errorCode());
     }
 
     try {
       etcd.put("etcd4j_test/barf", "huh").prevExist(true).send().get();
     } catch (EtcdException e) {
-      assertEquals(100, e.errorCode);
+      assertEquals(100, e.errorCode());
     }
   }
 
@@ -110,7 +110,7 @@ public class TestFunctionality {
 
     // Test redirect with a double slash
     EtcdKeysResponse response = etcd.get("//etcd4j_test/redirect").consistent().send().get();
-    assertEquals("bar", response.node.value);
+    assertEquals("bar", response.node().value());
   }
 
   /**
@@ -119,24 +119,24 @@ public class TestFunctionality {
   @Test
   public void testDir() throws IOException, EtcdException, TimeoutException {
     EtcdKeysResponse r = etcd.putDir("etcd4j_test/foo_dir").send().get();
-    assertEquals(r.action, EtcdKeyAction.set);
+    assertEquals(r.action(), EtcdKeyAction.set);
 
     r = etcd.getDir("etcd4j_test/foo_dir").consistent().send().get();
-    assertEquals(r.action, EtcdKeyAction.get);
+    assertEquals(r.action(), EtcdKeyAction.get);
 
     // Test slash before key
     r = etcd.getDir("/etcd4j_test/foo_dir").send().get();
-    assertEquals(r.action, EtcdKeyAction.get);
+    assertEquals(r.action(), EtcdKeyAction.get);
 
     r = etcd.put("etcd4j_test/foo_dir/foo", "bar").send().get();
-    assertEquals(r.node.value, "bar");
+    assertEquals(r.node().value(), "bar");
 
     r = etcd.putDir("etcd4j_test/foo_dir/foo_subdir").ttl(20).send().get();
-    assertEquals(r.action, EtcdKeyAction.set);
-    assertNotNull(r.node.expiration);
+    assertEquals(r.action(), EtcdKeyAction.set);
+    assertNotNull(r.node().expiration());
 
     r = etcd.deleteDir("etcd4j_test/foo_dir").recursive().send().get();
-    assertEquals(r.action, EtcdKeyAction.delete);
+    assertEquals(r.action(), EtcdKeyAction.delete);
   }
 
   /**
@@ -145,20 +145,20 @@ public class TestFunctionality {
   @Test
   public void testInOrderKeys() throws IOException, EtcdException, TimeoutException {
     EtcdKeysResponse r = etcd.post("etcd4j_test/queue", "Job1").send().get();
-    assertEquals(r.action, EtcdKeyAction.create);
+    assertEquals(r.action(), EtcdKeyAction.create);
 
     r = etcd.post("etcd4j_test/queue", "Job2").ttl(20).send().get();
-    assertEquals(r.action, EtcdKeyAction.create);
+    assertEquals(r.action(), EtcdKeyAction.create);
 
-    r = etcd.get("etcd4j_test/queue/" + r.node.createdIndex).consistent().send().get();
-    assertEquals(r.node.value, "Job2");
+    r = etcd.get("etcd4j_test/queue/" + r.node().createdIndex()).consistent().send().get();
+    assertEquals(r.node().value(), "Job2");
 
     r = etcd.get("etcd4j_test/queue").consistent().recursive().sorted().send().get();
-    assertEquals(2, r.node.nodes.size());
-    assertEquals("Job2", r.node.nodes.get(1).value);
+    assertEquals(2, r.node().nodes().size());
+    assertEquals("Job2", r.node().nodes().get(1).value());
 
     r = etcd.deleteDir("etcd4j_test/queue").recursive().send().get();
-    assertEquals(r.action, EtcdKeyAction.delete);
+    assertEquals(r.action(), EtcdKeyAction.delete);
   }
 
   /**
@@ -181,7 +181,7 @@ public class TestFunctionality {
     }, 20);
 
     EtcdKeysResponse r = p.get();
-    assertEquals("changed", r.node.value);
+    assertEquals("changed", r.node().value());
   }
 
   @Test(timeout = 1000)
@@ -192,7 +192,7 @@ public class TestFunctionality {
       stringBuilder.append("a");
     }
     EtcdKeysResponse response = etcd.put("etcd4j_test/foo", stringBuilder.toString()).send().get();
-    assertEquals(EtcdKeyAction.set, response.action);
+    assertEquals(EtcdKeyAction.set, response.action());
   }
 
   @After

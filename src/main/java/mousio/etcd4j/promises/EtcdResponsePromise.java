@@ -29,7 +29,7 @@ public class EtcdResponsePromise<T> extends ResponsePromise<T> {
 
   /**
    * Get the response. (Blocking)
-   * <p/>
+   *
    * Use addListener to fetch the value in a non blocking way.
    *
    * @return the response
