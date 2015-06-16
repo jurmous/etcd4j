@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
+import io.netty.handler.codec.http.HttpHeaders;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
@@ -18,6 +19,11 @@ import java.util.List;
  */
 public class EtcdKeysResponseParser {
   private static final JsonFactory factory = new JsonFactory();
+
+  protected static final String X_ETCD_CLUSTER_ID = "X-Etcd-Cluster-Id";
+  protected static final String X_ETCD_INDEX = "X-Etcd-Index";
+  protected static final String X_RAFT_INDEX = "X-Raft-Index";
+  protected static final String X_RAFT_TERM = "X-Raft-Term";
 
   private static final String ACTION = "action";
   private static final String NODE = "node";
@@ -40,18 +46,19 @@ public class EtcdKeysResponseParser {
   /**
    * Parses the Json content of the Etcd Response
    *
+   * @param headers
    * @param content to parse
    * @return EtcdResponse if found in response
    * @throws mousio.etcd4j.responses.EtcdException if exception was found in response
    * @throws java.io.IOException                   if Json parsing or parser creation fails
    */
-  public static EtcdKeysResponse parse(ByteBuf content) throws EtcdException, IOException {
+  public static EtcdKeysResponse parse(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
     JsonParser parser = factory.createParser(new ByteBufInputStream(content));
 
     if (parser.nextToken() == JsonToken.START_OBJECT) {
       if (parser.nextToken() == JsonToken.FIELD_NAME
           && parser.getCurrentName().contentEquals(ACTION)) {
-        return parseResponse(parser);
+        return parseResponse(headers, parser);
       } else {
         throw parseException(parser);
       }
@@ -68,22 +75,24 @@ public class EtcdKeysResponseParser {
    * @throws java.io.IOException IOException
    */
   private static EtcdException parseException(JsonParser parser) throws IOException {
-    EtcdException exception = new EtcdException();
+    String cause = null, message = null;
+    Integer errorCode = null;
+    Long index = null;
 
     JsonToken token = parser.getCurrentToken();
     while (token != JsonToken.END_OBJECT && token != null) {
       switch (parser.getCurrentName()) {
         case CAUSE:
-          exception.etcdCause = parser.nextTextValue();
+          cause = parser.nextTextValue();
           break;
         case MESSAGE:
-          exception.etcdMessage = parser.nextTextValue();
+          message = parser.nextTextValue();
           break;
         case ERRORCODE:
-          exception.errorCode = parser.nextIntValue(0);
+          errorCode = parser.nextIntValue(0);
           break;
         case INDEX:
-          exception.index = parser.nextIntValue(0);
+          index = parser.nextLongValue(0);
           break;
         default:
           throw new JsonParseException("Unknown field in exception " + parser.getCurrentName(), parser.getCurrentLocation());
@@ -92,17 +101,18 @@ public class EtcdKeysResponseParser {
       token = parser.nextToken();
     }
 
-    return exception;
+    return new EtcdException(errorCode, cause, message, index);
   }
 
   /**
    * Parses response
    *
-   * @param parser to parse with
+   * @param headers
+   * @param parser  to parse with
    * @return EtcdResponse
    * @throws java.io.IOException if JSON could not be parsed
    */
-  private static EtcdKeysResponse parseResponse(JsonParser parser) throws IOException {
+  private static EtcdKeysResponse parseResponse(HttpHeaders headers, JsonParser parser) throws IOException {
     String action = parser.nextTextValue();
 
     parser.nextToken(); // Go to the next field
@@ -111,22 +121,54 @@ public class EtcdKeysResponseParser {
     }
     parser.nextToken(); // Go to the node start
 
-    EtcdKeysResponse response = new EtcdKeysResponse(action, parseNode(parser));
+    EtcdKeysResponse.EtcdNode node = parseNode(parser);
+
     JsonToken token = parser.nextToken(); // Go past end of object
 
+    EtcdKeysResponse.EtcdNode prevNode = null;
     if (token == JsonToken.FIELD_NAME) {
       if (!parser.getCurrentName().contentEquals(PREVNODE)) {
         throw new JsonParseException("Expecting 'node' as second field", parser.getCurrentLocation());
       }
       parser.nextToken();
-      response.prevNode = parseNode(parser);
+      prevNode = parseNode(parser);
       token = parser.nextToken(); // Go past end of object
     }
 
+    String etcdClusterId = null;
+    Long etcdIndex = null, raftIndex = null, raftTerm = null;
+    if (headers != null) {
+      etcdClusterId = headers.get(X_ETCD_CLUSTER_ID);
+      etcdIndex = convertLong(headers.get(X_ETCD_INDEX));
+      raftIndex = convertLong(headers.get(X_RAFT_INDEX));
+      raftTerm = convertLong(headers.get(X_RAFT_TERM));
+    }
+
     if (token == JsonToken.END_OBJECT) {
-      return response;
+      return new EtcdKeysResponse(
+          action,
+          node,
+          prevNode,
+          etcdClusterId,
+          etcdIndex,
+          raftIndex,
+          raftTerm);
     } else {
       throw new JsonParseException("Unexpected content after response " + token, parser.getCurrentLocation());
+    }
+  }
+
+  /**
+   * Converts string to long
+   *
+   * @param s
+   * @return
+   */
+  private static Long convertLong(String s) {
+    try {
+      return Long.valueOf(s);
+    } catch (NumberFormatException e) {
+      return null;
     }
   }
 
@@ -143,34 +185,42 @@ public class EtcdKeysResponseParser {
     }
 
     JsonToken token = parser.nextToken();
-    EtcdKeysResponse.EtcdNode node = new EtcdKeysResponse.EtcdNode();
+
+    String key = null,
+        value = null,
+        expiration = null;
+    long createdIndex = 0L,
+        modifiedIndex = 0L,
+        ttl = 0L;
+    boolean dir = false;
+    List<EtcdKeysResponse.EtcdNode> nodes = null;
 
     while (token != JsonToken.END_OBJECT && token != null) {
       switch (parser.getCurrentName()) {
         case KEY:
-          node.key = parser.nextTextValue();
+          key = parser.nextTextValue();
           break;
         case CREATEDINDEX:
-          node.createdIndex = parser.nextLongValue(0);
+          createdIndex = parser.nextLongValue(0);
           break;
         case MODIFIEDINDEX:
-          node.modifiedIndex = parser.nextLongValue(0);
+          modifiedIndex = parser.nextLongValue(0);
           break;
         case VALUE:
-          node.value = parser.nextTextValue();
+          value = parser.nextTextValue();
           break;
         case DIR:
-          node.dir = parser.nextBooleanValue();
+          dir = parser.nextBooleanValue();
           break;
         case EXPIRATION:
-          node.expiration = convertDate(parser.nextTextValue());
+          expiration = parser.nextTextValue();
           break;
         case TTL:
-          node.ttl = parser.nextLongValue(0);
+          ttl = parser.nextLongValue(0);
           break;
         case NODES:
           parser.nextToken();
-          node.nodes = parseNodes(parser);
+          nodes = parseNodes(parser);
           break;
         default:
           throw new JsonParseException("Unknown field " + parser.getCurrentName(), parser.getCurrentLocation());
@@ -179,7 +229,8 @@ public class EtcdKeysResponseParser {
       token = parser.nextToken();
     }
 
-    return node;
+    return new EtcdKeysResponse.EtcdNode(dir, key, value, createdIndex,
+        modifiedIndex, expiration, ttl, nodes);
   }
 
   /**
@@ -187,9 +238,8 @@ public class EtcdKeysResponseParser {
    *
    * @param date as string to convert
    * @return converted Date
-   * @throws IOException if date was of wrong type
    */
-  protected static Date convertDate(String date) throws IOException {
+  protected static Date convertDate(String date) {
     return DatatypeConverter.parseDateTime(date).getTime();
   }
 

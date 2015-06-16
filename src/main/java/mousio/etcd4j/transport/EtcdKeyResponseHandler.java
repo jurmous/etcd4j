@@ -9,6 +9,8 @@ import mousio.etcd4j.responses.EtcdKeysResponseParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 /**
  * Handles etcd responses
  */
@@ -34,32 +36,7 @@ public class EtcdKeyResponseHandler extends AbstractEtcdResponseHandler<EtcdKeyR
               + this.request.getUri());
     }
 
-    if (response.status().equals(HttpResponseStatus.OK)
-        || response.status().equals(HttpResponseStatus.ACCEPTED)
-        || response.status().equals(HttpResponseStatus.CREATED)) {
-      if (!response.content().isReadable()) {
-        this.client.connect(this.request);
-        return;
-      }
-      try {
-        EtcdKeysResponse etcdKeysResponse = EtcdKeysResponseParser.parse(response.content());
-        String etcdIndex = response.headers().get("X-Etcd-Index");
-
-        if (etcdIndex != null) {
-          try {
-            etcdKeysResponse.etcdIndex = Long.parseLong(etcdIndex);
-          } catch (Exception e) {
-            logger.error("could not parse X-Etcd-Index header", e);
-          }
-        }
-
-        this.promise.setSuccess(etcdKeysResponse);
-      }
-      // Catches both parsed EtcdExceptions and parsing exceptions
-      catch (Exception e) {
-        this.promise.setFailure(e);
-      }
-    } else if (response.status().equals(HttpResponseStatus.MOVED_PERMANENTLY)
+    if (response.status().equals(HttpResponseStatus.MOVED_PERMANENTLY)
         || response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT)) {
       if (response.headers().contains("Location")) {
         this.request.setUrl(response.headers().get("Location"));
@@ -75,8 +52,17 @@ public class EtcdKeyResponseHandler extends AbstractEtcdResponseHandler<EtcdKeyR
         this.promise.setFailure(new Exception("Missing Location header on redirect"));
       }
     } else {
+      if (!response.content().isReadable()) {
+        this.promise.setFailure(new IOException("Content was not readable. HTTP Status: "
+            + response.status()));
+      }
+
       try {
-        EtcdKeysResponse etcdKeysResponse = EtcdKeysResponseParser.parse(response.content());
+        EtcdKeysResponse etcdKeysResponse = EtcdKeysResponseParser.parse(
+            response.headers(),
+            response.content()
+        );
+
         this.promise.setSuccess(etcdKeysResponse);
       }
       // Catches both parsed EtcdExceptions and parsing exceptions

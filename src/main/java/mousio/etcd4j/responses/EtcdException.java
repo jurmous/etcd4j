@@ -6,16 +6,29 @@ package mousio.etcd4j.responses;
 public class EtcdException extends Exception {
   private static final long serialVersionUID = -3921194095313052325L;
 
-  public String etcdCause;
-  public int errorCode;
-  public Integer index;
-  public String etcdMessage;
+  public final String etcdCause;
+  public final int errorCode;
+  public final Long index;
+  public final String etcdMessage;
 
   /**
    * Constructor
+   *
+   * @param errorCode
+   * @param cause
+   * @param message
+   * @param index
    */
-  public EtcdException() {
+  protected EtcdException(
+      final int errorCode,
+      final String cause,
+      final String message,
+      final Long index) {
     super();
+    this.errorCode = errorCode;
+    this.etcdCause = cause;
+    this.etcdMessage = message;
+    this.index = index;
   }
 
   @Override
@@ -26,5 +39,10 @@ public class EtcdException extends Exception {
         ((etcdCause != null) ? ", cause: " + etcdCause : ""),
         ((index != null) ? ", at index: " + index : "")
     );
+  }
+
+  @Override
+  public String toString() {
+    return getMessage();
   }
 }
