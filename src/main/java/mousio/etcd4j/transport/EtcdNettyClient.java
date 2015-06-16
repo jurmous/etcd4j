@@ -202,7 +202,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
 
         modifyPipeLine(etcdRequest, f.channel().pipeline());
 
-        createAndSendHttpRequest(uri.getHost(), etcdRequest.getUrl(), etcdRequest, channel)
+        createAndSendHttpRequest(uri, etcdRequest.getUrl(), etcdRequest, channel)
             .addListener(new ChannelFutureListener() {
               @Override
               public void operationComplete(ChannelFuture future) throws Exception {
@@ -267,7 +267,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
   /**
    * Get HttpRequest belonging to etcdRequest
    *
-   * @param hostName    host name for http request
+   * @param server      server for http request
    * @param uri         to send request to
    * @param etcdRequest to send
    * @param channel     to send request on
@@ -275,11 +275,11 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @return HttpRequest
    * @throws Exception when creating or sending HTTP request fails
    */
-  private <R> ChannelFuture createAndSendHttpRequest(String hostName, String uri, EtcdRequest<R> etcdRequest, Channel channel) throws Exception {
+  private <R> ChannelFuture createAndSendHttpRequest(URI server, String uri, EtcdRequest<R> etcdRequest, Channel channel) throws Exception {
     HttpRequest httpRequest = new DefaultHttpRequest(HttpVersion.HTTP_1_1, etcdRequest.getMethod(), uri);
     httpRequest.headers().add("Connection", "keep-alive");
     if(this.hostName == null) {
-      httpRequest.headers().add("Host", hostName);
+      httpRequest.headers().add("Host", server.getHost() + ":" + server.getPort());
     } else {
       httpRequest.headers().add("Host", this.hostName);
     }
