@@ -1,22 +1,33 @@
 package mousio.etcd4j.responses;
 
 import io.netty.buffer.Unpooled;
-import mousio.etcd4j.EtcdUtil;
+import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.HttpHeaders;
+import org.junit.Before;
 import org.junit.Test;
 
-import static mousio.etcd4j.responses.EtcdKeysResponseParser.parseException;
-import static mousio.etcd4j.responses.EtcdKeysResponseParser.parseResponse;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static mousio.etcd4j.responses.EtcdKeysResponseParser.*;
+import static org.junit.Assert.*;
 
 /**
  * Examples are taken out of the api.md of etcd project.
  */
 public class EtcdKeysResponseParserTest {
 
+  private HttpHeaders headers;
+
+  @Before
+  public void setup() {
+    this.headers = new DefaultHttpHeaders();
+    this.headers.add(X_ETCD_CLUSTER_ID, "test");
+    this.headers.add(X_ETCD_INDEX, 208);
+    this.headers.add(X_RAFT_INDEX, 5);
+    this.headers.add(X_RAFT_TERM, 15);
+  }
+
   @Test
   public void testParseSetKey() throws Exception {
-    final EtcdKeysResponse action = parseJsonResponse("{\n" +
+    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"set\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 2,\n" +
@@ -24,18 +35,23 @@ public class EtcdKeysResponseParserTest {
         "        \"modifiedIndex\": 2,\n" +
         "        \"value\": \"Hello world\"\n" +
         "    }\n" +
-        "}");
+        "}").getBytes()));
 
-    assertEquals(EtcdKeyAction.set, action.action());
-    assertEquals(2, action.node().createdIndex());
-    assertEquals("/message", action.node().key());
-    assertEquals(2, action.node().modifiedIndex());
-    assertEquals("Hello world", action.node().value());
+    assertEquals(EtcdKeyAction.set, action.action);
+    assertEquals(2, action.node.createdIndex.intValue());
+    assertEquals("/message", action.node.key);
+    assertEquals(2, action.node.modifiedIndex.intValue());
+    assertEquals("Hello world", action.node.value);
+
+    assertEquals("test", action.etcdClusterId);
+    assertEquals(208, action.etcdIndex.longValue());
+    assertEquals(5, action.raftIndex.longValue());
+    assertEquals(15, action.raftTerm.longValue());
   }
 
   @Test
   public void testParseGetKey() throws Exception {
-    final EtcdKeysResponse action = parseJsonResponse("{\n" +
+    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"get\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 2,\n" +
@@ -43,18 +59,18 @@ public class EtcdKeysResponseParserTest {
         "        \"modifiedIndex\": 2,\n" +
         "        \"value\": \"Hello world\"\n" +
         "    }\n" +
-        "}");
+        "}").getBytes()));
 
-    assertEquals(EtcdKeyAction.get, action.action());
-    assertEquals(2, action.node().createdIndex());
-    assertEquals("/message", action.node().key());
-    assertEquals(2, action.node().modifiedIndex());
-    assertEquals("Hello world", action.node().value());
+    assertEquals(EtcdKeyAction.get, action.action);
+    assertEquals(2, action.node.createdIndex.intValue());
+    assertEquals("/message", action.node.key);
+    assertEquals(2, action.node.modifiedIndex.intValue());
+    assertEquals("Hello world", action.node.value);
   }
 
   @Test
   public void testParseChangeKey() throws Exception {
-    final EtcdKeysResponse action = parseJsonResponse("{\n" +
+    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"set\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 3,\n" +
@@ -68,23 +84,23 @@ public class EtcdKeysResponseParserTest {
         "        \"value\": \"Hello world\",\n" +
         "        \"modifiedIndex\": 2\n" +
         "    }\n" +
-        "}");
+        "}").getBytes()));
 
-    assertEquals(EtcdKeyAction.set, action.action());
-    assertEquals(3, action.node().createdIndex());
-    assertEquals("/message", action.node().key());
-    assertEquals(3, action.node().modifiedIndex());
-    assertEquals("Hello etcd", action.node().value());
+    assertEquals(EtcdKeyAction.set, action.action);
+    assertEquals(3, action.node.createdIndex.intValue());
+    assertEquals("/message", action.node.key);
+    assertEquals(3, action.node.modifiedIndex.intValue());
+    assertEquals("Hello etcd", action.node.value);
 
-    assertEquals(2, action.prevNode().createdIndex());
-    assertEquals("/message", action.prevNode().key());
-    assertEquals(2, action.prevNode().modifiedIndex());
-    assertEquals("Hello world", action.prevNode().value());
+    assertEquals(2, action.prevNode.createdIndex.intValue());
+    assertEquals("/message", action.prevNode.key);
+    assertEquals(2, action.prevNode.modifiedIndex.intValue());
+    assertEquals("Hello world", action.prevNode.value);
   }
 
   @Test
   public void testParseDeleteKey() throws Exception {
-    final EtcdKeysResponse action = parseJsonResponse("{\n" +
+    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"delete\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 3,\n" +
@@ -97,22 +113,22 @@ public class EtcdKeysResponseParserTest {
         "        \"modifiedIndex\": 3,\n" +
         "        \"createdIndex\": 3\n" +
         "    }\n" +
-        "}");
+        "}").getBytes()));
 
-    assertEquals(EtcdKeyAction.delete, action.action());
-    assertEquals(3, action.node().createdIndex());
-    assertEquals("/message", action.node().key());
-    assertEquals(4, action.node().modifiedIndex());
+    assertEquals(EtcdKeyAction.delete, action.action);
+    assertEquals(3, action.node.createdIndex.intValue());
+    assertEquals("/message", action.node.key);
+    assertEquals(4, action.node.modifiedIndex.intValue());
 
-    assertEquals(3, action.prevNode().createdIndex());
-    assertEquals("/message", action.prevNode().key());
-    assertEquals(3, action.prevNode().modifiedIndex());
-    assertEquals("Hello etcd", action.prevNode().value());
+    assertEquals(3, action.prevNode.createdIndex.intValue());
+    assertEquals("/message", action.prevNode.key);
+    assertEquals(3, action.prevNode.modifiedIndex.intValue());
+    assertEquals("Hello etcd", action.prevNode.value);
   }
 
   @Test
   public void testParseSetKeyTtl() throws Exception {
-    final EtcdKeysResponse action = parseJsonResponse("{\n" +
+    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"set\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 5,\n" +
@@ -122,35 +138,38 @@ public class EtcdKeysResponseParserTest {
         "        \"ttl\": 5,\n" +
         "        \"value\": \"bar\"\n" +
         "    }\n" +
-        "}");
+        "}").getBytes()));
 
-    assertEquals(EtcdKeyAction.set, action.action());
-    assertEquals(5, action.node().createdIndex());
-    assertEquals("/foo", action.node().key());
-    assertEquals(5, action.node().modifiedIndex());
-    assertEquals("bar", action.node().value());
-    assertEquals(5, action.node().ttl());
-    assertEquals(EtcdUtil.convertDate("2013-12-04T12:01:21.874888581-08:00"), action.node().expiration());
+    assertEquals(EtcdKeyAction.set, action.action);
+    assertEquals(5, action.node.createdIndex.intValue());
+    assertEquals("/foo", action.node.key);
+    assertEquals(5, action.node.modifiedIndex.intValue());
+    assertEquals("bar", action.node.value);
+    assertEquals(5, action.node.ttl.intValue());
+    assertEquals(convertDate("2013-12-04T12:01:21.874888581-08:00"), action.node.expiration);
   }
 
   @Test
   public void testParseTtlExpiredException() throws Exception {
-        final EtcdException exception = parseJsonException("{\n" +
+    try {
+      parse(headers, Unpooled.copiedBuffer(("{\n" +
             "    \"cause\": \"/foo\",\n" +
             "    \"errorCode\": 100,\n" +
             "    \"index\": 6,\n" +
             "    \"message\": \"Key Not Found\"\n" +
-            "}");
-
-      assertEquals(100, exception.errorCode());
-      assertEquals(6, exception.index());
-      assertEquals("/foo", exception.etcdCause());
-      assertEquals("Key Not Found", exception.etcdMessage());
+          "}").getBytes()));
+      fail();
+    } catch (EtcdException e) {
+      assertEquals(100, e.errorCode);
+      assertEquals("/foo", e.etcdCause);
+      assertEquals(6, e.index.intValue());
+      assertEquals("Key Not Found", e.etcdMessage);
+    }
   }
 
   @Test
   public void testParseUpdateKeyTtl() throws Exception {
-    final EtcdKeysResponse action = parseJsonResponse("{\n" +
+    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"update\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 5,\n" +
@@ -166,25 +185,25 @@ public class EtcdKeysResponseParserTest {
         "        \"ttl\": 3,\n" +
         "        \"value\": \"bar\"\n" +
         "    }\n" +
-        "}");
+        "}").getBytes()));
 
-    assertEquals(EtcdKeyAction.update, action.action());
-    assertEquals(5, action.node().createdIndex());
-    assertEquals("/foo", action.node().key());
-    assertEquals(6, action.node().modifiedIndex());
-    assertEquals("bar", action.node().value());
+    assertEquals(EtcdKeyAction.update, action.action);
+    assertEquals(5, action.node.createdIndex.intValue());
+    assertEquals("/foo", action.node.key);
+    assertEquals(6, action.node.modifiedIndex.intValue());
+    assertEquals("bar", action.node.value);
 
-    assertEquals(5, action.prevNode().createdIndex());
-    assertEquals("/foo", action.prevNode().key());
-    assertEquals(5, action.prevNode().modifiedIndex());
-    assertEquals("bar", action.prevNode().value());
-    assertEquals(3, action.prevNode().ttl());
-    assertEquals(EtcdUtil.convertDate("2013-12-04T12:01:21.874888581-08:00"), action.prevNode().expiration());
+    assertEquals(5, action.prevNode.createdIndex.intValue());
+    assertEquals("/foo", action.prevNode.key);
+    assertEquals(5, action.prevNode.modifiedIndex.intValue());
+    assertEquals("bar", action.prevNode.value);
+    assertEquals(3, action.prevNode.ttl.intValue());
+    assertEquals(convertDate("2013-12-04T12:01:21.874888581-08:00"), action.prevNode.expiration);
   }
 
   @Test
   public void testParseCreateKey() throws Exception {
-    final EtcdKeysResponse action = parseJsonResponse("{\n" +
+    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"create\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 6,\n" +
@@ -192,18 +211,18 @@ public class EtcdKeysResponseParserTest {
         "        \"modifiedIndex\": 6,\n" +
         "        \"value\": \"Job1\"\n" +
         "    }\n" +
-        "}");
+        "}").getBytes()));
 
-    assertEquals(EtcdKeyAction.create, action.action());
-    assertEquals(6, action.node().createdIndex());
-    assertEquals("/queue/6", action.node().key());
-    assertEquals(6, action.node().modifiedIndex());
-    assertEquals("Job1", action.node().value());
+    assertEquals(EtcdKeyAction.create, action.action);
+    assertEquals(6, action.node.createdIndex.intValue());
+    assertEquals("/queue/6", action.node.key);
+    assertEquals(6, action.node.modifiedIndex.intValue());
+    assertEquals("Job1", action.node.value);
   }
 
   @Test
   public void testParseGetOrderedKeys() throws Exception {
-    final EtcdKeysResponse action = parseJsonResponse("{\n" +
+    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"get\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 2,\n" +
@@ -225,31 +244,31 @@ public class EtcdKeysResponseParserTest {
         "            }\n" +
         "        ]\n" +
         "    }\n" +
-        "}");
+        "}").getBytes()));
 
-    assertEquals(EtcdKeyAction.get, action.action());
-    assertEquals(2, action.node().createdIndex());
-    assertEquals("/queue", action.node().key());
-    assertEquals(2, action.node().modifiedIndex());
-    assertTrue(action.node().dir());
+    assertEquals(EtcdKeyAction.get, action.action);
+    assertEquals(2, action.node.createdIndex.intValue());
+    assertEquals("/queue", action.node.key);
+    assertEquals(2, action.node.modifiedIndex.intValue());
+    assertTrue(action.node.dir);
 
-    assertEquals(2, action.node().nodes().size());
+    assertEquals(2, action.node.nodes.size());
 
-    assertEquals(2, action.node().nodes().get(0).createdIndex());
-    assertEquals(2, action.node().nodes().get(0).modifiedIndex());
-    assertEquals("Job1", action.node().nodes().get(0).value());
-    assertEquals("/queue/2", action.node().nodes().get(0).key());
+    assertEquals(2, action.node.nodes.get(0).createdIndex.intValue());
+    assertEquals(2, action.node.nodes.get(0).modifiedIndex.intValue());
+    assertEquals("Job1", action.node.nodes.get(0).value);
+    assertEquals("/queue/2", action.node.nodes.get(0).key);
 
-    assertEquals(3, action.node().nodes().get(1).createdIndex());
-    assertEquals(3, action.node().nodes().get(1).modifiedIndex());
-    assertEquals("Job2", action.node().nodes().get(1).value());
-    assertEquals("/queue/3", action.node().nodes().get(1).key());
+    assertEquals(3, action.node.nodes.get(1).createdIndex.intValue());
+    assertEquals(3, action.node.nodes.get(1).modifiedIndex.intValue());
+    assertEquals("Job2", action.node.nodes.get(1).value);
+    assertEquals("/queue/3", action.node.nodes.get(1).key);
   }
 
 
   @Test
   public void testParseExpiredDir() throws Exception {
-    final EtcdKeysResponse action = parseJsonResponse("{\n" +
+    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"expire\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 8,\n" +
@@ -263,25 +282,25 @@ public class EtcdKeysResponseParserTest {
         "        \"modifiedIndex\": 17,\n" +
         "        \"expiration\": \"2013-12-11T10:39:35.689275857-08:00\"\n" +
         "    }\n" +
-        "}");
+        "}").getBytes()));
 
-    assertEquals(EtcdKeyAction.expire, action.action());
-    assertEquals(8, action.node().createdIndex());
-    assertEquals("/dir", action.node().key());
-    assertEquals(15, action.node().modifiedIndex());
+    assertEquals(EtcdKeyAction.expire, action.action);
+    assertEquals(8, action.node.createdIndex.intValue());
+    assertEquals("/dir", action.node.key);
+    assertEquals(15, action.node.modifiedIndex.intValue());
 
-    assertEquals(8, action.prevNode().createdIndex());
-    assertEquals("/dir", action.prevNode().key());
-    assertEquals(17, action.prevNode().modifiedIndex());
+    assertEquals(8, action.prevNode.createdIndex.intValue());
+    assertEquals("/dir", action.prevNode.key);
+    assertEquals(17, action.prevNode.modifiedIndex.intValue());
 
-    assertEquals(EtcdUtil.convertDate("2013-12-11T10:39:35.689275857-08:00"), action.prevNode().expiration());
+    assertEquals(convertDate("2013-12-11T10:39:35.689275857-08:00"), action.prevNode.expiration);
 
-    assertTrue(action.prevNode().dir());
+    assertTrue(action.prevNode.dir);
   }
 
   @Test
   public void testParseCompareAndSwap() throws Exception {
-    final EtcdKeysResponse action = parseJsonResponse("{\n" +
+    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"compareAndSwap\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 8,\n" +
@@ -295,23 +314,23 @@ public class EtcdKeysResponseParserTest {
         "        \"modifiedIndex\": 8,\n" +
         "        \"value\": \"one\"\n" +
         "    }\n" +
-        "}");
+        "}").getBytes()));
 
-    assertEquals(EtcdKeyAction.compareAndSwap, action.action());
-    assertEquals(8, action.node().createdIndex());
-    assertEquals("/foo", action.node().key());
-    assertEquals(9, action.node().modifiedIndex());
-    assertEquals("two", action.node().value());
+    assertEquals(EtcdKeyAction.compareAndSwap, action.action);
+    assertEquals(8, action.node.createdIndex.intValue());
+    assertEquals("/foo", action.node.key);
+    assertEquals(9, action.node.modifiedIndex.intValue());
+    assertEquals("two", action.node.value);
 
-    assertEquals(8, action.prevNode().createdIndex());
-    assertEquals("/foo", action.prevNode().key());
-    assertEquals(8, action.prevNode().modifiedIndex());
-    assertEquals("one", action.prevNode().value());
+    assertEquals(8, action.prevNode.createdIndex.intValue());
+    assertEquals("/foo", action.prevNode.key);
+    assertEquals(8, action.prevNode.modifiedIndex.intValue());
+    assertEquals("one", action.prevNode.value);
   }
 
   @Test
   public void testParseCompareAndDelete() throws Exception {
-      final EtcdKeysResponse action = parseJsonResponse("{\n" +
+    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
           "    \"action\": \"compareAndDelete\",\n" +
           "    \"node\": {\n" +
           "        \"key\": \"/foo\",\n" +
@@ -324,22 +343,22 @@ public class EtcdKeysResponseParserTest {
           "        \"modifiedIndex\": 8,\n" +
           "        \"createdIndex\": 8\n" +
           "    }\n" +
-          "}");
+        "}").getBytes()));
 
-    assertEquals(EtcdKeyAction.compareAndDelete, action.action());
-    assertEquals(8, action.node().createdIndex());
-    assertEquals("/foo", action.node().key());
-    assertEquals(9, action.node().modifiedIndex());
+    assertEquals(EtcdKeyAction.compareAndDelete, action.action);
+    assertEquals(8, action.node.createdIndex.intValue());
+    assertEquals("/foo", action.node.key);
+    assertEquals(9, action.node.modifiedIndex.intValue());
 
-    assertEquals(8, action.prevNode().createdIndex());
-    assertEquals("/foo", action.prevNode().key());
-    assertEquals(8, action.prevNode().modifiedIndex());
-    assertEquals("one", action.prevNode().value());
+    assertEquals(8, action.prevNode.createdIndex.intValue());
+    assertEquals("/foo", action.prevNode.key);
+    assertEquals(8, action.prevNode.modifiedIndex.intValue());
+    assertEquals("one", action.prevNode.value);
   }
 
   @Test
   public void testParseRecursiveGet() throws Exception {
-    final EtcdKeysResponse action = parseJsonResponse("{\n" +
+    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"get\",\n" +
         "    \"node\": {\n" +
         "        \"dir\": true,\n" +
@@ -361,35 +380,21 @@ public class EtcdKeysResponseParserTest {
         "            }\n" +
         "        ]\n" +
         "    }\n" +
-        "}");
+        "}").getBytes()));
 
-    assertEquals(EtcdKeyAction.get, action.action());
-    assertTrue(action.node().dir());
+    assertEquals(EtcdKeyAction.get, action.action);
+    assertTrue(action.node.dir);
 
-    assertEquals(1, action.node().nodes().size());
+    assertEquals(1, action.node.nodes.size());
 
-    assertEquals(2, action.node().nodes().get(0).createdIndex());
-    assertEquals("/foo_dir", action.node().nodes().get(0).key());
-    assertEquals(2, action.node().nodes().get(0).modifiedIndex());
-    assertTrue(action.node().nodes().get(0).dir());
+    assertEquals(2, action.node.nodes.get(0).createdIndex.intValue());
+    assertEquals("/foo_dir", action.node.nodes.get(0).key);
+    assertEquals(2, action.node.nodes.get(0).modifiedIndex.intValue());
+    assertTrue(action.node.nodes.get(0).dir);
 
-    assertEquals(2, action.node().nodes().get(0).nodes().get(0).createdIndex());
-    assertEquals("/foo_dir/foo", action.node().nodes().get(0).nodes().get(0).key());
-    assertEquals(2, action.node().nodes().get(0).nodes().get(0).modifiedIndex());
-    assertEquals("bar", action.node().nodes().get(0).nodes().get(0).value());
-  }
-
-    private static EtcdKeysResponse parseJsonResponse(String json) throws Exception {
-        return parseResponse(
-            null,
-            Unpooled.copiedBuffer(json.getBytes())
-        );
-    }
-
-    private static EtcdException parseJsonException(String json) throws Exception {
-        return parseException(
-            null,
-            Unpooled.copiedBuffer(json.getBytes())
-        );
+    assertEquals(2, action.node.nodes.get(0).nodes.get(0).createdIndex.intValue());
+    assertEquals("/foo_dir/foo", action.node.nodes.get(0).nodes.get(0).key);
+    assertEquals(2, action.node.nodes.get(0).nodes.get(0).modifiedIndex.intValue());
+    assertEquals("bar", action.node.nodes.get(0).nodes.get(0).value);
     }
 }

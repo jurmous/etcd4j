@@ -14,7 +14,7 @@ project.ext {
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
     nettyVersion = '4.1.0.Beta5'
-    jacksonVersion = '2.5.3'
+    jacksonVersion = '2.5.4'
     slf4jVersion = '1.7.12'
     junitVersion = '4.12'
 }
@@ -49,8 +49,6 @@ dependencies {
 
     compile sourceSets.client.compileClasspath
     compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
-    compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
-    compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
     compile "io.netty:netty-codec-http:$nettyVersion"
     compile "io.netty:netty-handler:$nettyVersion"
     compile "org.slf4j:slf4j-api:$slf4jVersion"
