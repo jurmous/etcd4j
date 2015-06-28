@@ -30,8 +30,7 @@ public class EtcdKeyGetRequest extends EtcdKeyRequest {
    * @param retryHandler Handles retries on fails
    */
   public EtcdKeyGetRequest(EtcdClientImpl clientImpl, String key, RetryPolicy retryHandler) {
-    super(clientImpl, HttpMethod.GET, retryHandler);
-    this.setKey(key);
+    super(clientImpl, HttpMethod.GET, retryHandler, key);
   }
 
   /**

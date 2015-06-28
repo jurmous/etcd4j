@@ -19,8 +19,7 @@ public class EtcdKeyPutRequest extends EtcdKeyRequest {
    * @param retryHandler Handles retries on fails
    */
   public EtcdKeyPutRequest(EtcdClientImpl clientImpl, String key, RetryPolicy retryHandler) {
-    super(clientImpl, HttpMethod.PUT, retryHandler);
-    this.setKey(key);
+    super(clientImpl, HttpMethod.PUT, retryHandler, key);
   }
 
   /**
