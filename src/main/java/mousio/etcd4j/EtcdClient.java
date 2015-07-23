@@ -5,6 +5,7 @@ import mousio.client.retry.RetryPolicy;
 import mousio.client.retry.RetryWithExponentialBackOff;
 import mousio.etcd4j.requests.*;
 import mousio.etcd4j.responses.EtcdException;
+import mousio.etcd4j.responses.EtcdVersionResponse;
 import mousio.etcd4j.transport.EtcdClientImpl;
 import mousio.etcd4j.transport.EtcdNettyClient;
 
@@ -56,7 +57,7 @@ public class EtcdClient implements Closeable {
    *
    * @return version
    */
-  public String getVersion() {
+  public EtcdVersionResponse getVersion() {
     try {
       return new EtcdVersionRequest(this.client, retryHandler).send().get();
     } catch (IOException | EtcdException | TimeoutException e) {
