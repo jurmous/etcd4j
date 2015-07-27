@@ -5,6 +5,7 @@ import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.responses.EtcdKeyAction;
 import mousio.etcd4j.responses.EtcdKeysResponse;
+import mousio.etcd4j.responses.EtcdVersionResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +39,10 @@ public class TestFunctionality {
    */
   @Test
   public void testVersion() {
-    assertTrue(etcd.getVersion().startsWith("etcd "));
+    EtcdVersionResponse version = etcd.getVersion();
+    assertNotNull(version);
+    assertTrue(version.server.startsWith("2.1"));
+    assertTrue(version.cluster.startsWith("2.1"));
   }
 
   @Test

@@ -1,7 +1,5 @@
 package mousio.etcd4j.responses;
 
-import io.netty.handler.codec.http.HttpHeaders;
-
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;

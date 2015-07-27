@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
@@ -243,18 +242,12 @@ public class EtcdNettyClient implements EtcdClientImpl {
     if (req instanceof EtcdKeyRequest) {
       handler = new EtcdKeyResponseHandler(this, (EtcdKeyRequest) req);
     } else if (req instanceof EtcdVersionRequest) {
-      handler = new AbstractEtcdResponseHandler<EtcdVersionRequest, FullHttpResponse>(this, (EtcdVersionRequest) req) {
-        @Override
-        protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse msg) throws Exception {
-          (((EtcdVersionRequest) req).getPromise()).getNettyPromise().setSuccess(msg.content().toString(Charset.defaultCharset()));
-        }
-      };
+      handler = new EtcdVersionResponseHandler(this, (EtcdVersionRequest) req);
     } else {
       throw new RuntimeException("Unknown request type " + req.getClass().getName());
     }
 
     pipeline.addLast(handler);
-
     pipeline.addLast(new ChannelHandlerAdapter() {
       @Override
       public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
