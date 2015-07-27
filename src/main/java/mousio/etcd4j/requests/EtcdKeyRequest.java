@@ -15,9 +15,8 @@ import java.util.Map;
  * A basic Etcd Keys Request
  */
 public class EtcdKeyRequest extends EtcdRequest<EtcdKeysResponse> {
-  protected String key;
-
-  protected final Map<String, String> requestParams = new HashMap<>();
+  protected final String key;
+  protected final Map<String, String> requestParams;
 
   /**
    * Constructs an EtcdKeysRequest
@@ -27,21 +26,26 @@ public class EtcdKeyRequest extends EtcdRequest<EtcdKeysResponse> {
    * @param retryHandler Handles retries on fails
    */
   public EtcdKeyRequest(EtcdClientImpl clientImpl, HttpMethod method, RetryPolicy retryHandler) {
-    super(clientImpl, method, retryHandler);
+    this(clientImpl, method, retryHandler, null);
   }
 
   /**
-   * Set key for request
+   * Constructs an EtcdKeysRequest
    *
-   * @param key to do action on
-   * @return EtcdKeysRequest for chaining
+   * @param clientImpl   the client to handle this request
+   * @param method       to set request with
+   * @param retryHandler handles retries on fails
+   * @param key          key to do action on
    */
-  public EtcdKeyRequest setKey(String key) {
+  public EtcdKeyRequest(EtcdClientImpl clientImpl, HttpMethod method, RetryPolicy retryHandler, String key) {
+    super(clientImpl, method, retryHandler);
+
     if (key.startsWith("/")){
       key = key.substring(1);
     }
+
     this.key = key;
-    return this;
+    this.requestParams = new HashMap<>();
   }
 
   @Override public EtcdKeyRequest setRetryPolicy(RetryPolicy retryPolicy) {

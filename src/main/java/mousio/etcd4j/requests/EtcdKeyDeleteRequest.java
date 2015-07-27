@@ -19,8 +19,7 @@ public class EtcdKeyDeleteRequest extends EtcdKeyRequest {
    * @param retryHandler Handles retries on fails
    */
   public EtcdKeyDeleteRequest(EtcdClientImpl clientImpl, String key, RetryPolicy retryHandler) {
-    super(clientImpl, HttpMethod.DELETE, retryHandler);
-    this.setKey(key);
+    super(clientImpl, HttpMethod.DELETE, retryHandler, key);
   }
 
   /**
