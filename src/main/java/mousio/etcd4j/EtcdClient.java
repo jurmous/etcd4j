@@ -48,10 +48,10 @@ public class EtcdClient implements Closeable {
   /**
    * Create a transport with a custom implementation
    *
-   * @param etcdClientImpl to create transport with.
+   * @param etcdClientTransport to create transport with.
    */
-  public EtcdClient(EtcdClientTransport etcdClientImpl) {
-    this.transport = etcdClientImpl;
+  public EtcdClient(EtcdClientTransport etcdClientTransport) {
+    this.transport = etcdClientTransport;
     this.retryHandler = new RetryWithExponentialBackOff(20, -1, 10000);
   }
 
