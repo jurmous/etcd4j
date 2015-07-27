@@ -19,7 +19,7 @@ import java.util.concurrent.TimeoutException;
  */
 public class EtcdClient implements Closeable {
   private final EtcdClientTransport transport;
-  private RetryPolicy retryHandler = new RetryWithExponentialBackOff(20, -1, 10000);
+  private RetryPolicy retryHandler;
 
   /**
    * Constructor
