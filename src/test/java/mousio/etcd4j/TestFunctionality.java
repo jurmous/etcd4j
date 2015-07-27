@@ -38,11 +38,21 @@ public class TestFunctionality {
    * @throws Exception
    */
   @Test
+  public void testOldVersion() {
+    assertTrue(etcd.getVersion().contains("etcd"));
+  }
+
+  /**
+   * Test version
+   *
+   * @throws Exception
+   */
+  @Test
   public void testVersion() {
-    EtcdVersionResponse version = etcd.getVersion();
+    EtcdVersionResponse version = etcd.version();
     assertNotNull(version);
-    assertTrue(version.server.startsWith("2.1"));
-    assertTrue(version.cluster.startsWith("2.1"));
+    assertTrue(version.server.startsWith("2."));
+    assertTrue(version.cluster.startsWith("2."));
   }
 
   @Test

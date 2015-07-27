@@ -17,6 +17,7 @@ import mousio.client.ConnectionState;
 import mousio.client.retry.RetryHandler;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.requests.EtcdKeyRequest;
+import mousio.etcd4j.requests.EtcdOldVersionRequest;
 import mousio.etcd4j.requests.EtcdRequest;
 import mousio.etcd4j.requests.EtcdVersionRequest;
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
@@ -243,6 +245,18 @@ public class EtcdNettyClient implements EtcdClientImpl {
       handler = new EtcdKeyResponseHandler(this, (EtcdKeyRequest) req);
     } else if (req instanceof EtcdVersionRequest) {
       handler = new EtcdVersionResponseHandler(this, (EtcdVersionRequest) req);
+    } else if (req instanceof EtcdOldVersionRequest) {
+      handler = new AbstractEtcdResponseHandler<EtcdOldVersionRequest, FullHttpResponse>(this, (EtcdOldVersionRequest) req) {
+        @Override
+        protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse msg) throws Exception {
+          (((EtcdOldVersionRequest) req).getPromise()).getNettyPromise().setSuccess(msg.content().toString(Charset.defaultCharset()));
+        }
+
+        @Override
+        protected FullHttpResponse decodeResponse(FullHttpResponse response) throws Exception {
+          return null;
+        }
+      };
     } else {
       throw new RuntimeException("Unknown request type " + req.getClass().getName());
     }

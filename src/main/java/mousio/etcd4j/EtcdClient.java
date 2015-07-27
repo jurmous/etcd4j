@@ -55,9 +55,24 @@ public class EtcdClient implements Closeable {
   /**
    * Get the version of the Etcd server
    *
+   * @return version as String
+   * @deprecated use version()
+   */
+  @Deprecated
+  public String getVersion() {
+    try {
+      return new EtcdOldVersionRequest(this.client, retryHandler).send().get();
+    } catch (IOException | EtcdException | TimeoutException e) {
+      return null;
+    }
+  }
+
+  /**
+   * Get the version of the Etcd server
+   *
    * @return version
    */
-  public EtcdVersionResponse getVersion() {
+  public EtcdVersionResponse version() {
     try {
       return new EtcdVersionRequest(this.client, retryHandler).send().get();
     } catch (IOException | EtcdException | TimeoutException e) {
