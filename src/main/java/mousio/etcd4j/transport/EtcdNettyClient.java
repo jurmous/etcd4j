@@ -1,14 +1,18 @@
 package mousio.etcd4j.transport;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.base64.Base64;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -40,7 +44,8 @@ public class EtcdNettyClient implements EtcdClientImpl {
   private final URI[] uris;
 
   private final Bootstrap bootstrap;
-  private final String hostName;
+  //private final String hostName;
+  private final EtcdNettyConfig config;
 
   protected int lastWorkingUriIndex = 0;
 
@@ -55,7 +60,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
   }
 
   /**
-   * Constructor with custom eventloopgroup and timeout
+   * Constructor with custom eventloop group and timeout
    *
    * @param config     for netty
    * @param sslContext SSL context if connecting with SSL. Null if not connecting with SSL.
@@ -65,6 +70,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
                          final SslContext sslContext, final URI... uris) {
     logger.info("Setting up Etcd4j Netty client");
 
+    this.config = config;
     this.uris = uris;
     this.eventLoopGroup = config.getEventLoopGroup();
     this.bootstrap = new Bootstrap()
@@ -86,7 +92,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
           }
         });
 
-    this.hostName = config.getHostName();
+    //this.hostName = config.getHostName();
   }
 
   /**
@@ -204,15 +210,15 @@ public class EtcdNettyClient implements EtcdClientImpl {
         modifyPipeLine(etcdRequest, f.channel().pipeline());
 
         createAndSendHttpRequest(uri, etcdRequest.getUrl(), etcdRequest, channel)
-            .addListener(new ChannelFutureListener() {
-              @Override
-              public void operationComplete(ChannelFuture future) throws Exception {
-                if (!future.isSuccess()) {
-                  etcdRequest.getPromise().setException(future.cause());
-                  f.channel().close();
-                }
+          .addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+              if (!future.isSuccess()) {
+                etcdRequest.getPromise().setException(future.cause());
+                f.channel().close();
               }
-            });
+            }
+          });
 
         channel.closeFuture().addListener(new ChannelFutureListener() {
           @Override
@@ -284,12 +290,15 @@ public class EtcdNettyClient implements EtcdClientImpl {
    */
   private <R> ChannelFuture createAndSendHttpRequest(URI server, String uri, EtcdRequest<R> etcdRequest, Channel channel) throws Exception {
     HttpRequest httpRequest = new DefaultHttpRequest(HttpVersion.HTTP_1_1, etcdRequest.getMethod(), uri);
-    httpRequest.headers().add("Connection", "keep-alive");
-    if(this.hostName == null) {
-      httpRequest.headers().add("Host", server.getHost() + ":" + server.getPort());
+    httpRequest.headers().add(HttpHeaderNames.CONNECTION, "keep-alive");
+    if(!this.config.hasHostName()) {
+      httpRequest.headers().add(HttpHeaderNames.HOST, server.getHost() + ":" + server.getPort());
     } else {
-      httpRequest.headers().add("Host", this.hostName);
+      httpRequest.headers().add(HttpHeaderNames.HOST, this.config.getHostName());
     }
+
+
+
 
     HttpPostRequestEncoder bodyRequestEncoder = null;
     Map<String, String> keyValuePairs = etcdRequest.getRequestParams();
@@ -318,6 +327,16 @@ public class EtcdNettyClient implements EtcdClientImpl {
         }
       }
     }
+
+    if(this.config.hasCredentials()) {
+      final ByteBuf authBuffer = Base64.encode(
+        Unpooled.copiedBuffer(this.config.getUsername() + ":" + this.config.getPassword(),
+          CharsetUtil.UTF_8)
+      );
+
+      httpRequest.headers().add(HttpHeaderNames.AUTHORIZATION, "Basic " + authBuffer.toString(CharsetUtil.UTF_8));
+    }
+
     etcdRequest.setHttpRequest(httpRequest);
     ChannelFuture future = channel.write(httpRequest);
     if (bodyRequestEncoder != null && bodyRequestEncoder.isChunked()) {

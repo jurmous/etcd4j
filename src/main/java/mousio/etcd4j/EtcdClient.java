@@ -4,6 +4,7 @@ import io.netty.handler.ssl.SslContext;
 import mousio.client.retry.RetryPolicy;
 import mousio.client.retry.RetryWithExponentialBackOff;
 import mousio.etcd4j.requests.*;
+import mousio.etcd4j.responses.EtcdAuthenticationException;
 import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.responses.EtcdVersionResponse;
 import mousio.etcd4j.transport.EtcdClientImpl;
@@ -62,7 +63,7 @@ public class EtcdClient implements Closeable {
   public String getVersion() {
     try {
       return new EtcdOldVersionRequest(this.client, retryHandler).send().get();
-    } catch (IOException | EtcdException | TimeoutException e) {
+    } catch (IOException | EtcdException | EtcdAuthenticationException | TimeoutException e) {
       return null;
     }
   }
@@ -75,7 +76,7 @@ public class EtcdClient implements Closeable {
   public EtcdVersionResponse version() {
     try {
       return new EtcdVersionRequest(this.client, retryHandler).send().get();
-    } catch (IOException | EtcdException | TimeoutException e) {
+    } catch (IOException | EtcdException | EtcdAuthenticationException | TimeoutException e) {
       return null;
     }
   }

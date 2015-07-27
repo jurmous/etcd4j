@@ -2,10 +2,7 @@ package mousio.etcd4j;
 
 import mousio.client.retry.RetryWithExponentialBackOff;
 import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.responses.EtcdException;
-import mousio.etcd4j.responses.EtcdKeyAction;
-import mousio.etcd4j.responses.EtcdKeysResponse;
-import mousio.etcd4j.responses.EtcdVersionResponse;
+import mousio.etcd4j.responses.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,7 +53,7 @@ public class TestFunctionality {
   }
 
   @Test
-  public void testTimeout() throws IOException, EtcdException {
+  public void testTimeout() throws IOException, EtcdException, EtcdAuthenticationException {
     try {
       etcd.put("etcd4j_test/fooTO", "bar").timeout(1, TimeUnit.MILLISECONDS).send().get();
       fail();
@@ -69,7 +66,7 @@ public class TestFunctionality {
    * Simple value tests
    */
   @Test
-  public void testKey() throws IOException, EtcdException, TimeoutException {
+  public void testKey() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
     EtcdKeysResponse response = etcd.put("etcd4j_test/foo", "bar").send().get();
     assertEquals(EtcdKeyAction.set, response.action);
 
@@ -101,7 +98,7 @@ public class TestFunctionality {
    * Simple value tests
    */
   @Test
-  public void testError() throws IOException, TimeoutException {
+  public void testError() throws IOException, EtcdAuthenticationException, TimeoutException {
     try {
       etcd.get("etcd4j_test/barf").send().get();
     } catch (EtcdException e) {
@@ -119,7 +116,7 @@ public class TestFunctionality {
    * Tests redirect by sending a key with too many slashes.
    */
   @Test
-  public void testRedirect() throws IOException, EtcdException, TimeoutException {
+  public void testRedirect() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
     etcd.put("etcd4j_test/redirect", "bar").send().get();
 
     // Test redirect with a double slash
@@ -131,7 +128,7 @@ public class TestFunctionality {
    * Directory tests
    */
   @Test
-  public void testDir() throws IOException, EtcdException, TimeoutException {
+  public void testDir() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
     EtcdKeysResponse r = etcd.putDir("etcd4j_test/foo_dir").send().get();
     assertEquals(r.action, EtcdKeyAction.set);
 
@@ -157,7 +154,7 @@ public class TestFunctionality {
    * In order key tests
    */
   @Test
-  public void testInOrderKeys() throws IOException, EtcdException, TimeoutException {
+  public void testInOrderKeys() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
     EtcdKeysResponse r = etcd.post("etcd4j_test/queue", "Job1").send().get();
     assertEquals(r.action, EtcdKeyAction.create);
 
@@ -179,7 +176,7 @@ public class TestFunctionality {
    * In order key tests
    */
   @Test
-  public void testWait() throws IOException, EtcdException, InterruptedException, TimeoutException {
+  public void testWait() throws IOException, EtcdException, EtcdAuthenticationException, InterruptedException, TimeoutException {
     EtcdResponsePromise<EtcdKeysResponse> p = etcd.get("etcd4j_test/test").waitForChange().send();
 
     // Ensure the change is received after the listen command is received.
@@ -188,7 +185,7 @@ public class TestFunctionality {
       public void run() {
         try {
           etcd.put("etcd4j_test/test", "changed").send().get();
-        } catch (IOException | EtcdException | TimeoutException e) {
+        } catch (IOException | EtcdException | EtcdAuthenticationException | TimeoutException e) {
           fail();
         }
       }
@@ -199,7 +196,7 @@ public class TestFunctionality {
   }
 
   @Test(timeout = 1000)
-  public void testChunkedData() throws IOException, EtcdException, TimeoutException {
+  public void testChunkedData() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
     //creating very long key to force content to be chunked
     StringBuilder stringBuilder = new StringBuilder(15000);
     for (int i = 0; i < 15000; i++) {

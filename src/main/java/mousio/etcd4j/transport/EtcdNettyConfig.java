@@ -7,9 +7,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 /**
  * Settings for the etcd Netty client
  */
@@ -25,6 +22,9 @@ public class EtcdNettyConfig {
   private int maxFrameSize = 1024 * 100;
 
   private String hostName;
+
+  private String username = null;
+  private String password = null;
 
   /**
    * Constructor
@@ -119,6 +119,10 @@ public class EtcdNettyConfig {
     return this;
   }
 
+  public boolean hasHostName() {
+    return hostName != null && !hostName.trim().isEmpty();
+  }
+
   /**
    * Get the local host name
    *
@@ -137,5 +141,28 @@ public class EtcdNettyConfig {
   public EtcdNettyConfig setHostName(String hostName) {
     this.hostName = hostName;
     return this;
+  }
+
+  public boolean hasCredentials() {
+    return this.username != null && !this.username.trim().isEmpty()
+        && this.password != null && !this.password.trim().isEmpty();
+  }
+
+  public EtcdNettyConfig setUsername(String username) {
+    this.username = username;
+    return this;
+  }
+
+  public String getUsername() {
+    return this.username;
+  }
+
+  public EtcdNettyConfig setPassword(String password) {
+    this.password = password;
+    return this;
+  }
+
+  public String getPassword() {
+    return this.password;
   }
 }
