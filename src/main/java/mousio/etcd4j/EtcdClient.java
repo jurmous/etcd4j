@@ -56,7 +56,7 @@ public class EtcdClient implements Closeable {
    * Get the version of the Etcd server
    *
    * @return version as String
-   * @deprecated use version()
+   * @deprecated use version() when using etcd 2.1+. 
    */
   @Deprecated
   public String getVersion() {
