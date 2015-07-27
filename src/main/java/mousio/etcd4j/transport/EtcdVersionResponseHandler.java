@@ -13,7 +13,7 @@ public class EtcdVersionResponseHandler extends AbstractEtcdResponseHandler<Etcd
    * @param etcdNettyClient the client handling connections
    * @param etcdVersionRequest request
    */
-  public EtcdVersionResponseHandler(EtcdNettyClient etcdNettyClient, EtcdVersionRequest etcdVersionRequest) {
+  public EtcdVersionResponseHandler(EtcdNettyClientTransport etcdNettyClient, EtcdVersionRequest etcdVersionRequest) {
     super(etcdNettyClient, etcdVersionRequest);
   }
 

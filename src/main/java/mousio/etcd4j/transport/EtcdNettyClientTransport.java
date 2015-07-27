@@ -33,8 +33,8 @@ import java.util.concurrent.CancellationException;
 /**
  * Netty client for the requests and responses
  */
-public class EtcdNettyClient implements EtcdClientImpl {
-  private static final Logger logger = LoggerFactory.getLogger(EtcdNettyClient.class);
+public class EtcdNettyClientTransport implements EtcdClientTransport {
+  private static final Logger logger = LoggerFactory.getLogger(EtcdNettyClientTransport.class);
 
   private final EventLoopGroup eventLoopGroup;
   private final URI[] uris;
@@ -50,8 +50,8 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @param sslContext SSL context if connecting with SSL. Null if not connecting with SSL.
    * @param uri        to connect to
    */
-  public EtcdNettyClient(final SslContext sslContext, final URI... uri) {
-    this(new EtcdNettyConfig(), sslContext, uri);
+  public EtcdNettyClientTransport(final SslContext sslContext, final URI... uri) {
+    this(new EtcdNettyClientConfig(), sslContext, uri);
   }
 
   /**
@@ -61,8 +61,8 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @param sslContext SSL context if connecting with SSL. Null if not connecting with SSL.
    * @param uris       to connect to
    */
-  public EtcdNettyClient(final EtcdNettyConfig config,
-                         final SslContext sslContext, final URI... uris) {
+  public EtcdNettyClientTransport(final EtcdNettyClientConfig config,
+                                  final SslContext sslContext, final URI... uris) {
     logger.info("Setting up Etcd4j Netty client");
 
     this.uris = uris;

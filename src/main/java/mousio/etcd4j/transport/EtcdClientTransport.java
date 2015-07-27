@@ -9,7 +9,7 @@ import java.io.IOException;
 /**
  * Interface for Etcd client implementations
  */
-public interface EtcdClientImpl extends Closeable {
+public interface EtcdClientTransport extends Closeable {
 
   /**
    * Sends a request to the server
@@ -20,7 +20,4 @@ public interface EtcdClientImpl extends Closeable {
    * @throws java.io.IOException if IO failure while sending
    */
   public <R> EtcdResponsePromise<R> send(EtcdRequest<R> request) throws IOException;
-
-  @Override
-  public void close();
 }

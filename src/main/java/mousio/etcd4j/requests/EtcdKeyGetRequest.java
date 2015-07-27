@@ -2,7 +2,7 @@ package mousio.etcd4j.requests;
 
 import io.netty.handler.codec.http.HttpMethod;
 import mousio.client.retry.RetryPolicy;
-import mousio.etcd4j.transport.EtcdClientImpl;
+import mousio.etcd4j.transport.EtcdClientTransport;
 
 import java.util.concurrent.TimeUnit;
 
@@ -18,7 +18,7 @@ public class EtcdKeyGetRequest extends EtcdKeyRequest {
    * @param clientImpl   the client to handle this request
    * @param retryHandler Handles retries on fails
    */
-  public EtcdKeyGetRequest(EtcdClientImpl clientImpl, RetryPolicy retryHandler) {
+  public EtcdKeyGetRequest(EtcdClientTransport clientImpl, RetryPolicy retryHandler) {
     super(clientImpl, HttpMethod.GET, retryHandler);
   }
 
@@ -29,7 +29,7 @@ public class EtcdKeyGetRequest extends EtcdKeyRequest {
    * @param key          to get
    * @param retryHandler Handles retries on fails
    */
-  public EtcdKeyGetRequest(EtcdClientImpl clientImpl, String key, RetryPolicy retryHandler) {
+  public EtcdKeyGetRequest(EtcdClientTransport clientImpl, String key, RetryPolicy retryHandler) {
     super(clientImpl, HttpMethod.GET, retryHandler, key);
   }
 

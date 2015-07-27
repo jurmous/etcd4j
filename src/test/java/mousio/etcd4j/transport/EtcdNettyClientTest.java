@@ -19,14 +19,14 @@ public class EtcdNettyClientTest {
 
     URI uri = URI.create("http://localhost:4001");
 
-    EtcdNettyConfig config = new EtcdNettyConfig()
+    EtcdNettyClientConfig config = new EtcdNettyClientConfig()
         .setConnectTimeout(100)
         .setSocketChannelClass(NioSocketChannel.class)
         .setMaxFrameSize(1024 * 1024)
         .setEventLoopGroup(evl)
         .setHostName("localhost");
 
-    EtcdNettyClient client = new EtcdNettyClient(config, null, uri);
+    EtcdNettyClientTransport client = new EtcdNettyClientTransport(config, null, uri);
 
     Bootstrap bootstrap = client.getBootstrap();
 

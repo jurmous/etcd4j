@@ -15,7 +15,7 @@ public class EtcdKeyResponseHandler extends AbstractEtcdResponseHandler<EtcdKeyR
    * @param etcdNettyClient the client handling connections
    * @param etcdKeyRequest  request
    */
-  public EtcdKeyResponseHandler(EtcdNettyClient etcdNettyClient, EtcdKeyRequest etcdKeyRequest) {
+  public EtcdKeyResponseHandler(EtcdNettyClientTransport etcdNettyClient, EtcdKeyRequest etcdKeyRequest) {
     super(etcdNettyClient, etcdKeyRequest);
   }
 
