@@ -7,7 +7,7 @@ import mousio.etcd4j.requests.*;
 import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.responses.EtcdVersionResponse;
 import mousio.etcd4j.transport.EtcdClientTransport;
-import mousio.etcd4j.transport.EtcdNettyClientTransport;
+import mousio.etcd4j.transport.EtcdNettyTransport;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -37,7 +37,7 @@ public class EtcdClient implements Closeable {
    * @param baseUri URI to create connection on
    */
   public EtcdClient(SslContext sslContext, URI... baseUri) {
-    this(new EtcdNettyClientTransport(
+    this(new EtcdNettyTransport(
       sslContext,
       baseUri.length == 0
         ? new URI[] { URI.create("https://127.0.0.1:4001") }

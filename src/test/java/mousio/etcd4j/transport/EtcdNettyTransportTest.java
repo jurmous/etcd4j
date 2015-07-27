@@ -11,7 +11,7 @@ import java.net.URI;
 
 import static org.junit.Assert.assertEquals;
 
-public class EtcdNettyClientTest {
+public class EtcdNettyTransportTest {
 
   @Test
   public void testConfig() throws Exception {
@@ -19,14 +19,14 @@ public class EtcdNettyClientTest {
 
     URI uri = URI.create("http://localhost:4001");
 
-    EtcdNettyClientConfig config = new EtcdNettyClientConfig()
+    EtcdNettyTransportConfig config = new EtcdNettyTransportConfig()
         .setConnectTimeout(100)
         .setSocketChannelClass(NioSocketChannel.class)
         .setMaxFrameSize(1024 * 1024)
         .setEventLoopGroup(evl)
         .setHostName("localhost");
 
-    EtcdNettyClientTransport client = new EtcdNettyClientTransport(config, null, uri);
+    EtcdNettyTransport client = new EtcdNettyTransport(config, null, uri);
 
     Bootstrap bootstrap = client.getBootstrap();
 

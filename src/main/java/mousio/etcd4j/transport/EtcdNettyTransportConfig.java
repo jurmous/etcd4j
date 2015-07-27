@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Settings for the etcd Netty client
  */
-public class EtcdNettyClientConfig {
-  private static final Logger logger = LoggerFactory.getLogger(EtcdNettyClientConfig.class);
+public class EtcdNettyTransportConfig {
+  private static final Logger logger = LoggerFactory.getLogger(EtcdNettyTransportConfig.class);
 
   private EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
@@ -26,7 +26,7 @@ public class EtcdNettyClientConfig {
   /**
    * Constructor
    */
-  public EtcdNettyClientConfig() {
+  public EtcdNettyTransportConfig() {
     String frameSize = System.getProperty("mousio.etcd4j.maxFrameSize");
     if (frameSize != null) {
       logger.warn("Setting mousio.etcd4j.maxFrameSize through system propery is deprecated. " +
@@ -50,7 +50,7 @@ public class EtcdNettyClientConfig {
    * @param connectTimeout to set
    * @return itself for chaining.
    */
-  public EtcdNettyClientConfig setConnectTimeout(int connectTimeout) {
+  public EtcdNettyTransportConfig setConnectTimeout(int connectTimeout) {
     this.connectTimeout = connectTimeout;
     return this;
   }
@@ -61,7 +61,7 @@ public class EtcdNettyClientConfig {
    * @param eventLoopGroup to set.
    * @return itself for chaining.
    */
-  public EtcdNettyClientConfig setEventLoopGroup(EventLoopGroup eventLoopGroup) {
+  public EtcdNettyTransportConfig setEventLoopGroup(EventLoopGroup eventLoopGroup) {
     this.eventLoopGroup = eventLoopGroup;
     return this;
   }
@@ -91,7 +91,7 @@ public class EtcdNettyClientConfig {
    * @param maxFrameSize to set
    * @return itself for chaining.
    */
-  public EtcdNettyClientConfig setMaxFrameSize(int maxFrameSize) {
+  public EtcdNettyTransportConfig setMaxFrameSize(int maxFrameSize) {
     this.maxFrameSize = maxFrameSize;
     return this;
   }
@@ -111,7 +111,7 @@ public class EtcdNettyClientConfig {
    * @param socketChannelClass to set
    * @return itself for chaining
    */
-  public EtcdNettyClientConfig setSocketChannelClass(Class<? extends SocketChannel> socketChannelClass) {
+  public EtcdNettyTransportConfig setSocketChannelClass(Class<? extends SocketChannel> socketChannelClass) {
     this.socketChannelClass = socketChannelClass;
     return this;
   }
@@ -131,7 +131,7 @@ public class EtcdNettyClientConfig {
    * @param hostName name of local host
    * @return itself for chaining
    */
-  public EtcdNettyClientConfig setHostName(String hostName) {
+  public EtcdNettyTransportConfig setHostName(String hostName) {
     this.hostName = hostName;
     return this;
   }
