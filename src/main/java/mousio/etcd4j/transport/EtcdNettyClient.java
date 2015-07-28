@@ -1,7 +1,6 @@
 package mousio.etcd4j.transport;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
@@ -29,7 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
@@ -70,7 +68,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
                          final SslContext sslContext, final URI... uris) {
     logger.info("Setting up Etcd4j Netty client");
 
-    this.config = config;
+    this.config = config.clone();
     this.uris = uris;
     this.eventLoopGroup = config.getEventLoopGroup();
     this.bootstrap = new Bootstrap()
@@ -87,12 +85,13 @@ public class EtcdNettyClient implements EtcdClientImpl {
               p.addLast(sslContext.newHandler(ch.alloc()));
             }
             p.addLast("codec", new HttpClientCodec());
+            if(config.hasCredentials()) {
+              p.addLast("auth", new HttpBasicAuthHandler());
+            }
             p.addLast("chunkedWriter", new ChunkedWriteHandler());
             p.addLast("aggregate", new HttpObjectAggregator(config.getMaxFrameSize()));
           }
         });
-
-    //this.hostName = config.getHostName();
   }
 
   /**
@@ -252,17 +251,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
     } else if (req instanceof EtcdVersionRequest) {
       handler = new EtcdVersionResponseHandler(this, (EtcdVersionRequest) req);
     } else if (req instanceof EtcdOldVersionRequest) {
-      handler = new AbstractEtcdResponseHandler<EtcdOldVersionRequest, FullHttpResponse>(this, (EtcdOldVersionRequest) req) {
-        @Override
-        protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse msg) throws Exception {
-          (((EtcdOldVersionRequest) req).getPromise()).getNettyPromise().setSuccess(msg.content().toString(Charset.defaultCharset()));
-        }
-
-        @Override
-        protected FullHttpResponse decodeResponse(FullHttpResponse response) throws Exception {
-          return null;
-        }
-      };
+      handler = new EtcdOldVersionResponseHandler(this, (EtcdOldVersionRequest) req);
     } else {
       throw new RuntimeException("Unknown request type " + req.getClass().getName());
     }
@@ -297,9 +286,6 @@ public class EtcdNettyClient implements EtcdClientImpl {
       httpRequest.headers().add(HttpHeaderNames.HOST, this.config.getHostName());
     }
 
-
-
-
     HttpPostRequestEncoder bodyRequestEncoder = null;
     Map<String, String> keyValuePairs = etcdRequest.getRequestParams();
     if (keyValuePairs != null && !keyValuePairs.isEmpty()) {
@@ -328,15 +314,6 @@ public class EtcdNettyClient implements EtcdClientImpl {
       }
     }
 
-    if(this.config.hasCredentials()) {
-      final ByteBuf authBuffer = Base64.encode(
-        Unpooled.copiedBuffer(this.config.getUsername() + ":" + this.config.getPassword(),
-          CharsetUtil.UTF_8)
-      );
-
-      httpRequest.headers().add(HttpHeaderNames.AUTHORIZATION, "Basic " + authBuffer.toString(CharsetUtil.UTF_8));
-    }
-
     etcdRequest.setHttpRequest(httpRequest);
     ChannelFuture future = channel.write(httpRequest);
     if (bodyRequestEncoder != null && bodyRequestEncoder.isChunked()) {
@@ -349,8 +326,30 @@ public class EtcdNettyClient implements EtcdClientImpl {
   /**
    * Close netty
    */
+  @Override
   public void close() {
     logger.info("Shutting down Etcd4j Netty client");
     eventLoopGroup.shutdownGracefully();
+  }
+
+  private class HttpBasicAuthHandler extends ChannelOutboundHandlerAdapter {
+    @Override
+    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+      if(msg instanceof HttpRequest) {
+        addBasicAuthHeader((HttpRequest)msg);
+      }
+
+      ctx.write(msg, promise);
+    }
+
+    private void addBasicAuthHeader(HttpRequest request) {
+      final String auth = Base64.encode(
+        Unpooled.copiedBuffer(
+          config.getUsername() + ":" + config.getPassword(),
+          CharsetUtil.UTF_8)
+        ).toString(CharsetUtil.UTF_8);
+
+      request.headers().add(HttpHeaderNames.AUTHORIZATION, "Basic " + auth);
+    }
   }
 }

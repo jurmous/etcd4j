@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Settings for the etcd Netty client
  */
-public class EtcdNettyConfig {
+public class EtcdNettyConfig implements Cloneable {
   private static final Logger logger = LoggerFactory.getLogger(EtcdNettyConfig.class);
 
   private EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
@@ -22,7 +22,6 @@ public class EtcdNettyConfig {
   private int maxFrameSize = 1024 * 100;
 
   private String hostName;
-
   private String username = null;
   private String password = null;
 
@@ -164,5 +163,15 @@ public class EtcdNettyConfig {
 
   public String getPassword() {
     return this.password;
+  }
+
+  @SuppressWarnings("CloneDoesntDeclareCloneNotSupportedException")
+  @Override
+  public EtcdNettyConfig clone() {
+    try {
+      return (EtcdNettyConfig) super.clone();
+    } catch (CloneNotSupportedException e) {
+      throw new AssertionError(e);
+    }
   }
 }
