@@ -22,8 +22,6 @@ public class EtcdNettyConfig implements Cloneable {
   private int maxFrameSize = 1024 * 100;
 
   private String hostName;
-  private String username = null;
-  private String password = null;
 
   /**
    * Constructor
@@ -140,29 +138,6 @@ public class EtcdNettyConfig implements Cloneable {
   public EtcdNettyConfig setHostName(String hostName) {
     this.hostName = hostName;
     return this;
-  }
-
-  public boolean hasCredentials() {
-    return this.username != null && !this.username.trim().isEmpty()
-        && this.password != null && !this.password.trim().isEmpty();
-  }
-
-  public EtcdNettyConfig setUsername(String username) {
-    this.username = username;
-    return this;
-  }
-
-  public String getUsername() {
-    return this.username;
-  }
-
-  public EtcdNettyConfig setPassword(String password) {
-    this.password = password;
-    return this;
-  }
-
-  public String getPassword() {
-    return this.password;
   }
 
   @SuppressWarnings("CloneDoesntDeclareCloneNotSupportedException")

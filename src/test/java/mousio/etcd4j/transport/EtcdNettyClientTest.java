@@ -30,8 +30,7 @@ public class EtcdNettyClientTest {
         .setEventLoopGroup(evl)
         .setHostName("localhost");
 
-    EtcdNettyClient client = new EtcdNettyClient(config, null, uri);
-
+    EtcdNettyClient client = new EtcdNettyClient(config, uri);
     Bootstrap bootstrap = client.getBootstrap();
 
     assertEquals(evl, bootstrap.group());
@@ -45,13 +44,9 @@ public class EtcdNettyClientTest {
   @Test
   public void testAuth() throws Exception {
     EtcdClient client = new EtcdClient(
-      new EtcdNettyClient(
-        new EtcdNettyConfig()
-          .setUsername("test")
-          .setPassword("test"),
-        null,
-        URI.create("http://localhost:4001"))
-    );
+      "test",
+      "test",
+      URI.create("http://localhost:4001"));
 
     assertNotNull(client.get("/test/messages").send().get());
   }
@@ -60,13 +55,9 @@ public class EtcdNettyClientTest {
   @Test(expected = EtcdAuthenticationException.class)
   public void testAuthFailure() throws Exception {
     EtcdClient client = new EtcdClient(
-      new EtcdNettyClient(
-        new EtcdNettyConfig()
-          .setUsername("test")
-          .setPassword("test_"),
-        null,
-        URI.create("http://localhost:4001"))
-    );
+      "test",
+      "test_",
+      URI.create("http://localhost:4001"));
 
     client.get("/test/messages").send().get();
   }

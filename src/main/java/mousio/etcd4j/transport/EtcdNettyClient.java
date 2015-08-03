@@ -18,6 +18,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
 import mousio.client.ConnectionState;
 import mousio.client.retry.RetryHandler;
+import mousio.etcd4j.EtcdSecurityContext;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.requests.EtcdKeyRequest;
 import mousio.etcd4j.requests.EtcdOldVersionRequest;
@@ -44,6 +45,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
   private final Bootstrap bootstrap;
   //private final String hostName;
   private final EtcdNettyConfig config;
+  private final EtcdSecurityContext securityContext;
 
   protected int lastWorkingUriIndex = 0;
 
@@ -58,6 +60,16 @@ public class EtcdNettyClient implements EtcdClientImpl {
   }
 
   /**
+   * Constructor
+   *
+   * @param securityContext security context.
+   * @param uri             to connect to
+   */
+  public EtcdNettyClient(final EtcdSecurityContext securityContext, final URI... uri) {
+    this(new EtcdNettyConfig(), securityContext, uri);
+  }
+
+  /**
    * Constructor with custom eventloop group and timeout
    *
    * @param config     for netty
@@ -66,32 +78,56 @@ public class EtcdNettyClient implements EtcdClientImpl {
    */
   public EtcdNettyClient(final EtcdNettyConfig config,
                          final SslContext sslContext, final URI... uris) {
+    this(config, new EtcdSecurityContext(sslContext), uris);
+  }
+
+  /**
+   * Constructor with custom eventloop group and timeout
+   *
+   * @param config     for netty
+   * @param uris       to connect to
+   */
+  public EtcdNettyClient(final EtcdNettyConfig config, final URI... uris) {
+    this(config, EtcdSecurityContext.NONE, uris);
+  }
+
+
+  /**
+   * Constructor with custom eventloop group and timeout
+   *
+   * @param config          for netty
+   * @param securityContext security context (ssl, authentication)
+   * @param uris            to connect to
+   */
+  public EtcdNettyClient(final EtcdNettyConfig config,
+                         final EtcdSecurityContext securityContext, final URI... uris) {
     logger.info("Setting up Etcd4j Netty client");
 
     this.config = config.clone();
+    this.securityContext = securityContext.clone();
     this.uris = uris;
     this.eventLoopGroup = config.getEventLoopGroup();
     this.bootstrap = new Bootstrap()
-        .group(eventLoopGroup)
-        .channel(config.getSocketChannelClass())
-        .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-        .option(ChannelOption.TCP_NODELAY, true)
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getConnectTimeout())
-        .handler(new ChannelInitializer<SocketChannel>() {
-          @Override
-          public void initChannel(SocketChannel ch) throws Exception {
-            ChannelPipeline p = ch.pipeline();
-            if (sslContext != null) {
-              p.addLast(sslContext.newHandler(ch.alloc()));
-            }
-            p.addLast("codec", new HttpClientCodec());
-            if(config.hasCredentials()) {
-              p.addLast("auth", new HttpBasicAuthHandler());
-            }
-            p.addLast("chunkedWriter", new ChunkedWriteHandler());
-            p.addLast("aggregate", new HttpObjectAggregator(config.getMaxFrameSize()));
+      .group(eventLoopGroup)
+      .channel(config.getSocketChannelClass())
+      .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+      .option(ChannelOption.TCP_NODELAY, true)
+      .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getConnectTimeout())
+      .handler(new ChannelInitializer<SocketChannel>() {
+        @Override
+        public void initChannel(SocketChannel ch) throws Exception {
+          ChannelPipeline p = ch.pipeline();
+          if (securityContext.hasSsl()) {
+            p.addLast(securityContext.sslContext().newHandler(ch.alloc()));
           }
-        });
+          p.addLast("codec", new HttpClientCodec());
+          if(securityContext.hasCredentials()) {
+            p.addLast("auth", new HttpBasicAuthHandler());
+          }
+          p.addLast("chunkedWriter", new ChunkedWriteHandler());
+          p.addLast("aggregate", new HttpObjectAggregator(config.getMaxFrameSize()));
+        }
+      });
   }
 
   /**
@@ -345,7 +381,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
     private void addBasicAuthHeader(HttpRequest request) {
       final String auth = Base64.encode(
         Unpooled.copiedBuffer(
-          config.getUsername() + ":" + config.getPassword(),
+          securityContext.username() + ":" + securityContext.password(),
           CharsetUtil.UTF_8)
         ).toString(CharsetUtil.UTF_8);
 
