@@ -17,7 +17,9 @@ import java.util.List;
 /**
  * Parses the JSON response for key responses
  */
-public class EtcdKeysResponseParser {
+public class EtcdKeysResponseParser implements EtcdResponseParser<EtcdKeysResponse> {
+  public static final EtcdKeysResponseParser INSTANCE = new EtcdKeysResponseParser();
+
   private static final JsonFactory factory = new JsonFactory();
 
   protected static final String X_ETCD_CLUSTER_ID = "X-Etcd-Cluster-Id";
@@ -52,7 +54,7 @@ public class EtcdKeysResponseParser {
    * @throws mousio.etcd4j.responses.EtcdException if exception was found in response
    * @throws java.io.IOException                   if Json parsing or parser creation fails
    */
-  public static EtcdKeysResponse parse(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
+  public EtcdKeysResponse parse(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
     JsonParser parser = factory.createParser(new ByteBufInputStream(content));
 
     if (parser.nextToken() == JsonToken.START_OBJECT) {

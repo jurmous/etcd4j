@@ -27,7 +27,7 @@ public class EtcdKeysResponseParserTest {
 
   @Test
   public void testParseSetKey() throws Exception {
-    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
+    EtcdKeysResponse action = EtcdKeysResponseParser.INSTANCE.parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"set\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 2,\n" +
@@ -51,7 +51,7 @@ public class EtcdKeysResponseParserTest {
 
   @Test
   public void testParseGetKey() throws Exception {
-    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
+    EtcdKeysResponse action = EtcdKeysResponseParser.INSTANCE.parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"get\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 2,\n" +
@@ -70,7 +70,7 @@ public class EtcdKeysResponseParserTest {
 
   @Test
   public void testParseChangeKey() throws Exception {
-    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
+    EtcdKeysResponse action = EtcdKeysResponseParser.INSTANCE.parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"set\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 3,\n" +
@@ -100,7 +100,7 @@ public class EtcdKeysResponseParserTest {
 
   @Test
   public void testParseDeleteKey() throws Exception {
-    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
+    EtcdKeysResponse action = EtcdKeysResponseParser.INSTANCE.parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"delete\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 3,\n" +
@@ -128,7 +128,7 @@ public class EtcdKeysResponseParserTest {
 
   @Test
   public void testParseSetKeyTtl() throws Exception {
-    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
+    EtcdKeysResponse action = EtcdKeysResponseParser.INSTANCE.parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"set\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 5,\n" +
@@ -152,11 +152,11 @@ public class EtcdKeysResponseParserTest {
   @Test
   public void testParseTtlExpiredException() throws Exception {
     try {
-      parse(headers, Unpooled.copiedBuffer(("{\n" +
-            "    \"cause\": \"/foo\",\n" +
-            "    \"errorCode\": 100,\n" +
-            "    \"index\": 6,\n" +
-            "    \"message\": \"Key Not Found\"\n" +
+      EtcdKeysResponseParser.INSTANCE.parse(headers, Unpooled.copiedBuffer(("{\n" +
+          "    \"cause\": \"/foo\",\n" +
+          "    \"errorCode\": 100,\n" +
+          "    \"index\": 6,\n" +
+          "    \"message\": \"Key Not Found\"\n" +
           "}").getBytes()));
       fail();
     } catch (EtcdException e) {
@@ -169,7 +169,7 @@ public class EtcdKeysResponseParserTest {
 
   @Test
   public void testParseUpdateKeyTtl() throws Exception {
-    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
+    EtcdKeysResponse action = EtcdKeysResponseParser.INSTANCE.parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"update\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 5,\n" +
@@ -203,7 +203,7 @@ public class EtcdKeysResponseParserTest {
 
   @Test
   public void testParseCreateKey() throws Exception {
-    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
+    EtcdKeysResponse action = EtcdKeysResponseParser.INSTANCE.parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"create\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 6,\n" +
@@ -222,7 +222,7 @@ public class EtcdKeysResponseParserTest {
 
   @Test
   public void testParseGetOrderedKeys() throws Exception {
-    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
+    EtcdKeysResponse action = EtcdKeysResponseParser.INSTANCE.parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"get\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 2,\n" +
@@ -268,7 +268,7 @@ public class EtcdKeysResponseParserTest {
 
   @Test
   public void testParseExpiredDir() throws Exception {
-    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
+    EtcdKeysResponse action = EtcdKeysResponseParser.INSTANCE.parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"expire\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 8,\n" +
@@ -300,7 +300,7 @@ public class EtcdKeysResponseParserTest {
 
   @Test
   public void testParseCompareAndSwap() throws Exception {
-    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
+    EtcdKeysResponse action = EtcdKeysResponseParser.INSTANCE.parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"compareAndSwap\",\n" +
         "    \"node\": {\n" +
         "        \"createdIndex\": 8,\n" +
@@ -330,19 +330,19 @@ public class EtcdKeysResponseParserTest {
 
   @Test
   public void testParseCompareAndDelete() throws Exception {
-    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
-          "    \"action\": \"compareAndDelete\",\n" +
-          "    \"node\": {\n" +
-          "        \"key\": \"/foo\",\n" +
-          "        \"modifiedIndex\": 9,\n" +
-          "        \"createdIndex\": 8\n" +
-          "    },\n" +
-          "    \"prevNode\": {\n" +
-          "        \"key\": \"/foo\",\n" +
-          "        \"value\": \"one\",\n" +
-          "        \"modifiedIndex\": 8,\n" +
-          "        \"createdIndex\": 8\n" +
-          "    }\n" +
+    EtcdKeysResponse action = EtcdKeysResponseParser.INSTANCE.parse(headers, Unpooled.copiedBuffer(("{\n" +
+        "    \"action\": \"compareAndDelete\",\n" +
+        "    \"node\": {\n" +
+        "        \"key\": \"/foo\",\n" +
+        "        \"modifiedIndex\": 9,\n" +
+        "        \"createdIndex\": 8\n" +
+        "    },\n" +
+        "    \"prevNode\": {\n" +
+        "        \"key\": \"/foo\",\n" +
+        "        \"value\": \"one\",\n" +
+        "        \"modifiedIndex\": 8,\n" +
+        "        \"createdIndex\": 8\n" +
+        "    }\n" +
         "}").getBytes()));
 
     assertEquals(EtcdKeyAction.compareAndDelete, action.action);
@@ -358,7 +358,7 @@ public class EtcdKeysResponseParserTest {
 
   @Test
   public void testParseRecursiveGet() throws Exception {
-    EtcdKeysResponse action = parse(headers, Unpooled.copiedBuffer(("{\n" +
+    EtcdKeysResponse action = EtcdKeysResponseParser.INSTANCE.parse(headers, Unpooled.copiedBuffer(("{\n" +
         "    \"action\": \"get\",\n" +
         "    \"node\": {\n" +
         "        \"dir\": true,\n" +

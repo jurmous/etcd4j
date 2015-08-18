@@ -5,6 +5,8 @@ import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.responses.EtcdKeyAction;
 import mousio.etcd4j.responses.EtcdKeysResponse;
+import mousio.etcd4j.responses.EtcdSelfStatsResponse;
+import mousio.etcd4j.responses.EtcdStoreStatsResponse;
 import mousio.etcd4j.responses.EtcdVersionResponse;
 import org.junit.After;
 import org.junit.Before;
@@ -53,6 +55,32 @@ public class TestFunctionality {
     assertNotNull(version);
     assertTrue(version.server.startsWith("2."));
     assertTrue(version.cluster.startsWith("2."));
+  }
+
+
+  /**
+   * Test Self Stats
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testSelfStats() {
+    EtcdSelfStatsResponse stats = etcd.getSelfStats();
+    assertNotNull(stats);
+    assertNotNull(stats.getLeaderInfo());
+    assertEquals(stats.getId(), stats.getLeaderInfo().getLeader());
+  }
+
+
+  /**
+   * Test Store Stats
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testStoreStats() {
+    EtcdStoreStatsResponse stats = etcd.getStoreStats();
+    assertNotNull(stats);
   }
 
   @Test

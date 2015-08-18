@@ -19,7 +19,13 @@ import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.requests.EtcdKeyRequest;
 import mousio.etcd4j.requests.EtcdOldVersionRequest;
 import mousio.etcd4j.requests.EtcdRequest;
+import mousio.etcd4j.requests.EtcdSelfStatsRequest;
+import mousio.etcd4j.requests.EtcdStoreStatsRequest;
 import mousio.etcd4j.requests.EtcdVersionRequest;
+import mousio.etcd4j.responses.EtcdKeysResponseParser;
+import mousio.etcd4j.responses.EtcdSelfStatsResponseParser;
+import mousio.etcd4j.responses.EtcdStoreStatsResponseParser;
+import mousio.etcd4j.responses.EtcdVersionResponseParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -239,22 +245,21 @@ public class EtcdNettyClient implements EtcdClientImpl {
       pipeline.addFirst(new ReadTimeoutHandler(req.getTimeout(), req.getTimeoutUnit()));
     }
 
-    final AbstractEtcdResponseHandler handler;
+    final EtcdResponseHandler handler;
 
     if (req instanceof EtcdKeyRequest) {
-      handler = new EtcdKeyResponseHandler(this, (EtcdKeyRequest) req);
+      handler = EtcdResponseHandler.from(this, req, EtcdKeysResponseParser.INSTANCE);
     } else if (req instanceof EtcdVersionRequest) {
-      handler = new EtcdVersionResponseHandler(this, (EtcdVersionRequest) req);
+      handler = EtcdResponseHandler.from(this, req, EtcdVersionResponseParser.INSTANCE);
+    } else if (req instanceof EtcdSelfStatsRequest) {
+      handler = EtcdResponseHandler.from(this, req, EtcdSelfStatsResponseParser.INSTANCE);
+    } else if (req instanceof EtcdStoreStatsRequest) {
+      handler = EtcdResponseHandler.from(this, req, EtcdStoreStatsResponseParser.INSTANCE);
     } else if (req instanceof EtcdOldVersionRequest) {
-      handler = new AbstractEtcdResponseHandler<EtcdOldVersionRequest, FullHttpResponse>(this, (EtcdOldVersionRequest) req) {
+      handler = new EtcdResponseHandler<EtcdOldVersionRequest, FullHttpResponse>(this, (EtcdOldVersionRequest) req, null) {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse msg) throws Exception {
           (((EtcdOldVersionRequest) req).getPromise()).getNettyPromise().setSuccess(msg.content().toString(Charset.defaultCharset()));
-        }
-
-        @Override
-        protected FullHttpResponse decodeResponse(FullHttpResponse response) throws Exception {
-          return null;
         }
       };
     } else {
