@@ -7,7 +7,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.util.concurrent.Promise;
 import mousio.client.exceptions.PrematureDisconnectException;
 import mousio.etcd4j.requests.EtcdRequest;
-import mousio.etcd4j.responses.EtcdResponseParser;
+import mousio.etcd4j.responses.EtcdResponseDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +25,7 @@ class EtcdResponseHandler<RQ extends EtcdRequest, RS> extends SimpleChannelInbou
   protected final Promise<RS> promise;
   protected final EtcdNettyClient client;
   protected final RQ request;
-  protected final EtcdResponseParser<RS> parser;
+  protected final EtcdResponseDecoder<RS> decoder;
 
   private boolean isRetried;
 
@@ -36,10 +36,10 @@ class EtcdResponseHandler<RQ extends EtcdRequest, RS> extends SimpleChannelInbou
    * @param etcdRequest     request
    */
   @SuppressWarnings("unchecked")
-  public EtcdResponseHandler(EtcdNettyClient etcdNettyClient, RQ etcdRequest,  EtcdResponseParser<RS> parser) {
+  public EtcdResponseHandler(EtcdNettyClient etcdNettyClient, RQ etcdRequest,  EtcdResponseDecoder<RS> decoder) {
     this.client = etcdNettyClient;
     this.request = etcdRequest;
-    this.parser = parser;
+    this.decoder = decoder;
     this.promise = etcdRequest.getPromise().getNettyPromise();
     this.isRetried = false;
   }
@@ -92,7 +92,7 @@ class EtcdResponseHandler<RQ extends EtcdRequest, RS> extends SimpleChannelInbou
       }
 
       try {
-        this.promise.setSuccess(decodeResponse(response));
+        this.promise.setSuccess(decoder.decode(response.headers(), response.content()));
       }
       // Catches both parsed EtcdExceptions and parsing exceptions
       catch (Exception e) {
@@ -101,14 +101,10 @@ class EtcdResponseHandler<RQ extends EtcdRequest, RS> extends SimpleChannelInbou
     }
   }
 
-  protected RS decodeResponse(FullHttpResponse response) throws Exception {
-    return this.parser != null ? this.parser.parse(response.headers(), response.content()) : null;
-  }
-
   public static <Request extends EtcdRequest, Response> EtcdResponseHandler<Request, Response> from(
       EtcdNettyClient etcdNettyClient,
       Request etcdRequest,
-      EtcdResponseParser<Response> parser) {
+      EtcdResponseDecoder<Response> parser) {
     return new EtcdResponseHandler(etcdNettyClient, etcdRequest, parser);
   }
 }

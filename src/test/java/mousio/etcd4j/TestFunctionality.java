@@ -41,7 +41,9 @@ public class TestFunctionality {
    */
   @Test
   public void testOldVersion() {
-    assertTrue(etcd.getVersion().contains("etcd"));
+    String version = etcd.getVersion();
+    assertNotNull(version);
+    assertTrue(version.contains("etcd"));
   }
 
   /**

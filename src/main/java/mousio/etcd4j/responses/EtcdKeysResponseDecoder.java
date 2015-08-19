@@ -17,8 +17,8 @@ import java.util.List;
 /**
  * Parses the JSON response for key responses
  */
-public class EtcdKeysResponseParser implements EtcdResponseParser<EtcdKeysResponse> {
-  public static final EtcdKeysResponseParser INSTANCE = new EtcdKeysResponseParser();
+public class EtcdKeysResponseDecoder implements EtcdResponseDecoder<EtcdKeysResponse> {
+  public static final EtcdKeysResponseDecoder INSTANCE = new EtcdKeysResponseDecoder();
 
   private static final JsonFactory factory = new JsonFactory();
 
@@ -49,12 +49,12 @@ public class EtcdKeysResponseParser implements EtcdResponseParser<EtcdKeysRespon
    * Parses the Json content of the Etcd Response
    *
    * @param headers
-   * @param content to parse
+   * @param content to decode
    * @return EtcdResponse if found in response
    * @throws mousio.etcd4j.responses.EtcdException if exception was found in response
    * @throws java.io.IOException                   if Json parsing or parser creation fails
    */
-  public EtcdKeysResponse parse(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
+  public EtcdKeysResponse decode(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
     JsonParser parser = factory.createParser(new ByteBufInputStream(content));
 
     if (parser.nextToken() == JsonToken.START_OBJECT) {
@@ -72,7 +72,7 @@ public class EtcdKeysResponseParser implements EtcdResponseParser<EtcdKeysRespon
   /**
    * Parses an EtcdException
    *
-   * @param parser to parse with
+   * @param parser to decode with
    * @return EtcdException
    * @throws java.io.IOException IOException
    */
@@ -110,7 +110,7 @@ public class EtcdKeysResponseParser implements EtcdResponseParser<EtcdKeysRespon
    * Parses response
    *
    * @param headers
-   * @param parser  to parse with
+   * @param parser  to decode with
    * @return EtcdResponse
    * @throws java.io.IOException if JSON could not be parsed
    */
@@ -248,7 +248,7 @@ public class EtcdKeysResponseParser implements EtcdResponseParser<EtcdKeysRespon
   /**
    * Parses an array with node descriptions
    *
-   * @param parser to parse with
+   * @param parser to decode with
    * @return List of EtcdNodes
    * @throws IOException if JSON content could not be parsed
    */

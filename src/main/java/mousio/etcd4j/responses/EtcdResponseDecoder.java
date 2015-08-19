@@ -6,7 +6,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import java.io.IOException;
 
 
-public interface EtcdResponseParser<T> {
+public interface EtcdResponseDecoder<T> {
   /**
    * @param headers
    * @param content
@@ -14,6 +14,6 @@ public interface EtcdResponseParser<T> {
    * @throws EtcdException
    * @throws IOException
    */
-  public T parse(HttpHeaders headers, ByteBuf content)
+  public T decode(HttpHeaders headers, ByteBuf content)
       throws EtcdException, IOException;
 }

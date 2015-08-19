@@ -18,7 +18,7 @@ public class EtcdSelfStatsResponse {
   private final String state;
   private final LeaderInfo leaderInfo;
 
-  public EtcdSelfStatsResponse(
+  EtcdSelfStatsResponse(
       String id,
       String name,
       long recvAppendRequestCnt,
@@ -81,7 +81,7 @@ public class EtcdSelfStatsResponse {
     private final Date startTime;
     private final String uptime;
 
-    public LeaderInfo(
+    LeaderInfo(
         String leader,
         Date startTime,
         String uptime) {

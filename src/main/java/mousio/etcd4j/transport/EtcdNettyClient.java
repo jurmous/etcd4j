@@ -22,16 +22,16 @@ import mousio.etcd4j.requests.EtcdRequest;
 import mousio.etcd4j.requests.EtcdSelfStatsRequest;
 import mousio.etcd4j.requests.EtcdStoreStatsRequest;
 import mousio.etcd4j.requests.EtcdVersionRequest;
-import mousio.etcd4j.responses.EtcdKeysResponseParser;
-import mousio.etcd4j.responses.EtcdSelfStatsResponseParser;
-import mousio.etcd4j.responses.EtcdStoreStatsResponseParser;
-import mousio.etcd4j.responses.EtcdVersionResponseParser;
+import mousio.etcd4j.responses.EtcdKeysResponseDecoder;
+import mousio.etcd4j.responses.EtcdSelfStatsResponseDecoder;
+import mousio.etcd4j.responses.EtcdStoreStatsResponseDecoder;
+import mousio.etcd4j.responses.EtcdStringResponseDecoder;
+import mousio.etcd4j.responses.EtcdVersionResponseDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
@@ -248,20 +248,15 @@ public class EtcdNettyClient implements EtcdClientImpl {
     final EtcdResponseHandler handler;
 
     if (req instanceof EtcdKeyRequest) {
-      handler = EtcdResponseHandler.from(this, req, EtcdKeysResponseParser.INSTANCE);
+      handler = EtcdResponseHandler.from(this, req, EtcdKeysResponseDecoder.INSTANCE);
     } else if (req instanceof EtcdVersionRequest) {
-      handler = EtcdResponseHandler.from(this, req, EtcdVersionResponseParser.INSTANCE);
+      handler = EtcdResponseHandler.from(this, req, EtcdVersionResponseDecoder.INSTANCE);
     } else if (req instanceof EtcdSelfStatsRequest) {
-      handler = EtcdResponseHandler.from(this, req, EtcdSelfStatsResponseParser.INSTANCE);
+      handler = EtcdResponseHandler.from(this, req, EtcdSelfStatsResponseDecoder.INSTANCE);
     } else if (req instanceof EtcdStoreStatsRequest) {
-      handler = EtcdResponseHandler.from(this, req, EtcdStoreStatsResponseParser.INSTANCE);
+      handler = EtcdResponseHandler.from(this, req, EtcdStoreStatsResponseDecoder.INSTANCE);
     } else if (req instanceof EtcdOldVersionRequest) {
-      handler = new EtcdResponseHandler<EtcdOldVersionRequest, FullHttpResponse>(this, (EtcdOldVersionRequest) req, null) {
-        @Override
-        protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse msg) throws Exception {
-          (((EtcdOldVersionRequest) req).getPromise()).getNettyPromise().setSuccess(msg.content().toString(Charset.defaultCharset()));
-        }
-      };
+      handler = EtcdResponseHandler.from(this, req, EtcdStringResponseDecoder.INSTANCE);
     } else {
       throw new RuntimeException("Unknown request type " + req.getClass().getName());
     }

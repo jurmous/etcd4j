@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import static mousio.etcd4j.responses.EtcdKeysResponseParser.convertDate;
+import static mousio.etcd4j.responses.EtcdKeysResponseDecoder.convertDate;
 
 /**
  * Etcd Keys Response
@@ -31,7 +31,7 @@ public final class EtcdKeysResponse {
    * @param raftIndex
    * @param raftTerm
    */
-  protected EtcdKeysResponse(
+  EtcdKeysResponse(
       final String action,
       final EtcdNode node,
       final EtcdNode prevNode,
@@ -74,7 +74,7 @@ public final class EtcdKeysResponse {
      * @param ttl
      * @param nodes
      */
-    protected EtcdNode(
+    EtcdNode(
         final Boolean dir,
         final String key,
         final String value,

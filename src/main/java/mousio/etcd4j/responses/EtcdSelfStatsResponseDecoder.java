@@ -14,8 +14,8 @@ import java.util.Date;
 /**
  * Parses the JSON response for storage stats responses
  */
-public class EtcdSelfStatsResponseParser implements EtcdResponseParser<EtcdSelfStatsResponse> {
-  public static final EtcdSelfStatsResponseParser INSTANCE = new EtcdSelfStatsResponseParser();
+public class EtcdSelfStatsResponseDecoder implements EtcdResponseDecoder<EtcdSelfStatsResponse> {
+  public static final EtcdSelfStatsResponseDecoder INSTANCE = new EtcdSelfStatsResponseDecoder();
 
   private static final JsonFactory factory = new JsonFactory();
 
@@ -37,12 +37,12 @@ public class EtcdSelfStatsResponseParser implements EtcdResponseParser<EtcdSelfS
    * Parses the Json content of the Etcd Response
    *
    * @param headers
-   * @param content to parse
+   * @param content to decode
    * @return EtcdResponse   if found in response
    * @throws EtcdException  if exception was found in response
    * @throws IOException    if Json parsing or parser creation fails
    */
-  public EtcdSelfStatsResponse parse(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
+  public EtcdSelfStatsResponse decode(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
     final JsonParser parser = factory.createParser(new ByteBufInputStream(content));
 
     String id = null;

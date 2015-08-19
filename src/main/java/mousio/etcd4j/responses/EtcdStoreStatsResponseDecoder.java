@@ -1,7 +1,6 @@
 package mousio.etcd4j.responses;
 
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import io.netty.buffer.ByteBuf;
@@ -13,8 +12,8 @@ import java.io.IOException;
 /**
  * Parses the JSON response for storage stats responses
  */
-public class EtcdStoreStatsResponseParser implements EtcdResponseParser<EtcdStoreStatsResponse> {
-  public static final EtcdStoreStatsResponseParser INSTANCE = new EtcdStoreStatsResponseParser();
+public class EtcdStoreStatsResponseDecoder implements EtcdResponseDecoder<EtcdStoreStatsResponse> {
+  public static final EtcdStoreStatsResponseDecoder INSTANCE = new EtcdStoreStatsResponseDecoder();
 
   private static final JsonFactory factory = new JsonFactory();
 
@@ -37,12 +36,12 @@ public class EtcdStoreStatsResponseParser implements EtcdResponseParser<EtcdStor
    * Parses the Json content of the Etcd Response
    *
    * @param headers
-   * @param content to parse
+   * @param content to decode
    * @return EtcdResponse   if found in response
    * @throws EtcdException  if exception was found in response
    * @throws IOException    if Json parsing or parser creation fails
    */
-  public EtcdStoreStatsResponse parse(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
+  public EtcdStoreStatsResponse decode(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
     final JsonParser parser = factory.createParser(new ByteBufInputStream(content));
 
     long compareAndSwapFail = 0;

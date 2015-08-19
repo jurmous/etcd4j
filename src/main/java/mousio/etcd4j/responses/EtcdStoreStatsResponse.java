@@ -19,7 +19,7 @@ public class EtcdStoreStatsResponse {
   private final long updateSuccess;
   private final long watchers;
 
-  public EtcdStoreStatsResponse(
+  EtcdStoreStatsResponse(
       long compareAndSwapFail,
       long compareAndSwapSuccess,
       long createFail,
