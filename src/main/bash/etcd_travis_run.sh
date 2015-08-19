@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-./etcd-dist/etcd --name 'etcd4j' --data-dir /tmp/etcd4j &
+./etcd-dist/etcd --name 'etcd4j.etcd' --data-dir /tmp/etcd4j.etcd &
 

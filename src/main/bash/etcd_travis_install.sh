@@ -8,6 +8,7 @@ ETCD_ARC="linux-amd64"
 rm -rf etcd-${ETCD_VER}-${ETCD_ARC}.tar.gz
 rm -rf etcd-${ETCD_VER}-${ETCD_ARC}
 rm -rf etcd
+rm -rf default.etcd
 
 mkdir etcd-dist
 
