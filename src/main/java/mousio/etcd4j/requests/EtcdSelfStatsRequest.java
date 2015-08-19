@@ -4,7 +4,6 @@ import io.netty.handler.codec.http.HttpMethod;
 import mousio.client.retry.RetryPolicy;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.EtcdSelfStatsResponse;
-import mousio.etcd4j.responses.EtcdStoreStatsResponse;
 import mousio.etcd4j.transport.EtcdClientImpl;
 
 import java.io.IOException;

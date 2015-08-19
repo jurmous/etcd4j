@@ -16,15 +16,15 @@ import java.io.IOException;
 /**
  * Handles etcd responses
  *
- * @param <RS> Response type
+ * @param <R> Response type
  */
-class EtcdResponseHandler<RS> extends SimpleChannelInboundHandler<FullHttpResponse> {
+class EtcdResponseHandler<R> extends SimpleChannelInboundHandler<FullHttpResponse> {
   private static final Logger logger = LoggerFactory.getLogger(EtcdResponseHandler.class);
 
-  protected final Promise<RS> promise;
+  protected final Promise<R> promise;
   protected final EtcdNettyClient client;
   protected final EtcdRequest<?> request;
-  protected final EtcdResponseDecoder<RS> decoder;
+  protected final EtcdResponseDecoder<R> decoder;
 
   private boolean isRetried;
 
@@ -35,7 +35,7 @@ class EtcdResponseHandler<RS> extends SimpleChannelInboundHandler<FullHttpRespon
    * @param etcdRequest     request
    */
   @SuppressWarnings("unchecked")
-  public EtcdResponseHandler(EtcdNettyClient etcdNettyClient, EtcdRequest<RS> etcdRequest,  EtcdResponseDecoder<RS> decoder) {
+  public EtcdResponseHandler(EtcdNettyClient etcdNettyClient, EtcdRequest<R> etcdRequest,  EtcdResponseDecoder<R> decoder) {
     this.client = etcdNettyClient;
     this.request = etcdRequest;
     this.decoder = decoder;

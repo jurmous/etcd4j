@@ -240,7 +240,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @param <R>      Type of Response
    */
   private <R> void modifyPipeLine(final EtcdRequest<R> req, final ChannelPipeline pipeline) {
-    final EtcdResponseHandler handler;
+    final EtcdResponseHandler<?> handler;
 
     if (req instanceof EtcdKeyRequest) {
       handler = new EtcdResponseHandler<>(this, (EtcdKeyRequest)req, EtcdKeysResponseDecoder.INSTANCE) ;
