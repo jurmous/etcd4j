@@ -1,0 +1,14 @@
+sudo: false
+language:
+- java
+before_install:
+- ./src/main/bash/etcd_travis_install.sh
+script:
+- ./src/main/bash/etcd_travis_run.sh
+- ./gradlew install
+jdk:
+- oraclejdk7
+branches:
+  only:
+    - TRAVIS-CI
+
