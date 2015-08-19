@@ -11,4 +11,7 @@ jdk:
 branches:
   only:
     - TRAVIS-CI
-
+env:
+  global:
+    - CI_DEPLOY_USERNAME=fake
+    - CI_DEPLOY_PASSWORD=fake
