@@ -239,26 +239,25 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @param pipeline to modify
    * @param <R>      Type of Response
    */
-  @SuppressWarnings("unchecked")
   private <R> void modifyPipeLine(final EtcdRequest<R> req, final ChannelPipeline pipeline) {
-    if (req.getTimeout() != -1) {
-      pipeline.addFirst(new ReadTimeoutHandler(req.getTimeout(), req.getTimeoutUnit()));
-    }
-
     final EtcdResponseHandler handler;
 
     if (req instanceof EtcdKeyRequest) {
-      handler = EtcdResponseHandler.from(this, req, EtcdKeysResponseDecoder.INSTANCE);
+      handler = new EtcdResponseHandler<>(this, (EtcdKeyRequest)req, EtcdKeysResponseDecoder.INSTANCE) ;
     } else if (req instanceof EtcdVersionRequest) {
-      handler = EtcdResponseHandler.from(this, req, EtcdVersionResponseDecoder.INSTANCE);
+      handler = new EtcdResponseHandler<>(this, (EtcdVersionRequest)req, EtcdVersionResponseDecoder.INSTANCE);
     } else if (req instanceof EtcdSelfStatsRequest) {
-      handler = EtcdResponseHandler.from(this, req, EtcdSelfStatsResponseDecoder.INSTANCE);
+      handler = new EtcdResponseHandler<>(this, (EtcdSelfStatsRequest)req, EtcdSelfStatsResponseDecoder.INSTANCE);
     } else if (req instanceof EtcdStoreStatsRequest) {
-      handler = EtcdResponseHandler.from(this, req, EtcdStoreStatsResponseDecoder.INSTANCE);
+      handler = new EtcdResponseHandler<>(this, (EtcdStoreStatsRequest)req, EtcdStoreStatsResponseDecoder.INSTANCE);
     } else if (req instanceof EtcdOldVersionRequest) {
-      handler = EtcdResponseHandler.from(this, req, EtcdStringResponseDecoder.INSTANCE);
+      handler = new EtcdResponseHandler<>(this, (EtcdOldVersionRequest)req, EtcdStringResponseDecoder.INSTANCE);
     } else {
       throw new RuntimeException("Unknown request type " + req.getClass().getName());
+    }
+
+    if (req.getTimeout() != -1) {
+      pipeline.addFirst(new ReadTimeoutHandler(req.getTimeout(), req.getTimeoutUnit()));
     }
 
     pipeline.addLast(handler);

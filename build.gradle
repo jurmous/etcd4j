@@ -104,6 +104,10 @@ signing {
     sign configurations.archives
 }
 
+//tasks.withType(JavaCompile) {
+//    options.compilerArgs << "-Xlint:unchecked"
+//}
+
 uploadArchives {
     repositories {
         mavenDeployer {

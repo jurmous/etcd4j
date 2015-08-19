@@ -16,15 +16,14 @@ import java.io.IOException;
 /**
  * Handles etcd responses
  *
- * @param <RQ> Request type
  * @param <RS> Response type
  */
-class EtcdResponseHandler<RQ extends EtcdRequest, RS> extends SimpleChannelInboundHandler<FullHttpResponse> {
+class EtcdResponseHandler<RS> extends SimpleChannelInboundHandler<FullHttpResponse> {
   private static final Logger logger = LoggerFactory.getLogger(EtcdResponseHandler.class);
 
   protected final Promise<RS> promise;
   protected final EtcdNettyClient client;
-  protected final RQ request;
+  protected final EtcdRequest<?> request;
   protected final EtcdResponseDecoder<RS> decoder;
 
   private boolean isRetried;
@@ -36,7 +35,7 @@ class EtcdResponseHandler<RQ extends EtcdRequest, RS> extends SimpleChannelInbou
    * @param etcdRequest     request
    */
   @SuppressWarnings("unchecked")
-  public EtcdResponseHandler(EtcdNettyClient etcdNettyClient, RQ etcdRequest,  EtcdResponseDecoder<RS> decoder) {
+  public EtcdResponseHandler(EtcdNettyClient etcdNettyClient, EtcdRequest<RS> etcdRequest,  EtcdResponseDecoder<RS> decoder) {
     this.client = etcdNettyClient;
     this.request = etcdRequest;
     this.decoder = decoder;
@@ -99,12 +98,5 @@ class EtcdResponseHandler<RQ extends EtcdRequest, RS> extends SimpleChannelInbou
         this.promise.setFailure(e);
       }
     }
-  }
-
-  public static <Request extends EtcdRequest, Response> EtcdResponseHandler<Request, Response> from(
-      EtcdNettyClient etcdNettyClient,
-      Request etcdRequest,
-      EtcdResponseDecoder<Response> parser) {
-    return new EtcdResponseHandler(etcdNettyClient, etcdRequest, parser);
   }
 }
