@@ -1,11 +1,8 @@
 package mousio.etcd4j.responses;
 
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
 import io.netty.handler.codec.http.HttpHeaders;
 
 import javax.xml.bind.DatatypeConverter;
@@ -17,10 +14,8 @@ import java.util.List;
 /**
  * Parses the JSON response for key responses
  */
-public class EtcdKeysResponseDecoder implements EtcdResponseDecoder<EtcdKeysResponse> {
+public class EtcdKeysResponseDecoder extends AbstractJsonResponseDecoder<EtcdKeysResponse> {
   public static final EtcdKeysResponseDecoder INSTANCE = new EtcdKeysResponseDecoder();
-
-  private static final JsonFactory factory = new JsonFactory();
 
   protected static final String X_ETCD_CLUSTER_ID = "X-Etcd-Cluster-Id";
   protected static final String X_ETCD_INDEX = "X-Etcd-Index";
@@ -49,14 +44,13 @@ public class EtcdKeysResponseDecoder implements EtcdResponseDecoder<EtcdKeysResp
    * Parses the Json content of the Etcd Response
    *
    * @param headers
-   * @param content to decode
+   * @param parser Json parser
    * @return EtcdResponse if found in response
    * @throws mousio.etcd4j.responses.EtcdException if exception was found in response
    * @throws java.io.IOException                   if Json parsing or parser creation fails
    */
-  public EtcdKeysResponse decode(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
-    JsonParser parser = factory.createParser(new ByteBufInputStream(content));
-
+  @Override
+  protected EtcdKeysResponse decodeJson(HttpHeaders headers, JsonParser parser) throws EtcdException, IOException {
     if (parser.nextToken() == JsonToken.START_OBJECT) {
       if (parser.nextToken() == JsonToken.FIELD_NAME
           && parser.getCurrentName().contentEquals(ACTION)) {

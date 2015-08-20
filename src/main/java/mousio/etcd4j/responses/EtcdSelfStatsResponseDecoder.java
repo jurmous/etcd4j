@@ -1,10 +1,7 @@
 package mousio.etcd4j.responses;
 
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
 import io.netty.handler.codec.http.HttpHeaders;
 
 import javax.xml.bind.DatatypeConverter;
@@ -14,10 +11,8 @@ import java.util.Date;
 /**
  * Parses the JSON response for storage stats responses
  */
-public class EtcdSelfStatsResponseDecoder implements EtcdResponseDecoder<EtcdSelfStatsResponse> {
+public class EtcdSelfStatsResponseDecoder extends AbstractJsonResponseDecoder<EtcdSelfStatsResponse> {
   public static final EtcdSelfStatsResponseDecoder INSTANCE = new EtcdSelfStatsResponseDecoder();
-
-  private static final JsonFactory factory = new JsonFactory();
 
   public static final String ID = "id";
   public static final String NAME = "name";
@@ -37,13 +32,13 @@ public class EtcdSelfStatsResponseDecoder implements EtcdResponseDecoder<EtcdSel
    * Parses the Json content of the Etcd Response
    *
    * @param headers
-   * @param content to decode
-   * @return EtcdResponse   if found in response
-   * @throws EtcdException  if exception was found in response
-   * @throws IOException    if Json parsing or parser creation fails
+   * @param parser Json parser
+   * @return EtcdSelfStatsResponse if found in response
+   * @throws mousio.etcd4j.responses.EtcdException if exception was found in response
+   * @throws java.io.IOException                   if Json parsing or parser creation fails
    */
-  public EtcdSelfStatsResponse decode(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
-    final JsonParser parser = factory.createParser(new ByteBufInputStream(content));
+  @Override
+  protected EtcdSelfStatsResponse decodeJson(HttpHeaders headers, JsonParser parser) throws EtcdException, IOException {
 
     String id = null;
     String name = null;

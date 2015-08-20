@@ -12,7 +12,7 @@ import java.io.IOException;
 /**
  * Parses the JSON response for storage stats responses
  */
-public class EtcdStoreStatsResponseDecoder implements EtcdResponseDecoder<EtcdStoreStatsResponse> {
+public class EtcdStoreStatsResponseDecoder extends AbstractJsonResponseDecoder<EtcdStoreStatsResponse> {
   public static final EtcdStoreStatsResponseDecoder INSTANCE = new EtcdStoreStatsResponseDecoder();
 
   private static final JsonFactory factory = new JsonFactory();
@@ -36,14 +36,13 @@ public class EtcdStoreStatsResponseDecoder implements EtcdResponseDecoder<EtcdSt
    * Parses the Json content of the Etcd Response
    *
    * @param headers
-   * @param content to decode
+   * @param parser Json parser
    * @return EtcdResponse   if found in response
    * @throws EtcdException  if exception was found in response
    * @throws IOException    if Json parsing or parser creation fails
    */
-  public EtcdStoreStatsResponse decode(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
-    final JsonParser parser = factory.createParser(new ByteBufInputStream(content));
-
+  @Override
+  public EtcdStoreStatsResponse decodeJson(HttpHeaders headers, JsonParser parser) throws EtcdException, IOException {
     long compareAndSwapFail = 0;
     long compareAndSwapSuccess = 0;
     long createFail = 0;

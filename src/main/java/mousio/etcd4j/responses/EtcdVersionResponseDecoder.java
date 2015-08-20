@@ -13,7 +13,7 @@ import java.io.IOException;
 /**
  * Parses the JSON response for key responses
  */
-public class EtcdVersionResponseDecoder implements EtcdResponseDecoder<EtcdVersionResponse> {
+public class EtcdVersionResponseDecoder extends AbstractJsonResponseDecoder<EtcdVersionResponse> {
   public static final EtcdVersionResponseDecoder INSTANCE = new EtcdVersionResponseDecoder();
 
   private static final JsonFactory factory = new JsonFactory();
@@ -25,17 +25,16 @@ public class EtcdVersionResponseDecoder implements EtcdResponseDecoder<EtcdVersi
    * Parses the Json content of the Etcd Response
    *
    * @param headers
-   * @param content to decode
+   * @param parser Json parser
    * @return EtcdResponse if found in response
    * @throws EtcdException if exception was found in response
    * @throws IOException                   if Json parsing or parser creation fails
    */
-  public EtcdVersionResponse decode(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
-    JsonParser parser = factory.createParser(new ByteBufInputStream(content));
-
+  public EtcdVersionResponse decodeJson(HttpHeaders headers, JsonParser parser) throws EtcdException, IOException {
     if (parser.nextToken() == JsonToken.START_OBJECT) {
-      String etcdserver = null;
-      String etcdcluster = null;
+
+      final String etcdserver;
+      final String etcdcluster;
 
       if (parser.nextToken() == JsonToken.FIELD_NAME && parser.getCurrentName().contentEquals(ETCD_SERVER)) {
         etcdserver = parser.nextTextValue();
