@@ -203,7 +203,7 @@ try{
 }
 
 
-EtcdKeysGetRequest getRequest = client.get("foo").waitForChange().timeout(2, TimeUnit.MINUTES);
+EtcdKeyGetRequest getRequest = client.get("foo").waitForChange().timeout(2, TimeUnit.MINUTES);
 
 try{
   r = getRequest.send().get();
