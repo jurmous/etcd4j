@@ -8,15 +8,21 @@ group = 'org.mousio'
 version = '2.8.0-SNAPSHOT'
 
 project.ext {
+    isTravisBuild = Boolean.valueOf("$System.env.CI_TRAVIS")
     isSnapshot = version.endsWith("-SNAPSHOT")
     mavenDeployUrl = isSnapshot ?
         'https://oss.sonatype.org/content/repositories/snapshots/' :
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
-    nettyVersion = '4.1.0.Beta5'
-    jacksonVersion = '2.5.4'
-    slf4jVersion = '1.7.12'
-    junitVersion = '4.12'
+    nettyVersion   = '4.1.0.Beta5'
+    jacksonVersion = '2.6.1'
+    slf4jVersion   = '1.7.12'
+    junitVersion   = '4.12'
+
+    if(!project.hasProperty('sonatypeUsername') && !project.hasProperty('sonatypePassword')) {
+        sonatypeUsername = "$System.env.CI_DEPLOY_USERNAME"
+        sonatypePassword = "$System.env.CI_DEPLOY_PASSWORD"
+    }
 }
 
 repositories {
@@ -101,6 +107,11 @@ artifacts {
 }
 
 signing {
+    // Do not sigh jars on trvis-ci 
+    required { 
+        !isTravisBuild
+    }
+
     sign configurations.archives
 }
 
