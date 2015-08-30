@@ -84,6 +84,13 @@ abstract class AbstractEtcdResponseHandler<RQ extends EtcdRequest, RS> extends S
       }
     } else {
       if (!response.content().isReadable()) {
+        // If connection was accepted maybe response has to be waited for
+        if (response.status().equals(HttpResponseStatus.OK)
+            || response.status().equals(HttpResponseStatus.ACCEPTED)
+            || response.status().equals(HttpResponseStatus.CREATED)) {
+          this.client.connect(this.request);
+          return;
+        }
         this.promise.setFailure(new IOException("Content was not readable. HTTP Status: "
           + response.status()));
       }
