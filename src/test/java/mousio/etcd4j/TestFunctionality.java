@@ -198,6 +198,15 @@ public class TestFunctionality {
     assertEquals("changed", r.node.value);
   }
 
+  @Test(expected = TimeoutException.class)
+  public void testWaitTimeout() throws IOException, EtcdException, InterruptedException, TimeoutException {
+    EtcdResponsePromise<EtcdKeysResponse> p = etcd.get("etcd4j_test/test").waitForChange().timeout(10, TimeUnit.MILLISECONDS).send();
+
+    EtcdKeysResponse r = p.get();
+    // get should have thrown TimeoutException
+    fail();
+  }
+
   @Test(timeout = 1000)
   public void testChunkedData() throws IOException, EtcdException, TimeoutException {
     //creating very long key to force content to be chunked
