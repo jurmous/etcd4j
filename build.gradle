@@ -2,6 +2,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'signing'
 apply plugin: 'idea'
+apply plugin: 'osgi'
 
 sourceCompatibility = 1.7
 group = 'org.mousio'
@@ -29,81 +30,26 @@ repositories {
     mavenCentral()
 }
 
-sourceSets {
-    client {
-        java {
-            srcDir 'src/client/java'
-        }
-    }
-    main {
-        java {
-            compileClasspath += client.output
-            srcDir 'src/main/java'
-        }
-    }
-    test {
-        java {
-            srcDir 'src/test/java'
-        }
-    }
-}
-
 dependencies {
-    clientCompile "io.netty:netty-codec-http:$nettyVersion"
-    clientCompile "io.netty:netty-handler:$nettyVersion"
-    clientCompile "org.slf4j:slf4j-api:$slf4jVersion"
-
-    compile sourceSets.client.compileClasspath
-    compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
+    compile "org.slf4j:slf4j-api:$slf4jVersion"
     compile "io.netty:netty-codec-http:$nettyVersion"
     compile "io.netty:netty-handler:$nettyVersion"
-    compile "org.slf4j:slf4j-api:$slf4jVersion"
+    compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
 
-    testCompile sourceSets.main.compileClasspath
     testCompile "junit:junit:$junitVersion"
     testCompile "org.slf4j:slf4j-simple:$slf4jVersion"
 }
 
-javadoc {
-    source sourceSets.main.allJava
-    source sourceSets.client.allJava
-}
-
 jar {
-    from sourceSets.main.output
-    from sourceSets.client.output
-}
+    baseName = "${project.name}"
 
-idea {
-    module {
-        scopes.COMPILE.plus += configurations.clientCompile.all
-    }
-}
-
-task jarClient(type: Jar) {
-    classifier = 'client'
-    from sourceSets.client.output
-    manifest {
-        attributes 'Implementation-Title': baseName, 'Implementation-Version': version
-    }
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from 'build/docs/javadoc'
-}
-
-task sourcesJar(type: Jar) {
-    from sourceSets.client.allSource
-    from sourceSets.main.allSource
-    classifier = 'sources'
-}
-
-artifacts {
-    archives jar
-    archives javadocJar
-    archives sourcesJar
-    archives jarClient
+    manifest.attributes['Bundle-Description'     ] = "${project.name}"
+    manifest.attributes['Bundle-Name'            ] = "${project.name}"
+    manifest.attributes['Bundle-SymbolicName'    ] = "${project.group}-${project.name}"
+    manifest.attributes['Bundle-Version'         ] = project.version.replaceAll('-','.')
+    manifest.attributes['Implementation-Title'   ] = project.name
+    manifest.attributes['Implementation-Version' ] = project.version
+    manifest.attributes['Implementation-Vendor'  ] = 'jurmous'
 }
 
 signing {
