@@ -164,7 +164,7 @@ public class TestFunctionality {
     r = etcd.post("etcd4j_test/queue", "Job2").ttl(20).send().get();
     assertEquals(r.action, EtcdKeyAction.create);
 
-    r = etcd.get("etcd4j_test/queue/" + r.node.createdIndex).consistent().send().get();
+    r = etcd.get(String.format("etcd4j_test/queue/%020d",r.node.createdIndex)).consistent().send().get();
     assertEquals(r.node.value, "Job2");
 
     r = etcd.get("etcd4j_test/queue").consistent().recursive().sorted().send().get();
