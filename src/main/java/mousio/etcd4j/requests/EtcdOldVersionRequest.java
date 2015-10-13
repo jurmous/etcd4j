@@ -3,7 +3,7 @@ package mousio.etcd4j.requests;
 import io.netty.handler.codec.http.HttpMethod;
 import mousio.client.retry.RetryPolicy;
 import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.transport.EtcdClientImpl;
+import mousio.etcd4j.transport.EtcdClientTransport;
 
 import java.io.IOException;
 
@@ -18,7 +18,7 @@ public class EtcdOldVersionRequest extends EtcdRequest<String> {
    * @param clientImpl   the client to handle this request
    * @param retryHandler handles retries
    */
-  public EtcdOldVersionRequest(EtcdClientImpl clientImpl, RetryPolicy retryHandler) {
+  public EtcdOldVersionRequest(EtcdClientTransport clientImpl, RetryPolicy retryHandler) {
     super(clientImpl, HttpMethod.GET, retryHandler);
   }
 

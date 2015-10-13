@@ -22,7 +22,7 @@ abstract class AbstractEtcdResponseHandler<RQ extends EtcdRequest, RS> extends S
   private static final Logger logger = LoggerFactory.getLogger(AbstractEtcdResponseHandler.class);
 
   protected final Promise<RS> promise;
-  protected final EtcdNettyClient client;
+  protected final EtcdNettyTransport client;
   protected final RQ request;
 
   private boolean isRetried;
@@ -34,7 +34,7 @@ abstract class AbstractEtcdResponseHandler<RQ extends EtcdRequest, RS> extends S
    * @param etcdRequest     request
    */
   @SuppressWarnings("unchecked")
-  public AbstractEtcdResponseHandler(EtcdNettyClient etcdNettyClient, RQ etcdRequest) {
+  public AbstractEtcdResponseHandler(EtcdNettyTransport etcdNettyClient, RQ etcdRequest) {
     this.client = etcdNettyClient;
     this.request = etcdRequest;
     this.promise = etcdRequest.getPromise().getNettyPromise();

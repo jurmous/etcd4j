@@ -4,7 +4,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import mousio.client.retry.RetryPolicy;
 import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.transport.EtcdClientImpl;
+import mousio.etcd4j.transport.EtcdClientTransport;
 
 import java.io.IOException;
 import java.util.Map;
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  * @param <R> Response Type returned by request
  */
 public abstract class EtcdRequest<R> {
-  protected final EtcdClientImpl clientImpl;
+  protected final EtcdClientTransport clientImpl;
 
   protected final HttpMethod method;
 
@@ -36,7 +36,7 @@ public abstract class EtcdRequest<R> {
    * @param method      http method to use for Request
    * @param retryPolicy Handles retries on fails
    */
-  protected EtcdRequest(EtcdClientImpl clientImpl, HttpMethod method, RetryPolicy retryPolicy) {
+  protected EtcdRequest(EtcdClientTransport clientImpl, HttpMethod method, RetryPolicy retryPolicy) {
     this.clientImpl = clientImpl;
     this.method = method;
     this.retryPolicy = retryPolicy;
