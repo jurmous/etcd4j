@@ -7,13 +7,10 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 /**
  * Settings for the etcd Netty client
  */
-public class EtcdNettyConfig {
+public class EtcdNettyConfig implements Cloneable {
   private static final Logger logger = LoggerFactory.getLogger(EtcdNettyConfig.class);
 
   private EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
@@ -119,6 +116,10 @@ public class EtcdNettyConfig {
     return this;
   }
 
+  public boolean hasHostName() {
+    return hostName != null && !hostName.trim().isEmpty();
+  }
+
   /**
    * Get the local host name
    *
@@ -137,5 +138,15 @@ public class EtcdNettyConfig {
   public EtcdNettyConfig setHostName(String hostName) {
     this.hostName = hostName;
     return this;
+  }
+
+  @SuppressWarnings("CloneDoesntDeclareCloneNotSupportedException")
+  @Override
+  public EtcdNettyConfig clone() {
+    try {
+      return (EtcdNettyConfig) super.clone();
+    } catch (CloneNotSupportedException e) {
+      throw new AssertionError(e);
+    }
   }
 }

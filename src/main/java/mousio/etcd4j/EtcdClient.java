@@ -4,6 +4,7 @@ import io.netty.handler.ssl.SslContext;
 import mousio.client.retry.RetryPolicy;
 import mousio.client.retry.RetryWithExponentialBackOff;
 import mousio.etcd4j.requests.*;
+import mousio.etcd4j.responses.EtcdAuthenticationException;
 import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.responses.EtcdVersionResponse;
 import mousio.etcd4j.transport.EtcdClientImpl;
@@ -19,7 +20,7 @@ import java.util.concurrent.TimeoutException;
  */
 public class EtcdClient implements Closeable {
   private final EtcdClientImpl client;
-  private RetryPolicy retryHandler = new RetryWithExponentialBackOff(20, -1, 10000);
+  private RetryPolicy retryHandler;
 
   /**
    * Constructor
@@ -27,20 +28,57 @@ public class EtcdClient implements Closeable {
    * @param baseUri URI to create connection on
    */
   public EtcdClient(URI... baseUri) {
-    this(null, baseUri);
+    this(EtcdSecurityContext.NONE, baseUri);
   }
 
   /**
    * Constructor
    *
-   * @param sslContext context for Ssl connections
-   * @param baseUri URI to create connection on
+   * @param username  username
+   * @param password  password
+   * @param baseUri   URI to create connection on
+   */
+  public EtcdClient(String username, String password, URI... baseUri) {
+    this(EtcdSecurityContext.withCredential(username, password), baseUri);
+  }
+
+  /**
+   * Constructor
+   *
+   * @param sslContext  context for Ssl connections
+   * @param username    username
+   * @param password    password
+   * @param baseUri     URI to create connection on
+   */
+  public EtcdClient(SslContext sslContext, String username, String password, URI... baseUri) {
+    this(new EtcdSecurityContext(sslContext, username, password), baseUri);
+  }
+
+  /**
+   * Constructor
+   *
+   * @param sslContext  context for Ssl connections
+   * @param baseUri     URI to create connection on
    */
   public EtcdClient(SslContext sslContext, URI... baseUri) {
-    if (baseUri.length == 0) {
-      baseUri = new URI[] { URI.create("https://127.0.0.1:4001") };
-    }
-    this.client = new EtcdNettyClient(sslContext, baseUri);
+    this(EtcdSecurityContext.withSslContext(sslContext), baseUri);
+  }
+
+  /**
+   * Constructor
+   *
+   * @param securityContext context for security
+   * @param baseUri URI to create connection on
+   */
+  public EtcdClient(EtcdSecurityContext securityContext, URI... baseUri) {
+    this.retryHandler = RetryWithExponentialBackOff.DEFAULT;
+
+    this.client = new EtcdNettyClient(
+      securityContext,
+      (baseUri.length == 0)
+        ? new URI[] { URI.create("https://127.0.0.1:4001") }
+        : baseUri
+    );
   }
 
   /**
@@ -62,7 +100,7 @@ public class EtcdClient implements Closeable {
   public String getVersion() {
     try {
       return new EtcdOldVersionRequest(this.client, retryHandler).send().get();
-    } catch (IOException | EtcdException | TimeoutException e) {
+    } catch (IOException | EtcdException | EtcdAuthenticationException | TimeoutException e) {
       return null;
     }
   }
@@ -75,7 +113,7 @@ public class EtcdClient implements Closeable {
   public EtcdVersionResponse version() {
     try {
       return new EtcdVersionRequest(this.client, retryHandler).send().get();
-    } catch (IOException | EtcdException | TimeoutException e) {
+    } catch (IOException | EtcdException | EtcdAuthenticationException | TimeoutException e) {
       return null;
     }
   }
@@ -173,7 +211,8 @@ public class EtcdClient implements Closeable {
    *
    * @param retryHandler to set
    */
-  public void setRetryHandler(RetryPolicy retryHandler) {
+  public EtcdClient setRetryHandler(RetryPolicy retryHandler) {
     this.retryHandler = retryHandler;
+    return this;
   }
 }

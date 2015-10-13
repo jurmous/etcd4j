@@ -4,9 +4,11 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.Promise;
 import mousio.client.exceptions.PrematureDisconnectException;
 import mousio.etcd4j.requests.EtcdRequest;
+import mousio.etcd4j.responses.EtcdAuthenticationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,6 +84,8 @@ abstract class AbstractEtcdResponseHandler<RQ extends EtcdRequest, RS> extends S
       } else {
         this.promise.setFailure(new Exception("Missing Location header on redirect"));
       }
+    } if(response.status().equals(HttpResponseStatus.UNAUTHORIZED)) {
+      this.promise.setFailure(new EtcdAuthenticationException(response.content().toString(CharsetUtil.UTF_8)));
     } else {
       if (!response.content().isReadable()) {
         // If connection was accepted maybe response has to be waited for

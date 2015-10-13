@@ -6,6 +6,8 @@ import mousio.client.ConnectionState;
  * Retries with an exponential backoff
  */
 public class RetryWithExponentialBackOff extends RetryPolicy {
+  public static final RetryWithExponentialBackOff DEFAULT =  new RetryWithExponentialBackOff(20, -1, 10000);
+
   private final int maxRetryCount;
   private final int maxDelay;
 
