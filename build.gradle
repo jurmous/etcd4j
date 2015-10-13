@@ -15,8 +15,8 @@ project.ext {
         'https://oss.sonatype.org/content/repositories/snapshots/' :
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
-    nettyVersion   = '4.1.0.Beta6'
-    jacksonVersion = '2.6.1'
+    nettyVersion   = '4.1.0.Beta7'
+    jacksonVersion = '2.6.3'
     slf4jVersion   = '1.7.12'
     junitVersion   = '4.12'
 
@@ -94,6 +94,10 @@ uploadArchives {
                     developer {
                         id 'jurmous'
                         name 'Jurriaan Mous'
+                    }
+                    developer {
+                        id 'lburgazzoli'
+                        name 'Luca Burgazzoli'
                     }
                 }
             }
