@@ -3,6 +3,7 @@ package mousio.etcd4j;
 import mousio.client.retry.RetryWithExponentialBackOff;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.*;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +37,9 @@ public class TestFunctionality {
    */
   @Test
   public void testOldVersion() {
-    assertTrue(etcd.getVersion().contains("etcd"));
+    String version = etcd.getVersion();
+    assertNotNull(version);
+    assertTrue(version.contains("etcd"));
   }
 
   /**
@@ -50,6 +53,32 @@ public class TestFunctionality {
     assertNotNull(version);
     assertTrue(version.server.startsWith("2."));
     assertTrue(version.cluster.startsWith("2."));
+  }
+
+
+  /**
+   * Test Self Stats
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testSelfStats() {
+    EtcdSelfStatsResponse stats = etcd.getSelfStats();
+    assertNotNull(stats);
+    assertNotNull(stats.getLeaderInfo());
+    assertEquals(stats.getId(), stats.getLeaderInfo().getLeader());
+  }
+
+
+  /**
+   * Test Store Stats
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testStoreStats() {
+    EtcdStoreStatsResponse stats = etcd.getStoreStats();
+    assertNotNull(stats);
   }
 
   @Test

@@ -18,8 +18,8 @@ package mousio.etcd4j.requests;
 import io.netty.handler.codec.http.HttpMethod;
 import mousio.client.retry.RetryPolicy;
 import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.responses.EtcdVersionResponse;
-import mousio.etcd4j.responses.EtcdVersionResponseDecoder;
+import mousio.etcd4j.responses.EtcdSelfStatsResponse;
+import mousio.etcd4j.responses.EtcdSelfStatsResponseDecoder;
 import mousio.etcd4j.transport.EtcdClientImpl;
 
 import java.io.IOException;
@@ -28,9 +28,9 @@ import java.io.IOException;
  * @author Jurriaan Mous
  * @author Luca Burgazzoli
  *
- * An Etcd Version Request
+ * An Etcd Store Stats Request
  */
-public class EtcdVersionRequest extends EtcdRequest<EtcdVersionResponse> {
+public class EtcdSelfStatsRequest extends EtcdRequest<EtcdSelfStatsResponse> {
 
   /**
    * Constructor
@@ -38,20 +38,20 @@ public class EtcdVersionRequest extends EtcdRequest<EtcdVersionResponse> {
    * @param clientImpl   the client to handle this request
    * @param retryHandler handles retries
    */
-  public EtcdVersionRequest(EtcdClientImpl clientImpl, RetryPolicy retryHandler) {
-    super(clientImpl, HttpMethod.GET, retryHandler, EtcdVersionResponseDecoder.INSTANCE);
+  public EtcdSelfStatsRequest(EtcdClientImpl clientImpl, RetryPolicy retryHandler) {
+    super(clientImpl, HttpMethod.GET, retryHandler, EtcdSelfStatsResponseDecoder.INSTANCE);
   }
 
-  @Override public EtcdResponsePromise<EtcdVersionResponse> send() throws IOException {
+  @Override public EtcdResponsePromise<EtcdSelfStatsResponse> send() throws IOException {
     return clientImpl.send(this);
   }
 
-  @Override public EtcdVersionRequest setRetryPolicy(RetryPolicy retryPolicy) {
+  @Override public EtcdSelfStatsRequest setRetryPolicy(RetryPolicy retryPolicy) {
     super.setRetryPolicy(retryPolicy);
     return this;
   }
 
   @Override public String getUri() {
-    return "/version";
+    return "/v2/stats/self";
   }
 }

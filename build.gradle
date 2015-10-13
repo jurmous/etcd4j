@@ -53,13 +53,20 @@ jar {
 }
 
 signing {
-    // Do not sigh jars on trvis-ci 
+    // Do not sigh jars on travis-ci
     required { 
         !isTravisBuild
     }
 
     sign configurations.archives
 }
+
+/*
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:deprecation"
+    options.compilerArgs << "-Xlint:uncheked"
+}
+*/
 
 uploadArchives {
     repositories {

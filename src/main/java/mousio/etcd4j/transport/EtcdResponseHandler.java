@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2015, contributors as indicated by the @author tags.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package mousio.etcd4j.transport;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -15,17 +30,21 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 /**
+ * @author Jurriaan Mous
+ * @author Luca Burgazzoli
+ *
  * Handles etcd responses
  *
- * @param <RQ> Request type
- * @param <RS> Response type
+ * @param <R> Response type
  */
-abstract class AbstractEtcdResponseHandler<RQ extends EtcdRequest, RS> extends SimpleChannelInboundHandler<FullHttpResponse> {
-  private static final Logger logger = LoggerFactory.getLogger(AbstractEtcdResponseHandler.class);
+class EtcdResponseHandler<R> extends SimpleChannelInboundHandler<FullHttpResponse> {
+  private static final Logger logger = LoggerFactory.getLogger(EtcdResponseHandler.class);
 
-  protected final Promise<RS> promise;
+  private static final CharSequence HTTP_HEADER_LOCATION = "Location";
+
+  protected final Promise<R> promise;
   protected final EtcdNettyClient client;
-  protected final RQ request;
+  protected final EtcdRequest<R> request;
 
   private boolean isRetried;
 
@@ -36,7 +55,7 @@ abstract class AbstractEtcdResponseHandler<RQ extends EtcdRequest, RS> extends S
    * @param etcdRequest     request
    */
   @SuppressWarnings("unchecked")
-  public AbstractEtcdResponseHandler(EtcdNettyClient etcdNettyClient, RQ etcdRequest) {
+  public EtcdResponseHandler(EtcdNettyClient etcdNettyClient, EtcdRequest<R> etcdRequest) {
     this.client = etcdNettyClient;
     this.request = etcdRequest;
     this.promise = etcdRequest.getPromise().getNettyPromise();
@@ -71,15 +90,15 @@ abstract class AbstractEtcdResponseHandler<RQ extends EtcdRequest, RS> extends S
 
     if (response.status().equals(HttpResponseStatus.MOVED_PERMANENTLY)
       || response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT)) {
-      if (response.headers().contains("Location")) {
-        this.request.setUrl(response.headers().get("Location"));
+      if (response.headers().contains(HTTP_HEADER_LOCATION)) {
+        this.request.setUrl(response.headers().get(HTTP_HEADER_LOCATION));
         this.client.connect(this.request);
         // Closing the connection which handled the previous request.
         ctx.close();
         if (logger.isDebugEnabled()) {
           logger.debug(
             "redirect for " + this.request.getHttpRequest().uri() + " to " + response.headers()
-              .get("Location"));
+              .get(HTTP_HEADER_LOCATION));
         }
       } else {
         this.promise.setFailure(new Exception("Missing Location header on redirect"));
@@ -100,7 +119,7 @@ abstract class AbstractEtcdResponseHandler<RQ extends EtcdRequest, RS> extends S
       }
 
       try {
-        this.promise.setSuccess(decodeResponse(response));
+        this.promise.setSuccess(request.getResponseDecoder().decode(response.headers(), response.content()));
       }
       // Catches both parsed EtcdExceptions and parsing exceptions
       catch (Exception e) {
@@ -108,6 +127,4 @@ abstract class AbstractEtcdResponseHandler<RQ extends EtcdRequest, RS> extends S
       }
     }
   }
-
-  protected abstract RS decodeResponse(FullHttpResponse response) throws Exception;
 }

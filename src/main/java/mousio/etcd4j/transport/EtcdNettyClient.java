@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2015, contributors as indicated by the @author tags.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package mousio.etcd4j.transport;
 
 import io.netty.bootstrap.Bootstrap;
@@ -20,10 +35,7 @@ import mousio.client.ConnectionState;
 import mousio.client.retry.RetryHandler;
 import mousio.etcd4j.EtcdSecurityContext;
 import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.requests.EtcdKeyRequest;
-import mousio.etcd4j.requests.EtcdOldVersionRequest;
 import mousio.etcd4j.requests.EtcdRequest;
-import mousio.etcd4j.requests.EtcdVersionRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +46,9 @@ import java.util.Map;
 import java.util.concurrent.CancellationException;
 
 /**
+ * @author Jurriaan Mous
+ * @author Luca Burgazzoli
+ *
  * Netty client for the requests and responses
  */
 public class EtcdNettyClient implements EtcdClientImpl {
@@ -274,22 +289,11 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @param pipeline to modify
    * @param <R>      Type of Response
    */
-  @SuppressWarnings("unchecked")
   private <R> void modifyPipeLine(final EtcdRequest<R> req, final ChannelPipeline pipeline) {
+    final EtcdResponseHandler<R> handler = new EtcdResponseHandler<>(this, req);
+
     if (req.getTimeout() != -1) {
       pipeline.addFirst(new ReadTimeoutHandler(req.getTimeout(), req.getTimeoutUnit()));
-    }
-
-    final AbstractEtcdResponseHandler handler;
-
-    if (req instanceof EtcdKeyRequest) {
-      handler = new EtcdKeyResponseHandler(this, (EtcdKeyRequest) req);
-    } else if (req instanceof EtcdVersionRequest) {
-      handler = new EtcdVersionResponseHandler(this, (EtcdVersionRequest) req);
-    } else if (req instanceof EtcdOldVersionRequest) {
-      handler = new EtcdOldVersionResponseHandler(this, (EtcdOldVersionRequest) req);
-    } else {
-      throw new RuntimeException("Unknown request type " + req.getClass().getName());
     }
 
     pipeline.addLast(handler);
