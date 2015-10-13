@@ -1,16 +1,23 @@
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'signing'
-apply plugin: 'idea'
-apply plugin: 'osgi'
+plugins {
+    id 'java'
+    id 'maven'
+    id 'signing'
+    id 'idea'
+    id 'osgi'
+}
 
-sourceCompatibility = 1.7
+compileJava {
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+}
+
 group = 'org.mousio'
 version = '2.8.0-SNAPSHOT'
 
 project.ext {
-    isTravisBuild = Boolean.valueOf("$System.env.CI_TRAVIS")
     isSnapshot = version.endsWith("-SNAPSHOT")
+    isRelease = !isSnapshot
+
     mavenDeployUrl = isSnapshot ?
         'https://oss.sonatype.org/content/repositories/snapshots/' :
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
@@ -27,6 +34,7 @@ project.ext {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -53,9 +61,8 @@ jar {
 }
 
 signing {
-    // Do not sigh jars on travis-ci
-    required { 
-        !isTravisBuild
+    required {
+        isRelease && gradle.taskGraph.hasTask("uploadArchives")
     }
 
     sign configurations.archives
@@ -71,7 +78,9 @@ tasks.withType(JavaCompile) {
 uploadArchives {
     repositories {
         mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+            beforeDeployment {
+                MavenDeployment deployment -> signing.signPom(deployment)
+            }
 
             repository(url: mavenDeployUrl) {
                 authentication(userName: sonatypeUsername, password: sonatypePassword)
