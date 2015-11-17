@@ -1,9 +1,25 @@
+/*
+ * Copyright (c) 2015, contributors as indicated by the @author tags.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package mousio.etcd4j.requests;
 
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import mousio.client.retry.RetryPolicy;
 import mousio.etcd4j.promises.EtcdResponsePromise;
+import mousio.etcd4j.responses.EtcdResponseDecoder;
 import mousio.etcd4j.transport.EtcdClientImpl;
 
 import java.io.IOException;
@@ -11,6 +27,9 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * @author Jurriaan Mous
+ * @author Luca Burgazzoli
+ *
  * Request to Etcd
  *
  * @param <R> Response Type returned by request
@@ -23,6 +42,7 @@ public abstract class EtcdRequest<R> {
   protected RetryPolicy retryPolicy;
 
   private EtcdResponsePromise<R> promise;
+  private final EtcdResponseDecoder<R> decoder;
 
   private long timeout = -1L;
   private TimeUnit timeoutUnit = TimeUnit.SECONDS;
@@ -35,11 +55,15 @@ public abstract class EtcdRequest<R> {
    * @param clientImpl  implementation of client to handle request
    * @param method      http method to use for Request
    * @param retryPolicy Handles retries on fails
+   * @param decoder     The response decoder
    */
-  protected EtcdRequest(EtcdClientImpl clientImpl, HttpMethod method, RetryPolicy retryPolicy) {
+  protected EtcdRequest(
+      EtcdClientImpl clientImpl, HttpMethod method, RetryPolicy retryPolicy, EtcdResponseDecoder<R> decoder) {
+
     this.clientImpl = clientImpl;
     this.method = method;
     this.retryPolicy = retryPolicy;
+    this.decoder = decoder;
   }
 
   /**
@@ -49,6 +73,14 @@ public abstract class EtcdRequest<R> {
    * @throws java.io.IOException if sending fails
    */
   public abstract EtcdResponsePromise<R> send() throws IOException;
+
+  /**
+   *
+   * @return
+   */
+  public EtcdResponseDecoder<R> getResponseDecoder() {
+    return this.decoder;
+  }
 
   /**
    * Get Http Method

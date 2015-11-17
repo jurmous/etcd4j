@@ -1,36 +1,54 @@
+/*
+ * Copyright (c) 2015, contributors as indicated by the @author tags.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package mousio.etcd4j.transport;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.base64.Base64;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
 import mousio.client.ConnectionState;
 import mousio.client.retry.RetryHandler;
+import mousio.etcd4j.EtcdSecurityContext;
 import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.requests.EtcdKeyRequest;
-import mousio.etcd4j.requests.EtcdOldVersionRequest;
 import mousio.etcd4j.requests.EtcdRequest;
-import mousio.etcd4j.requests.EtcdVersionRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 
 /**
+ * @author Jurriaan Mous
+ * @author Luca Burgazzoli
+ *
  * Netty client for the requests and responses
  */
 public class EtcdNettyClient implements EtcdClientImpl {
@@ -40,7 +58,9 @@ public class EtcdNettyClient implements EtcdClientImpl {
   private final URI[] uris;
 
   private final Bootstrap bootstrap;
-  private final String hostName;
+  //private final String hostName;
+  private final EtcdNettyConfig config;
+  private final EtcdSecurityContext securityContext;
 
   protected int lastWorkingUriIndex = 0;
 
@@ -55,7 +75,17 @@ public class EtcdNettyClient implements EtcdClientImpl {
   }
 
   /**
-   * Constructor with custom eventloopgroup and timeout
+   * Constructor
+   *
+   * @param securityContext security context.
+   * @param uri             to connect to
+   */
+  public EtcdNettyClient(final EtcdSecurityContext securityContext, final URI... uri) {
+    this(new EtcdNettyConfig(), securityContext, uri);
+  }
+
+  /**
+   * Constructor with custom eventloop group and timeout
    *
    * @param config     for netty
    * @param sslContext SSL context if connecting with SSL. Null if not connecting with SSL.
@@ -63,30 +93,56 @@ public class EtcdNettyClient implements EtcdClientImpl {
    */
   public EtcdNettyClient(final EtcdNettyConfig config,
                          final SslContext sslContext, final URI... uris) {
+    this(config, new EtcdSecurityContext(sslContext), uris);
+  }
+
+  /**
+   * Constructor with custom eventloop group and timeout
+   *
+   * @param config     for netty
+   * @param uris       to connect to
+   */
+  public EtcdNettyClient(final EtcdNettyConfig config, final URI... uris) {
+    this(config, EtcdSecurityContext.NONE, uris);
+  }
+
+
+  /**
+   * Constructor with custom eventloop group and timeout
+   *
+   * @param config          for netty
+   * @param securityContext security context (ssl, authentication)
+   * @param uris            to connect to
+   */
+  public EtcdNettyClient(final EtcdNettyConfig config,
+                         final EtcdSecurityContext securityContext, final URI... uris) {
     logger.info("Setting up Etcd4j Netty client");
 
+    this.config = config.clone();
+    this.securityContext = securityContext.clone();
     this.uris = uris;
     this.eventLoopGroup = config.getEventLoopGroup();
     this.bootstrap = new Bootstrap()
-        .group(eventLoopGroup)
-        .channel(config.getSocketChannelClass())
-        .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-        .option(ChannelOption.TCP_NODELAY, true)
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getConnectTimeout())
-        .handler(new ChannelInitializer<SocketChannel>() {
-          @Override
-          public void initChannel(SocketChannel ch) throws Exception {
-            ChannelPipeline p = ch.pipeline();
-            if (sslContext != null) {
-              p.addLast(sslContext.newHandler(ch.alloc()));
-            }
-            p.addLast("codec", new HttpClientCodec());
-            p.addLast("chunkedWriter", new ChunkedWriteHandler());
-            p.addLast("aggregate", new HttpObjectAggregator(config.getMaxFrameSize()));
+      .group(eventLoopGroup)
+      .channel(config.getSocketChannelClass())
+      .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+      .option(ChannelOption.TCP_NODELAY, true)
+      .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getConnectTimeout())
+      .handler(new ChannelInitializer<SocketChannel>() {
+        @Override
+        public void initChannel(SocketChannel ch) throws Exception {
+          ChannelPipeline p = ch.pipeline();
+          if (securityContext.hasSsl()) {
+            p.addLast(securityContext.sslContext().newHandler(ch.alloc()));
           }
-        });
-
-    this.hostName = config.getHostName();
+          p.addLast("codec", new HttpClientCodec());
+          if(securityContext.hasCredentials()) {
+            p.addLast("auth", new HttpBasicAuthHandler());
+          }
+          p.addLast("chunkedWriter", new ChunkedWriteHandler());
+          p.addLast("aggregate", new HttpObjectAggregator(config.getMaxFrameSize()));
+        }
+      });
   }
 
   /**
@@ -204,15 +260,15 @@ public class EtcdNettyClient implements EtcdClientImpl {
         modifyPipeLine(etcdRequest, f.channel().pipeline());
 
         createAndSendHttpRequest(uri, etcdRequest.getUrl(), etcdRequest, channel)
-            .addListener(new ChannelFutureListener() {
-              @Override
-              public void operationComplete(ChannelFuture future) throws Exception {
-                if (!future.isSuccess()) {
-                  etcdRequest.getPromise().setException(future.cause());
-                  f.channel().close();
-                }
+          .addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+              if (!future.isSuccess()) {
+                etcdRequest.getPromise().setException(future.cause());
+                f.channel().close();
               }
-            });
+            }
+          });
 
         channel.closeFuture().addListener(new ChannelFutureListener() {
           @Override
@@ -233,32 +289,11 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @param pipeline to modify
    * @param <R>      Type of Response
    */
-  @SuppressWarnings("unchecked")
   private <R> void modifyPipeLine(final EtcdRequest<R> req, final ChannelPipeline pipeline) {
+    final EtcdResponseHandler<R> handler = new EtcdResponseHandler<>(this, req);
+
     if (req.getTimeout() != -1) {
       pipeline.addFirst(new ReadTimeoutHandler(req.getTimeout(), req.getTimeoutUnit()));
-    }
-
-    final AbstractEtcdResponseHandler handler;
-
-    if (req instanceof EtcdKeyRequest) {
-      handler = new EtcdKeyResponseHandler(this, (EtcdKeyRequest) req);
-    } else if (req instanceof EtcdVersionRequest) {
-      handler = new EtcdVersionResponseHandler(this, (EtcdVersionRequest) req);
-    } else if (req instanceof EtcdOldVersionRequest) {
-      handler = new AbstractEtcdResponseHandler<EtcdOldVersionRequest, FullHttpResponse>(this, (EtcdOldVersionRequest) req) {
-        @Override
-        protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse msg) throws Exception {
-          (((EtcdOldVersionRequest) req).getPromise()).getNettyPromise().setSuccess(msg.content().toString(Charset.defaultCharset()));
-        }
-
-        @Override
-        protected FullHttpResponse decodeResponse(FullHttpResponse response) throws Exception {
-          return null;
-        }
-      };
-    } else {
-      throw new RuntimeException("Unknown request type " + req.getClass().getName());
     }
 
     pipeline.addLast(handler);
@@ -284,11 +319,11 @@ public class EtcdNettyClient implements EtcdClientImpl {
    */
   private <R> ChannelFuture createAndSendHttpRequest(URI server, String uri, EtcdRequest<R> etcdRequest, Channel channel) throws Exception {
     HttpRequest httpRequest = new DefaultHttpRequest(HttpVersion.HTTP_1_1, etcdRequest.getMethod(), uri);
-    httpRequest.headers().add("Connection", "keep-alive");
-    if(this.hostName == null) {
-      httpRequest.headers().add("Host", server.getHost() + ":" + server.getPort());
+    httpRequest.headers().add(HttpHeaderNames.CONNECTION, "keep-alive");
+    if(!this.config.hasHostName()) {
+      httpRequest.headers().add(HttpHeaderNames.HOST, server.getHost() + ":" + server.getPort());
     } else {
-      httpRequest.headers().add("Host", this.hostName);
+      httpRequest.headers().add(HttpHeaderNames.HOST, this.config.getHostName());
     }
 
     HttpPostRequestEncoder bodyRequestEncoder = null;
@@ -318,6 +353,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
         }
       }
     }
+
     etcdRequest.setHttpRequest(httpRequest);
     ChannelFuture future = channel.write(httpRequest);
     if (bodyRequestEncoder != null && bodyRequestEncoder.isChunked()) {
@@ -330,8 +366,30 @@ public class EtcdNettyClient implements EtcdClientImpl {
   /**
    * Close netty
    */
+  @Override
   public void close() {
     logger.info("Shutting down Etcd4j Netty client");
     eventLoopGroup.shutdownGracefully();
+  }
+
+  private class HttpBasicAuthHandler extends ChannelOutboundHandlerAdapter {
+    @Override
+    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+      if(msg instanceof HttpRequest) {
+        addBasicAuthHeader((HttpRequest)msg);
+      }
+
+      ctx.write(msg, promise);
+    }
+
+    private void addBasicAuthHeader(HttpRequest request) {
+      final String auth = Base64.encode(
+        Unpooled.copiedBuffer(
+          securityContext.username() + ":" + securityContext.password(),
+          CharsetUtil.UTF_8)
+        ).toString(CharsetUtil.UTF_8);
+
+      request.headers().add(HttpHeaderNames.AUTHORIZATION, "Basic " + auth);
+    }
   }
 }

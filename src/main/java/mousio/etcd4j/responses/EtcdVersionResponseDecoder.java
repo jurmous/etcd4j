@@ -4,8 +4,6 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
 import io.netty.handler.codec.http.HttpHeaders;
 
 import java.io.IOException;
@@ -13,7 +11,9 @@ import java.io.IOException;
 /**
  * Parses the JSON response for key responses
  */
-public class EtcdVersionResponseParser {
+public class EtcdVersionResponseDecoder extends AbstractJsonResponseDecoder<EtcdVersionResponse> {
+  public static final EtcdVersionResponseDecoder INSTANCE = new EtcdVersionResponseDecoder();
+
   private static final JsonFactory factory = new JsonFactory();
 
   private static final String ETCD_SERVER  = "etcdserver";
@@ -23,17 +23,16 @@ public class EtcdVersionResponseParser {
    * Parses the Json content of the Etcd Response
    *
    * @param headers
-   * @param content to parse
+   * @param parser Json parser
    * @return EtcdResponse if found in response
    * @throws EtcdException if exception was found in response
    * @throws IOException                   if Json parsing or parser creation fails
    */
-  public static EtcdVersionResponse parse(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
-    JsonParser parser = factory.createParser(new ByteBufInputStream(content));
-
+  public EtcdVersionResponse decodeJson(HttpHeaders headers, JsonParser parser) throws EtcdException, IOException {
     if (parser.nextToken() == JsonToken.START_OBJECT) {
-      String etcdserver = null;
-      String etcdcluster = null;
+
+      final String etcdserver;
+      final String etcdcluster;
 
       if (parser.nextToken() == JsonToken.FIELD_NAME && parser.getCurrentName().contentEquals(ETCD_SERVER)) {
         etcdserver = parser.nextTextValue();

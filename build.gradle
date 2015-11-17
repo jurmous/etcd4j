@@ -1,22 +1,29 @@
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'signing'
-apply plugin: 'idea'
-apply plugin: 'osgi'
+plugins {
+    id 'java'
+    id 'maven'
+    id 'signing'
+    id 'idea'
+    id 'osgi'
+}
 
-sourceCompatibility = 1.7
+compileJava {
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+}
+
 group = 'org.mousio'
 version = '2.8.0-SNAPSHOT'
 
 project.ext {
-    isTravisBuild = Boolean.valueOf("$System.env.CI_TRAVIS")
     isSnapshot = version.endsWith("-SNAPSHOT")
+    isRelease = !isSnapshot
+
     mavenDeployUrl = isSnapshot ?
         'https://oss.sonatype.org/content/repositories/snapshots/' :
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
-    nettyVersion   = '4.1.0.Beta6'
-    jacksonVersion = '2.6.1'
+    nettyVersion   = '4.1.0.Beta7'
+    jacksonVersion = '2.6.3'
     slf4jVersion   = '1.7.12'
     junitVersion   = '4.12'
 
@@ -27,6 +34,7 @@ project.ext {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -53,18 +61,26 @@ jar {
 }
 
 signing {
-    // Do not sigh jars on trvis-ci 
-    required { 
-        !isTravisBuild
+    required {
+        isRelease && gradle.taskGraph.hasTask("uploadArchives")
     }
 
     sign configurations.archives
 }
 
+/*
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:deprecation"
+    options.compilerArgs << "-Xlint:uncheked"
+}
+*/
+
 uploadArchives {
     repositories {
         mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+            beforeDeployment {
+                MavenDeployment deployment -> signing.signPom(deployment)
+            }
 
             repository(url: mavenDeployUrl) {
                 authentication(userName: sonatypeUsername, password: sonatypePassword)
@@ -94,6 +110,10 @@ uploadArchives {
                     developer {
                         id 'jurmous'
                         name 'Jurriaan Mous'
+                    }
+                    developer {
+                        id 'lburgazzoli'
+                        name 'Luca Burgazzoli'
                     }
                 }
             }

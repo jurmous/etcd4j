@@ -14,7 +14,7 @@ public final class EtcdVersionResponse {
    * @param server
    * @param cluster
    */
-  protected EtcdVersionResponse(
+  EtcdVersionResponse(
     final String server,
     final String cluster) {
     this.server = server;
