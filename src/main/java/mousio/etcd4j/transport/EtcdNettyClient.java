@@ -213,6 +213,12 @@ public class EtcdNettyClient implements EtcdClientImpl {
       uri = uris[connectionState.uriIndex];
     }
 
+    if(eventLoopGroup.isShuttingDown() || eventLoopGroup.isShutdown()){
+      etcdRequest.getPromise().getNettyPromise().cancel(true);
+      logger.debug(String.format("Retry canceled because of closed etcd client"));
+      return;
+    }
+
     // Start the connection attempt.
     final ChannelFuture connectFuture = bootstrap.clone().connect(uri.getHost(), uri.getPort());
 

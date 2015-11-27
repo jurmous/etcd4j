@@ -2,8 +2,13 @@ package mousio.etcd4j;
 
 import mousio.client.retry.RetryWithExponentialBackOff;
 import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.responses.*;
-
+import mousio.etcd4j.responses.EtcdAuthenticationException;
+import mousio.etcd4j.responses.EtcdException;
+import mousio.etcd4j.responses.EtcdKeyAction;
+import mousio.etcd4j.responses.EtcdKeysResponse;
+import mousio.etcd4j.responses.EtcdSelfStatsResponse;
+import mousio.etcd4j.responses.EtcdStoreStatsResponse;
+import mousio.etcd4j.responses.EtcdVersionResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,10 +16,14 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Performs tests on a real server at local address. All actions are performed in "etcd4j_test" dir
@@ -242,6 +251,25 @@ public class TestFunctionality {
     }
     EtcdKeysResponse response = etcd.put("etcd4j_test/foo", stringBuilder.toString()).send().get();
     assertEquals(EtcdKeyAction.set, response.action);
+  }
+
+  @Test
+  public void testIfCleanClose() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
+    EtcdClient client = new EtcdClient();
+    client.setRetryHandler(new RetryWithExponentialBackOff(20, 4, -1));
+
+    EtcdResponsePromise<EtcdKeysResponse> p = client.get("etcd4j_test/test").waitForChange().send();
+    client.close();
+
+    try {
+      p.get();
+      fail();
+    } catch (IOException e){
+      // should be catched because connection was canceled
+      if (!(e.getCause() instanceof CancellationException)) {
+        fail();
+      }
+    }
   }
 
   @After
