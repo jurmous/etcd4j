@@ -22,9 +22,9 @@ project.ext {
         'https://oss.sonatype.org/content/repositories/snapshots/' :
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
-    nettyVersion   = '4.1.0.Beta7'
-    jacksonVersion = '2.6.3'
-    slf4jVersion   = '1.7.12'
+    nettyVersion   = '4.1.0.Beta8'
+    jacksonVersion = '2.6.4'
+    slf4jVersion   = '1.7.13'
     junitVersion   = '4.12'
 
     if(!project.hasProperty('sonatypeUsername') && !project.hasProperty('sonatypePassword')) {
