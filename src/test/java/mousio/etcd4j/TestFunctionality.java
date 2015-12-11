@@ -5,6 +5,7 @@ import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.EtcdAuthenticationException;
 import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.responses.EtcdKeyAction;
+import mousio.etcd4j.responses.EtcdLeaderStatsResponse;
 import mousio.etcd4j.responses.EtcdKeysResponse;
 import mousio.etcd4j.responses.EtcdSelfStatsResponse;
 import mousio.etcd4j.responses.EtcdStoreStatsResponse;
@@ -76,6 +77,23 @@ public class TestFunctionality {
     assertNotNull(stats);
     assertNotNull(stats.getLeaderInfo());
     assertEquals(stats.getId(), stats.getLeaderInfo().getLeader());
+  }
+
+
+  /**
+   * Test leader Stats
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testLeaderStats() {
+    EtcdLeaderStatsResponse stats = etcd.getLeaderStats();
+    assertNotNull(stats);
+
+    // stats
+    assertNotNull(stats.getLeader());
+    assertNotNull(stats.getFollowers());
+    assertEquals(stats.getFollowers().size(), 0);
   }
 
 

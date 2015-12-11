@@ -9,6 +9,7 @@ import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.responses.EtcdSelfStatsResponse;
 import mousio.etcd4j.responses.EtcdStoreStatsResponse;
 import mousio.etcd4j.responses.EtcdVersionResponse;
+import mousio.etcd4j.responses.EtcdLeaderStatsResponse;
 import mousio.etcd4j.transport.EtcdClientImpl;
 import mousio.etcd4j.transport.EtcdNettyClient;
 
@@ -128,6 +129,19 @@ public class EtcdClient implements Closeable {
   public EtcdSelfStatsResponse getSelfStats() {
     try {
       return new EtcdSelfStatsRequest(this.client, retryHandler).send().get();
+    } catch (IOException | EtcdException | EtcdAuthenticationException | TimeoutException e) {
+      return null;
+    }
+  }
+
+  /**
+   * Get the Leader Statistics of Etcd
+   *
+   * @return EtcdLeaderStatsResponse
+   */
+  public EtcdLeaderStatsResponse getLeaderStats() {
+    try {
+      return new EtcdLeaderStatsRequest(this.client, retryHandler).send().get();
     } catch (IOException | EtcdException | EtcdAuthenticationException | TimeoutException e) {
       return null;
     }
