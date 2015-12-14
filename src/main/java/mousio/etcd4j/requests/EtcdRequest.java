@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, contributors as indicated by the @author tags.
+ * Copyright (c) 2015, Jurriaan Mous and contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ public abstract class EtcdRequest<R> {
    * @param clientImpl  implementation of client to handle request
    * @param method      http method to use for Request
    * @param retryPolicy Handles retries on fails
-   * @param decoder     The response decoder
+   * @param decoder     The response json
    */
   protected EtcdRequest(
       EtcdClientImpl clientImpl, HttpMethod method, RetryPolicy retryPolicy, EtcdResponseDecoder<R> decoder) {

@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package mousio.client.retry;
+package mousio.etcd4j.responses;
 
-import java.io.IOException;
+import io.netty.handler.codec.http.HttpHeaders;
 
 /**
- * Interface to handle a retry
+ * @author Luca Burgazzoli
  */
-public interface ConnectionFailHandler {
+public interface EtcdHeaderAwareResponse extends EtcdResponse {
   /**
-   * Catch exception on retry
    *
-   * @param exception to be handled
+   * @param headers
    */
-  public void catchException(IOException exception);
+  void loadHeaders(HttpHeaders headers);
 }

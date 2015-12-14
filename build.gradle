@@ -14,7 +14,7 @@ compileJava {
 group = 'org.mousio'
 version = '2.9.0-SNAPSHOT'
 
-project.ext {
+ext {
     isSnapshot = version.endsWith("-SNAPSHOT")
     isRelease = !isSnapshot
 
@@ -22,10 +22,12 @@ project.ext {
         'https://oss.sonatype.org/content/repositories/snapshots/' :
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
-    nettyVersion   = '4.1.0.Beta8'
-    jacksonVersion = '2.6.4'
-    slf4jVersion   = '1.7.13'
-    junitVersion   = '4.12'
+    versions = [
+        netty   : '4.1.0.Beta8',
+        jackson : '2.6.4',
+        slf4j   : '1.7.13',
+        junit   : '4.12',
+    ]
 
     if(!project.hasProperty('sonatypeUsername') && !project.hasProperty('sonatypePassword')) {
         sonatypeUsername = "$System.env.CI_DEPLOY_USERNAME"
@@ -39,13 +41,16 @@ repositories {
 }
 
 dependencies {
-    compile "org.slf4j:slf4j-api:$slf4jVersion"
-    compile "io.netty:netty-codec-http:$nettyVersion"
-    compile "io.netty:netty-handler:$nettyVersion"
-    compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
+    compile "org.slf4j:slf4j-api:$versions.slf4j"
+    compile "io.netty:netty-codec-http:$versions.netty"
+    compile "io.netty:netty-handler:$versions.netty"
+    compile "com.fasterxml.jackson.core:jackson-core:$versions.jackson"
+    compile "com.fasterxml.jackson.core:jackson-databind:$versions.jackson"
+    compile "com.fasterxml.jackson.core:jackson-annotations:$versions.jackson"
+    compile "com.fasterxml.jackson.module:jackson-module-afterburner:$versions.jackson"
 
-    testCompile "junit:junit:$junitVersion"
-    testCompile "org.slf4j:slf4j-simple:$slf4jVersion"
+    testCompile "junit:junit:$versions.junit"
+    testCompile "org.slf4j:slf4j-simple:$versions.slf4j"
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {

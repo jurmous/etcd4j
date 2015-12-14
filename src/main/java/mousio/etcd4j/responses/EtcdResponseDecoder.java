@@ -14,6 +14,6 @@ public interface EtcdResponseDecoder<T> {
    * @throws EtcdException
    * @throws IOException
    */
-  public T decode(HttpHeaders headers, ByteBuf content)
+  T decode(HttpHeaders headers, ByteBuf content)
       throws EtcdException, IOException;
 }

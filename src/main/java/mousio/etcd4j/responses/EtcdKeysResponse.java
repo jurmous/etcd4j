@@ -1,24 +1,51 @@
+/*
+ * Copyright (c) 2015, Jurriaan Mous and contributors as indicated by the @author tags.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package mousio.etcd4j.responses;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.netty.handler.codec.http.HttpHeaders;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import static mousio.etcd4j.responses.EtcdKeysResponseDecoder.convertDate;
+import static mousio.etcd4j.EtcdUtil.convertDate;
+import static mousio.etcd4j.EtcdUtil.getHeaderPropertyAsLong;
 
 /**
+ * @author Luca Burgazzoli
+ *
  * Etcd Keys Response
  */
-public final class EtcdKeysResponse {
+@JsonIgnoreProperties( ignoreUnknown = true )
+public final class EtcdKeysResponse implements EtcdHeaderAwareResponse {
+
+  // The json
+  public static final EtcdResponseDecoder<EtcdKeysResponse> DECODER =
+    EtcdResponseDecoders.json(EtcdKeysResponse.class);
 
   public final EtcdKeyAction action;
   public final EtcdNode node;
   public final EtcdNode prevNode;
 
-  public final String etcdClusterId;
-  public final Long etcdIndex;
-  public final Long raftIndex;
-  public final Long raftTerm;
+  public String etcdClusterId;
+  public Long etcdIndex;
+  public Long raftIndex;
+  public Long raftTerm;
 
   /**
    * Protected constructor
@@ -26,32 +53,36 @@ public final class EtcdKeysResponse {
    * @param action
    * @param node
    * @param prevNode
-   * @param etcdClusterId
-   * @param etcdIndex
-   * @param raftIndex
-   * @param raftTerm
    */
   EtcdKeysResponse(
-      final String action,
-      final EtcdNode node,
-      final EtcdNode prevNode,
-      final String etcdClusterId,
-      final Long etcdIndex,
-      final Long raftIndex,
-      final Long raftTerm) {
+      @JsonProperty("action") String action,
+      @JsonProperty("node") EtcdNode node,
+      @JsonProperty("prevNode") EtcdNode prevNode) {
+
     this.action = EtcdKeyAction.valueOf(action);
     this.node = node;
     this.prevNode = prevNode;
 
-    this.etcdClusterId = etcdClusterId;
-    this.etcdIndex = etcdIndex;
-    this.raftIndex = raftIndex;
-    this.raftTerm = raftTerm;
+    this.etcdClusterId = null;
+    this.etcdIndex = null;
+    this.raftIndex = null;
+    this.raftTerm = null;
+  }
+
+  @Override
+  public void loadHeaders(HttpHeaders headers) {
+    if(headers != null) {
+      this.etcdClusterId = headers.get("X-Etcd-Cluster-Id");
+      this.etcdIndex = getHeaderPropertyAsLong(headers, "X-Etcd-Index");
+      this.raftIndex = getHeaderPropertyAsLong(headers, "X-Raft-Index");
+      this.raftTerm = getHeaderPropertyAsLong(headers, "X-Raft-Term");
+    }
   }
 
   /**
    * An Etcd node
    */
+  @JsonIgnoreProperties( ignoreUnknown = true )
   public static final class EtcdNode {
     public final String key;
     public final boolean dir;
@@ -75,14 +106,14 @@ public final class EtcdKeysResponse {
      * @param nodes
      */
     EtcdNode(
-        final Boolean dir,
-        final String key,
-        final String value,
-        final long createdIndex,
-        final long modifiedIndex,
-        final String expiration,
-        final long ttl,
-        final List<EtcdNode> nodes) {
+        @JsonProperty("dir") final Boolean dir,
+        @JsonProperty("key") final String key,
+        @JsonProperty("value") final String value,
+        @JsonProperty("createdIndex") final long createdIndex,
+        @JsonProperty("modifiedIndex") final long modifiedIndex,
+        @JsonProperty("expiration") final String expiration,
+        @JsonProperty("ttl") final long ttl,
+        @JsonProperty("nodes") final List<EtcdNode> nodes) {
 
       this.dir = dir != null ? dir : false;
       this.key = key;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, contributors as indicated by the @author tags.
+ * Copyright (c) 2015, Jurriaan Mous and contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

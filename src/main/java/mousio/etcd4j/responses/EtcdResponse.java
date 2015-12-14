@@ -13,18 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package mousio.client.retry;
-
-import java.io.IOException;
+package mousio.etcd4j.responses;
 
 /**
- * Interface to handle a retry
+ * @author Luca Burgazzoli
  */
-public interface ConnectionFailHandler {
-  /**
-   * Catch exception on retry
-   *
-   * @param exception to be handled
-   */
-  public void catchException(IOException exception);
+public interface EtcdResponse {
 }

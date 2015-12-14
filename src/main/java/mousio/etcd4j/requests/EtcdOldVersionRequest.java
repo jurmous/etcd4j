@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, contributors as indicated by the @author tags.
+ * Copyright (c) 2015, Jurriaan Mous and contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,8 @@ package mousio.etcd4j.requests;
 
 import io.netty.handler.codec.http.HttpMethod;
 import mousio.client.retry.RetryPolicy;
-import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.responses.EtcdStringResponseDecoder;
+import mousio.etcd4j.responses.EtcdResponseDecoders;
 import mousio.etcd4j.transport.EtcdClientImpl;
-
-import java.io.IOException;
 
 /**
  * @author Jurriaan Mous
@@ -29,7 +26,7 @@ import java.io.IOException;
  *
  * An Etcd Version Request
  */
-public class EtcdOldVersionRequest extends EtcdRequest<String> {
+public class EtcdOldVersionRequest extends AbstractEtcdRequest<String> {
 
   /**
    * Constructor
@@ -38,19 +35,12 @@ public class EtcdOldVersionRequest extends EtcdRequest<String> {
    * @param retryHandler handles retries
    */
   public EtcdOldVersionRequest(EtcdClientImpl clientImpl, RetryPolicy retryHandler) {
-    super(clientImpl, HttpMethod.GET, retryHandler, EtcdStringResponseDecoder.INSTANCE);
+    super("/version", clientImpl, HttpMethod.GET, retryHandler, EtcdResponseDecoders.STINRG);
   }
 
-  @Override public EtcdResponsePromise<String> send() throws IOException {
-    return clientImpl.send(this);
-  }
-
-  @Override public EtcdOldVersionRequest setRetryPolicy(RetryPolicy retryPolicy) {
+  @Override
+  public EtcdOldVersionRequest setRetryPolicy(RetryPolicy retryPolicy) {
     super.setRetryPolicy(retryPolicy);
     return this;
-  }
-
-  @Override public String getUri() {
-    return "/version";
   }
 }
