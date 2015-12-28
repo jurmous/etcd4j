@@ -53,8 +53,9 @@ import java.util.concurrent.CancellationException;
  */
 public class EtcdNettyClient implements EtcdClientImpl {
   private static final Logger logger = LoggerFactory.getLogger(EtcdNettyClient.class);
-  private static final int DEFAULT_PORT = 80;
 
+  // default etcd port
+  private static final int DEFAULT_PORT = 2379;
   private final EventLoopGroup eventLoopGroup;
   private final URI[] uris;
 
@@ -222,8 +223,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
 
     // Start the connection attempt.
     final ChannelFuture connectFuture;
-    // uri may not have port information if behind some proxy
-    // make default port explicit 80 on connect
+    // uri may not have port information, work with default port
     if (uri.getPort() == -1) {
       connectFuture = bootstrap.clone().connect(uri.getHost(), DEFAULT_PORT);
     } else {
