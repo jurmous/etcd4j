@@ -56,6 +56,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
 
   // default etcd port
   private static final int DEFAULT_PORT = 2379;
+  private static final String ENV_ETCD4J_ENDPOINT = "ETCD4J_ENDPOINT";
   private final EventLoopGroup eventLoopGroup;
   private final URI[] uris;
 
@@ -211,7 +212,11 @@ public class EtcdNettyClient implements EtcdClientImpl {
     URI requestUri = URI.create(etcdRequest.getUrl());
     if (requestUri.getHost() != null && requestUri.getPort() > -1) {
       uri = requestUri;
-    }else{
+    } else if (uris.length == 0 && System.getenv(ENV_ETCD4J_ENDPOINT) != null) {
+      // read uri from environment variable
+      String endpoint_uri = System.getenv(ENV_ETCD4J_ENDPOINT);
+      uri = URI.create(endpoint_uri);
+    } else {
       uri = uris[connectionState.uriIndex];
     }
 
