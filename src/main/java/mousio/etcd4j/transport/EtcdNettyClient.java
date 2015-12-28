@@ -215,6 +215,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
     } else if (uris.length == 0 && System.getenv(ENV_ETCD4J_ENDPOINT) != null) {
       // read uri from environment variable
       String endpoint_uri = System.getenv(ENV_ETCD4J_ENDPOINT);
+      logger.debug("Will use environment variable " + ENV_ETCD4J_ENDPOINT + " as uri with value " + endpoint_uri);
       uri = URI.create(endpoint_uri);
     } else {
       uri = uris[connectionState.uriIndex];
