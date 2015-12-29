@@ -15,10 +15,12 @@
  */
 package mousio.etcd4j.transport;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.util.concurrent.Promise;
 import mousio.client.exceptions.PrematureDisconnectException;
@@ -94,44 +96,48 @@ class EtcdResponseHandler<R> extends SimpleChannelInboundHandler<FullHttpRespons
 
   @Override
   protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse response) throws Exception {
+    final HttpResponseStatus status =response.status();
+    final HttpHeaders headers = response.headers();
+    final ByteBuf content = response.content();
+
     if (logger.isDebugEnabled()) {
       logger.debug("Received {} for {} {}",
-        response.status().code(), this.request.getMethod().name(), this.request.getUri());
+        status.code(), this.request.getMethod().name(), this.request.getUri());
     }
 
-    if (response.status().equals(HttpResponseStatus.MOVED_PERMANENTLY)
-        || response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT)) {
-      if (response.headers().contains(HttpHeaderNames.LOCATION)) {
-        this.request.setUrl(response.headers().get(HttpHeaderNames.LOCATION));
+    if (status.equals(HttpResponseStatus.MOVED_PERMANENTLY)
+      || status.equals(HttpResponseStatus.TEMPORARY_REDIRECT)) {
+      if (headers.contains(HttpHeaderNames.LOCATION)) {
+        this.request.setUrl(headers.get(HttpHeaderNames.LOCATION));
         this.client.connect(this.request);
         // Closing the connection which handled the previous request.
         ctx.close();
         if (logger.isDebugEnabled()) {
           logger.debug("redirect for {} to {}",
             this.request.getHttpRequest().uri() ,
-            response.headers().get(HttpHeaderNames.LOCATION));
+            headers.get(HttpHeaderNames.LOCATION));
         }
       } else {
         this.promise.setFailure(new Exception("Missing Location header on redirect"));
       }
     } else {
-      EtcdResponseDecoder<? extends Throwable> failureDecoder = failureDecoders.get(response.status());
+      EtcdResponseDecoder<? extends Throwable> failureDecoder = failureDecoders.get(status);
       if(failureDecoder != null) {
-        this.promise.setFailure(failureDecoder.decode(response.headers(), response.content()));
-      } else if (!response.content().isReadable()) {
+        this.promise.setFailure(failureDecoder.decode(headers, content));
+      } else if (!content.isReadable()) {
         // If connection was accepted maybe response has to be waited for
-        if (response.status().equals(HttpResponseStatus.OK)
-            || response.status().equals(HttpResponseStatus.ACCEPTED)
-            || response.status().equals(HttpResponseStatus.CREATED)) {
+        if (status.equals(HttpResponseStatus.OK)
+          || status.equals(HttpResponseStatus.ACCEPTED)
+          || status.equals(HttpResponseStatus.CREATED)) {
           this.client.connect(this.request);
         } else {
           this.promise.setFailure(new IOException(
-            "Content was not readable. HTTP Status: " + response.status()));
+            "Content was not readable. HTTP Status: " + status));
         }
       } else {
         try {
           this.promise.setSuccess(
-            request.getResponseDecoder().decode(response.headers(), response.content()));
+            request.getResponseDecoder().decode(headers, content));
         } catch (Exception e) {
           // Catches both parsed EtcdExceptions and parsing exceptions
           this.promise.setFailure(e);
