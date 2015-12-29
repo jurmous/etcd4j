@@ -18,17 +18,20 @@ package mousio.etcd4j.transport;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.util.concurrent.Promise;
 import mousio.client.exceptions.PrematureDisconnectException;
 import mousio.etcd4j.requests.EtcdRequest;
 import mousio.etcd4j.responses.EtcdAuthenticationException;
 import mousio.etcd4j.responses.EtcdException;
+import mousio.etcd4j.responses.EtcdResponseDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Jurriaan Mous
@@ -40,8 +43,16 @@ import java.nio.charset.Charset;
  */
 class EtcdResponseHandler<R> extends SimpleChannelInboundHandler<FullHttpResponse> {
   private static final Logger logger = LoggerFactory.getLogger(EtcdResponseHandler.class);
+  private static final Map<HttpResponseStatus, EtcdResponseDecoder<? extends Throwable>> failureDecoders;
 
-  private static final CharSequence HTTP_HEADER_LOCATION = "Location";
+  static {
+    failureDecoders = new HashMap<>();
+    failureDecoders.put(HttpResponseStatus.UNAUTHORIZED, EtcdAuthenticationException.DECODER);
+    failureDecoders.put(HttpResponseStatus.NOT_FOUND, EtcdException.DECODER);
+    failureDecoders.put(HttpResponseStatus.FORBIDDEN, EtcdException.DECODER);
+    failureDecoders.put(HttpResponseStatus.PRECONDITION_FAILED, EtcdException.DECODER);
+    failureDecoders.put(HttpResponseStatus.INTERNAL_SERVER_ERROR, EtcdException.DECODER);
+  }
 
   protected final Promise<R> promise;
   protected final EtcdNettyClient client;
@@ -65,7 +76,7 @@ class EtcdResponseHandler<R> extends SimpleChannelInboundHandler<FullHttpRespons
 
   /**
    * Set if the connection is retried.
-   * If true the promise will not fail on unregistering this handler.
+   * If true the promise will not fail on un-registering this handler.
    *
    * @param retried true if request is being retried.
    */
@@ -84,53 +95,47 @@ class EtcdResponseHandler<R> extends SimpleChannelInboundHandler<FullHttpRespons
   @Override
   protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse response) throws Exception {
     if (logger.isDebugEnabled()) {
-      logger.debug(
-        "Received " + response.status().code() + " for " + this.request.getMethod().name() + " "
-          + this.request.getUri());
+      logger.debug("Received {} for {} {}",
+        response.status().code(), this.request.getMethod().name(), this.request.getUri());
     }
 
     if (response.status().equals(HttpResponseStatus.MOVED_PERMANENTLY)
-      || response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT)) {
-      if (response.headers().contains(HTTP_HEADER_LOCATION)) {
-        this.request.setUrl(response.headers().get(HTTP_HEADER_LOCATION));
+        || response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT)) {
+      if (response.headers().contains(HttpHeaderNames.LOCATION)) {
+        this.request.setUrl(response.headers().get(HttpHeaderNames.LOCATION));
         this.client.connect(this.request);
         // Closing the connection which handled the previous request.
         ctx.close();
         if (logger.isDebugEnabled()) {
-          logger.debug(
-            "redirect for " + this.request.getHttpRequest().uri() + " to " + response.headers()
-              .get(HTTP_HEADER_LOCATION));
+          logger.debug("redirect for {} to {}",
+            this.request.getHttpRequest().uri() ,
+            response.headers().get(HttpHeaderNames.LOCATION));
         }
       } else {
         this.promise.setFailure(new Exception("Missing Location header on redirect"));
       }
-    } if(response.status().equals(HttpResponseStatus.UNAUTHORIZED)) {
-      this.promise.setFailure(
-        new EtcdAuthenticationException(response.content().toString(Charset.defaultCharset()))
-      );
-    } else if (response.status().equals(HttpResponseStatus.NOT_FOUND)) {
-      this.promise.setFailure(
-        EtcdException.DECODER.decode(response.headers(), response.content())
-      );
-    }else {
-      if (!response.content().isReadable()) {
+    } else {
+      EtcdResponseDecoder<? extends Throwable> failureDecoder = failureDecoders.get(response.status());
+      if(failureDecoder != null) {
+        this.promise.setFailure(failureDecoder.decode(response.headers(), response.content()));
+      } else if (!response.content().isReadable()) {
         // If connection was accepted maybe response has to be waited for
         if (response.status().equals(HttpResponseStatus.OK)
             || response.status().equals(HttpResponseStatus.ACCEPTED)
             || response.status().equals(HttpResponseStatus.CREATED)) {
           this.client.connect(this.request);
-          return;
+        } else {
+          this.promise.setFailure(new IOException(
+            "Content was not readable. HTTP Status: " + response.status()));
         }
-        this.promise.setFailure(new IOException("Content was not readable. HTTP Status: "
-          + response.status()));
-      }
-
-      try {
-        this.promise.setSuccess(request.getResponseDecoder().decode(response.headers(), response.content()));
-      }
-      // Catches both parsed EtcdExceptions and parsing exceptions
-      catch (Exception e) {
-        this.promise.setFailure(e);
+      } else {
+        try {
+          this.promise.setSuccess(
+            request.getResponseDecoder().decode(response.headers(), response.content()));
+        } catch (Exception e) {
+          // Catches both parsed EtcdExceptions and parsing exceptions
+          this.promise.setFailure(e);
+        }
       }
     }
   }

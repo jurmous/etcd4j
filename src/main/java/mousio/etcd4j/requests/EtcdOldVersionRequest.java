@@ -35,7 +35,7 @@ public class EtcdOldVersionRequest extends AbstractEtcdRequest<String> {
    * @param retryHandler handles retries
    */
   public EtcdOldVersionRequest(EtcdClientImpl clientImpl, RetryPolicy retryHandler) {
-    super("/version", clientImpl, HttpMethod.GET, retryHandler, EtcdResponseDecoders.STINRG);
+    super("/version", clientImpl, HttpMethod.GET, retryHandler, EtcdResponseDecoders.STRING_DECODER);
   }
 
   @Override

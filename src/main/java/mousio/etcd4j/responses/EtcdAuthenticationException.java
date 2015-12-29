@@ -15,12 +15,21 @@
  */
 package mousio.etcd4j.responses;
 
+import static mousio.etcd4j.responses.EtcdResponseDecoders.StringToObjectDecoder;
+
 /**
  * @author Luca Burgazzoli
  *
  * Exception on etcd failures
  */
 public class EtcdAuthenticationException extends Exception {
+  public static final EtcdResponseDecoder<EtcdAuthenticationException> DECODER = new StringToObjectDecoder<EtcdAuthenticationException>() {
+    @Override
+    protected EtcdAuthenticationException newInstance(String message) {
+      return new EtcdAuthenticationException(message);
+    }
+  };
+
   /**
    * Constructor
    * @param message

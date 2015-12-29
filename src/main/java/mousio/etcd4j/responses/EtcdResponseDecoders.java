@@ -34,7 +34,7 @@ public class EtcdResponseDecoders {
   protected static final CharSequence X_RAFT_INDEX = "X-Raft-Index";
   protected static final CharSequence X_RAFT_TERM = "X-Raft-Term";
 
-  public static final EtcdResponseDecoder<String> STINRG = new StringDecoder();
+  public static final EtcdResponseDecoder<String> STRING_DECODER = new StringDecoder();
 
   private static final ObjectMapper MAPPER = new ObjectMapper()
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -65,6 +65,17 @@ public class EtcdResponseDecoders {
     public String decode(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
       return content.toString(Charset.defaultCharset());
     }
+  }
+
+
+
+  public abstract static class StringToObjectDecoder<T> implements EtcdResponseDecoder<T> {
+    @Override
+    public T decode(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
+      return newInstance(content.toString(Charset.defaultCharset()));
+    }
+
+    protected abstract T newInstance(String message);
   }
 
   // ***************************************************************************
