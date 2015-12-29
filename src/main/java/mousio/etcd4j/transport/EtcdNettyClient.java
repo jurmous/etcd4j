@@ -54,6 +54,9 @@ import java.util.concurrent.CancellationException;
 public class EtcdNettyClient implements EtcdClientImpl {
   private static final Logger logger = LoggerFactory.getLogger(EtcdNettyClient.class);
 
+  // default etcd port
+  private static final int DEFAULT_PORT = 2379;
+  private static final String ENV_ETCD4J_ENDPOINT = "ETCD4J_ENDPOINT";
   private final EventLoopGroup eventLoopGroup;
   private final URI[] uris;
 
@@ -209,7 +212,12 @@ public class EtcdNettyClient implements EtcdClientImpl {
     URI requestUri = URI.create(etcdRequest.getUrl());
     if (requestUri.getHost() != null && requestUri.getPort() > -1) {
       uri = requestUri;
-    }else{
+    } else if (uris.length == 0 && System.getenv(ENV_ETCD4J_ENDPOINT) != null) {
+      // read uri from environment variable
+      String endpoint_uri = System.getenv(ENV_ETCD4J_ENDPOINT);
+      logger.debug("Will use environment variable " + ENV_ETCD4J_ENDPOINT + " as uri with value " + endpoint_uri);
+      uri = URI.create(endpoint_uri);
+    } else {
       uri = uris[connectionState.uriIndex];
     }
 
@@ -220,7 +228,13 @@ public class EtcdNettyClient implements EtcdClientImpl {
     }
 
     // Start the connection attempt.
-    final ChannelFuture connectFuture = bootstrap.clone().connect(uri.getHost(), uri.getPort());
+    final ChannelFuture connectFuture;
+    // uri may not have port information, work with default port
+    if (uri.getPort() == -1) {
+      connectFuture = bootstrap.clone().connect(uri.getHost(), DEFAULT_PORT);
+    } else {
+      connectFuture = bootstrap.clone().connect(uri.getHost(), uri.getPort());
+    }
 
     final Channel channel = connectFuture.channel();
 
