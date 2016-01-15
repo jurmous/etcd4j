@@ -76,7 +76,7 @@ public abstract class EtcdRequest<R> {
 
   /**
    *
-   * @return
+   * @return Response Decoder
    */
   public EtcdResponseDecoder<R> getResponseDecoder() {
     return this.decoder;
