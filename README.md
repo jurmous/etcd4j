@@ -14,13 +14,13 @@ This project supports any etcd client which supports the etcd v2 api. This is an
 <dependency>
   <groupId>org.mousio</groupId>
   <artifactId>etcd4j</artifactId>
-  <version>2.8.0</version>
+  <version>2.9.0</version>
 </dependency>
 ```
 
 ## Gradle
 ```
-compile 'org.mousio:etcd4j:2.8.0'
+compile 'org.mousio:etcd4j:2.9.0'
 ```
 
 ## Manually
