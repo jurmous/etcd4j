@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, contributors as indicated by the @author tags.
+ * Copyright (c) 2015, Jurriaan Mous and contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import io.netty.handler.codec.http.HttpMethod;
 import mousio.client.retry.RetryPolicy;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.EtcdKeysResponse;
-import mousio.etcd4j.responses.EtcdKeysResponseDecoder;
 import mousio.etcd4j.transport.EtcdClientImpl;
 
 import java.io.IOException;
@@ -56,7 +55,7 @@ public class EtcdKeyRequest extends EtcdRequest<EtcdKeysResponse> {
    * @param key          key to do action on
    */
   public EtcdKeyRequest(EtcdClientImpl clientImpl, HttpMethod method, RetryPolicy retryHandler, String key) {
-    super(clientImpl, method, retryHandler, EtcdKeysResponseDecoder.INSTANCE);
+    super(clientImpl, method, retryHandler, EtcdKeysResponse.DECODER);
 
     if (key.startsWith("/")){
       key = key.substring(1);
@@ -66,20 +65,24 @@ public class EtcdKeyRequest extends EtcdRequest<EtcdKeysResponse> {
     this.requestParams = new HashMap<>();
   }
 
-  @Override public EtcdKeyRequest setRetryPolicy(RetryPolicy retryPolicy) {
+  @Override
+  public EtcdKeyRequest setRetryPolicy(RetryPolicy retryPolicy) {
     super.setRetryPolicy(retryPolicy);
     return this;
   }
 
-  @Override public EtcdResponsePromise<EtcdKeysResponse> send() throws IOException {
+  @Override
+  public EtcdResponsePromise<EtcdKeysResponse> send() throws IOException {
     return this.clientImpl.send(this);
   }
 
-  @Override public String getUri() {
+  @Override
+  public String getUri() {
     return "/v2/keys/" + ((key != null) ? key : "");
   }
 
-  @Override public Map<String, String> getRequestParams() {
+  @Override
+  public Map<String, String> getRequestParams() {
     return requestParams;
   }
 }

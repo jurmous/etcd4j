@@ -1,9 +1,35 @@
+/*
+ * Copyright (c) 2015, Jurriaan Mous and contributors as indicated by the @author tags.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package mousio.etcd4j.responses;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
+ * @author Luca Burgazzoli
+ *
  * Etcd Store Stats response
  */
-public class EtcdStoreStatsResponse {
+@JsonIgnoreProperties( ignoreUnknown = true )
+public class EtcdStoreStatsResponse implements EtcdResponse {
+
+  // The json
+  public static final EtcdResponseDecoder<EtcdStoreStatsResponse> DECODER =
+    EtcdResponseDecoders.json(EtcdStoreStatsResponse.class);
+
   private final long compareAndSwapFail;
   private final long compareAndSwapSuccess;
   private final long createFail;
@@ -20,20 +46,20 @@ public class EtcdStoreStatsResponse {
   private final long watchers;
 
   EtcdStoreStatsResponse(
-      long compareAndSwapFail,
-      long compareAndSwapSuccess,
-      long createFail,
-      long createSuccess,
-      long deleteFail,
-      long deleteSuccess,
-      long expireCount,
-      long getsFail,
-      long getsSuccess,
-      long setsFail,
-      long setsSuccess,
-      long updateFail,
-      long updateSuccess,
-      long watchers) {
+      @JsonProperty("compareAndSwapFail") long compareAndSwapFail,
+      @JsonProperty("compareAndSwapSuccess") long compareAndSwapSuccess,
+      @JsonProperty("createFail") long createFail,
+      @JsonProperty("createSuccess") long createSuccess,
+      @JsonProperty("deleteFail") long deleteFail,
+      @JsonProperty("deleteSuccess") long deleteSuccess,
+      @JsonProperty("expireCount") long expireCount,
+      @JsonProperty("getsFail") long getsFail,
+      @JsonProperty("getsSuccess") long getsSuccess,
+      @JsonProperty("setsFail") long setsFail,
+      @JsonProperty("setsSuccess") long setsSuccess,
+      @JsonProperty("updateFail") long updateFail,
+      @JsonProperty("updateSuccess") long updateSuccess,
+      @JsonProperty("watchers") long watchers) {
 
     this.compareAndSwapFail=compareAndSwapFail;
     this.compareAndSwapSuccess=compareAndSwapSuccess;

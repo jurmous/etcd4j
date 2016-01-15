@@ -17,29 +17,32 @@ package mousio.etcd4j.requests;
 
 import io.netty.handler.codec.http.HttpMethod;
 import mousio.client.retry.RetryPolicy;
-import mousio.etcd4j.responses.EtcdStoreStatsResponse;
+import mousio.etcd4j.promises.EtcdResponsePromise;
+import mousio.etcd4j.responses.EtcdResponseDecoder;
 import mousio.etcd4j.transport.EtcdClientImpl;
 
-/**
- * @author Jurriaan Mous
- * @author Luca Burgazzoli
- *
- * An Etcd Store Stats Request
- */
-public class EtcdStoreStatsRequest extends AbstractEtcdRequest<EtcdStoreStatsResponse> {
+import java.io.IOException;
 
-  /**
-   * Constructor
-   *
-   * @param clientImpl   the client to handle this request
-   * @param retryHandler handles retries
-   */
-  public EtcdStoreStatsRequest(EtcdClientImpl clientImpl, RetryPolicy retryHandler) {
-    super("/v2/stats/store", clientImpl, HttpMethod.GET, retryHandler, EtcdStoreStatsResponse.DECODER);
+/**
+ * @author Luca Burgazzoli
+ */
+public class AbstractEtcdRequest<R> extends EtcdRequest<R> {
+  private final String uri;
+
+  protected AbstractEtcdRequest(
+    String uri,EtcdClientImpl clientImpl, HttpMethod method, RetryPolicy retryPolicy, EtcdResponseDecoder<R> decoder) {
+    super(clientImpl, method, retryPolicy, decoder);
+
+    this.uri = uri;
   }
 
-  @Override public EtcdStoreStatsRequest setRetryPolicy(RetryPolicy retryPolicy) {
-    super.setRetryPolicy(retryPolicy);
-    return this;
+  @Override
+  public EtcdResponsePromise<R> send() throws IOException {
+    return clientImpl.send(this);
+  }
+
+  @Override
+  public String getUri() {
+    return this.uri;
   }
 }
