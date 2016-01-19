@@ -32,7 +32,7 @@ public class EtcdAuthenticationException extends Exception {
 
   /**
    * Constructor
-   * @param message
+   * @param message the exception message
    */
   public EtcdAuthenticationException(
     final String message) {

@@ -2,7 +2,6 @@ plugins {
     id 'java'
     id 'maven'
     id 'signing'
-    id 'idea'
     id 'osgi'
 }
 
@@ -12,7 +11,7 @@ compileJava {
 }
 
 group = 'org.mousio'
-version = '2.9.0'
+version = '2.10.0-SNAPSHOT'
 
 ext {
     isSnapshot = version.endsWith("-SNAPSHOT")
@@ -24,7 +23,7 @@ ext {
 
     versions = [
         netty   : '4.1.0.Beta8',
-        jackson : '2.6.4',
+        jackson : '2.7.0',
         slf4j   : '1.7.13',
         junit   : '4.12',
     ]
@@ -88,13 +87,6 @@ signing {
 
     sign configurations.archives
 }
-
-/*
-tasks.withType(JavaCompile) {
-    options.compilerArgs << "-Xlint:deprecation"
-    options.compilerArgs << "-Xlint:uncheked"
-}
-*/
 
 uploadArchives {
     repositories {
