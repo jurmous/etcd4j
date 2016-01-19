@@ -23,7 +23,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 public interface EtcdHeaderAwareResponse extends EtcdResponse {
   /**
    *
-   * @param headers
+   * @param headers the http headers
    */
   void loadHeaders(HttpHeaders headers);
 }

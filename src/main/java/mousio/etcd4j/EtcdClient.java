@@ -264,9 +264,10 @@ public class EtcdClient implements Closeable {
   }
 
   /**
-   * Set the retry handler. Default is an exponential backoff with start of 20ms.
+   * Set the retry handler. Default is an exponential back-off with start of 20ms.
    *
    * @param retryHandler to set
+   * @return this instance
    */
   public EtcdClient setRetryHandler(RetryPolicy retryHandler) {
     this.retryHandler = retryHandler;

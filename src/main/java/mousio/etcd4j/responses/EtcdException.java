@@ -37,10 +37,10 @@ public class EtcdException extends Exception {
   /**
    * Constructor
    *
-   * @param errorCode
-   * @param cause
-   * @param message
-   * @param index
+   * @param errorCode the etcd error code
+   * @param cause     the exception cause
+   * @param message   the exception message
+   * @param index     the data index
    */
   protected EtcdException(
     @JsonProperty("errorCode") Integer errorCode,
