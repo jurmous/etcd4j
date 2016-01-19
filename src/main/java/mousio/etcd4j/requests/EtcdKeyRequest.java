@@ -31,7 +31,7 @@ import java.util.Map;
  *
  * A basic Etcd Keys Request
  */
-public class EtcdKeyRequest extends EtcdRequest<EtcdKeysResponse> {
+public class EtcdKeyRequest extends AbstractEtcdRequest<EtcdKeysResponse> {
   protected final String key;
   protected final Map<String, String> requestParams;
 
@@ -55,7 +55,7 @@ public class EtcdKeyRequest extends EtcdRequest<EtcdKeysResponse> {
    * @param key          key to do action on
    */
   public EtcdKeyRequest(EtcdClientImpl clientImpl, HttpMethod method, RetryPolicy retryHandler, String key) {
-    super(clientImpl, method, retryHandler, EtcdKeysResponse.DECODER);
+    super(null, clientImpl, method, retryHandler, EtcdKeysResponse.DECODER);
 
     if (key.startsWith("/")){
       key = key.substring(1);
@@ -63,12 +63,6 @@ public class EtcdKeyRequest extends EtcdRequest<EtcdKeysResponse> {
 
     this.key = key;
     this.requestParams = new HashMap<>();
-  }
-
-  @Override
-  public EtcdKeyRequest setRetryPolicy(RetryPolicy retryPolicy) {
-    super.setRetryPolicy(retryPolicy);
-    return this;
   }
 
   @Override
@@ -84,5 +78,10 @@ public class EtcdKeyRequest extends EtcdRequest<EtcdKeysResponse> {
   @Override
   public Map<String, String> getRequestParams() {
     return requestParams;
+  }
+
+  @Override
+  public boolean hasRequestParams() {
+    return !requestParams.isEmpty();
   }
 }

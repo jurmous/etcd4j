@@ -30,7 +30,7 @@ public class AbstractEtcdRequest<R> extends EtcdRequest<R> {
   private final String uri;
 
   protected AbstractEtcdRequest(
-    String uri,EtcdClientImpl clientImpl, HttpMethod method, RetryPolicy retryPolicy, EtcdResponseDecoder<R> decoder) {
+    String uri, EtcdClientImpl clientImpl, HttpMethod method, RetryPolicy retryPolicy, EtcdResponseDecoder<R> decoder) {
     super(clientImpl, method, retryPolicy, decoder);
 
     this.uri = uri;

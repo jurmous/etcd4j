@@ -15,6 +15,8 @@
  */
 package mousio.client.retry;
 
+import mousio.client.ConnectionState;
+
 import java.io.IOException;
 
 /**
@@ -26,5 +28,5 @@ public interface RetryHandler {
    *
    * @throws java.io.IOException if connection fails
    */
-  public void doRetry() throws IOException;
+  void doRetry(ConnectionState connectionState) throws IOException;
 }

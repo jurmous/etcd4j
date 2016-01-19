@@ -21,11 +21,12 @@ import java.net.URI;
  * Counts connection retries and current connection index
  */
 public class ConnectionState {
-  public int retryCount;
-  public long startTime;
   public final URI[] uris;
-  public int uriIndex;
-  public int msBeforeRetry = 0;
+
+  public int retryCount;
+  public volatile int uriIndex;
+  public int msBeforeRetry;
+  public long startTime;
 
   /**
    * Constructor
@@ -33,6 +34,38 @@ public class ConnectionState {
    * @param uris to connect to
    */
   public ConnectionState(URI[] uris) {
+    this(uris, 0);
+  }
+
+  /**
+   * Constructor
+   *
+   * @param uris to connect to
+   * @param uriIndex the uri index to start from
+   */
+  public ConnectionState(URI[] uris, int uriIndex) {
     this.uris = uris;
+    this.uriIndex = uriIndex;
+    this.retryCount = 0;
+    this.msBeforeRetry = 0;
+    this.startTime = System.currentTimeMillis();
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder("ConnectionState [")
+      .append("\nretryCount=").append(retryCount).append(", ")
+      .append("\nuriIndex=").append(uriIndex).append(", ")
+      .append("\nmsBeforeRetry=").append(msBeforeRetry).append(", ")
+      .append("\nstartTime=").append(startTime);
+
+    if(uris != null) {
+      builder.append("\nuris={");
+      for(int i=0; i< uris.length; i++) {
+        builder.append("\n\t").append(i).append("=").append(uris[i].toASCIIString());
+      }
+    }
+
+    return builder.append("\n]").toString();
   }
 }

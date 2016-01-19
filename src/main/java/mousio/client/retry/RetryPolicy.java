@@ -56,32 +56,34 @@ public abstract class RetryPolicy {
       state.msBeforeRetry = this.startRetryTime;
     }
 
-    state.uriIndex++;
-    if (state.uriIndex >= state.uris.length) {
-      if (this.shouldRetry(state)) {
-        if (logger.isDebugEnabled()) {
-          logger.debug(String.format("Retry %s to send command", state.retryCount));
-        }
-        state.retryCount += 1;
-        state.uriIndex = 0;
+    state.retryCount++;
+    state.uriIndex = state.retryCount % state.uris.length;
+
+    if (this.shouldRetry(state)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Retry {} to send command", state.retryCount);
+      }
+
+      if(state.msBeforeRetry > 0) {
         timer.newTimeout(new TimerTask() {
-          @Override public void run(Timeout timeout) throws Exception {
+          @Override
+          public void run(Timeout timeout) throws Exception {
             try {
-              retryHandler.doRetry();
+              retryHandler.doRetry(state);
             } catch (IOException e) {
               failHandler.catchException(e);
             }
           }
         }, state.msBeforeRetry, TimeUnit.MILLISECONDS);
       } else {
-        throw new RetryCancelled();
+        try {
+          retryHandler.doRetry(state);
+        } catch (IOException e) {
+          failHandler.catchException(e);
+        }
       }
     } else {
-      try {
-        retryHandler.doRetry();
-      } catch (IOException e) {
-        failHandler.catchException(e);
-      }
+      throw new RetryCancelled();
     }
   }
 

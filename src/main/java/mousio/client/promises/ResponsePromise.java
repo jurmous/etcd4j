@@ -23,7 +23,7 @@ import mousio.client.retry.RetryHandler;
 import mousio.client.retry.RetryPolicy;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
@@ -41,8 +41,9 @@ public class ResponsePromise<T> {
   protected T response;
   protected Throwable exception;
 
-  List<IsSimplePromiseResponseHandler<T>> handlers;
+  private List<IsSimplePromiseResponseHandler<T>> handlers;
   private final GenericFutureListener<Promise<T>> promiseHandler;
+  private final ConnectionFailHandler connectionFailHandler;
 
   /**
    * Constructor
@@ -60,6 +61,13 @@ public class ResponsePromise<T> {
       @Override
       public void operationComplete(Promise<T> future) throws Exception {
         handlePromise(future);
+      }
+    };
+
+    this.connectionFailHandler = new ConnectionFailHandler() {
+      @Override
+      public void catchException(IOException exception) {
+        handleRetry(exception);
       }
     };
   }
@@ -88,10 +96,11 @@ public class ResponsePromise<T> {
    */
   public void addListener(IsSimplePromiseResponseHandler<T> listener) {
     if (handlers == null) {
-      handlers = Collections.singletonList(listener);
-    } else {
-      handlers.add(listener);
+      handlers = new LinkedList<>();
     }
+
+    handlers.add(listener);
+
     if (response != null || exception != null) {
       listener.onResponse(this);
     }
@@ -212,11 +221,7 @@ public class ResponsePromise<T> {
    */
   public void handleRetry(Throwable cause) {
     try {
-      this.retryPolicy.retry(connectionState, retryHandler, new ConnectionFailHandler() {
-        @Override public void catchException(IOException exception) {
-          handleRetry(exception);
-        }
-      });
+      this.retryPolicy.retry(connectionState, retryHandler, connectionFailHandler);
     } catch (RetryPolicy.RetryCancelled retryCancelled) {
       this.getNettyPromise().setFailure(cause);
     }

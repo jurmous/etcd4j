@@ -121,12 +121,14 @@ public class EtcdKeyGetRequest extends EtcdKeyRequest {
     return this.wait;
   }
 
-  @Override public EtcdKeyGetRequest timeout(long timeout, TimeUnit unit) {
+  @Override
+  public EtcdKeyGetRequest timeout(long timeout, TimeUnit unit) {
     super.timeout(timeout, unit);
     return this;
   }
 
-  @Override public EtcdKeyGetRequest setRetryPolicy(RetryPolicy retryPolicy) {
+  @Override
+  public EtcdKeyGetRequest setRetryPolicy(RetryPolicy retryPolicy) {
     super.setRetryPolicy(retryPolicy);
     return this;
   }
