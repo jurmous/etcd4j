@@ -44,8 +44,8 @@ public abstract class EtcdRequest<R> {
   private EtcdResponsePromise<R> promise;
   private final EtcdResponseDecoder<R> decoder;
 
-  private long timeout = -1L;
-  private TimeUnit timeoutUnit = TimeUnit.SECONDS;
+  private long timeout;
+  private TimeUnit timeoutUnit;
   private HttpRequest httpRequest;
   private String url;
 
@@ -60,6 +60,8 @@ public abstract class EtcdRequest<R> {
   protected EtcdRequest(
       EtcdClientImpl clientImpl, HttpMethod method, RetryPolicy retryPolicy, EtcdResponseDecoder<R> decoder) {
 
+    this.timeout = -1;
+    this.timeoutUnit = TimeUnit.SECONDS;
     this.clientImpl = clientImpl;
     this.method = method;
     this.retryPolicy = retryPolicy;
@@ -107,6 +109,10 @@ public abstract class EtcdRequest<R> {
     return null;
   }
 
+  public boolean hasRequestParams() {
+    return false;
+  }
+
   /**
    * Set promise on request
    *
@@ -132,6 +138,10 @@ public abstract class EtcdRequest<R> {
    */
   public long getTimeout() {
     return timeout;
+  }
+
+  public boolean hasTimeout() {
+    return timeout != -1;
   }
 
   /**

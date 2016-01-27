@@ -22,6 +22,7 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.timeout.ReadTimeoutException;
 import io.netty.util.concurrent.Promise;
 import mousio.client.exceptions.PrematureDisconnectException;
 import mousio.etcd4j.requests.EtcdRequest;
@@ -115,7 +116,8 @@ class EtcdResponseHandler<R> extends SimpleChannelInboundHandler<FullHttpRespons
         if (logger.isDebugEnabled()) {
           logger.debug("redirect for {} to {}",
             this.request.getHttpRequest().uri() ,
-            headers.get(HttpHeaderNames.LOCATION));
+            headers.get(HttpHeaderNames.LOCATION)
+          );
         }
       } else {
         this.promise.setFailure(new Exception("Missing Location header on redirect"));
@@ -126,11 +128,9 @@ class EtcdResponseHandler<R> extends SimpleChannelInboundHandler<FullHttpRespons
         this.promise.setFailure(failureDecoder.decode(headers, content));
       } else if (!content.isReadable()) {
         // If connection was accepted maybe response has to be waited for
-        if (status.equals(HttpResponseStatus.OK)
-          || status.equals(HttpResponseStatus.ACCEPTED)
-          || status.equals(HttpResponseStatus.CREATED)) {
-          this.client.connect(this.request);
-        } else {
+        if (!status.equals(HttpResponseStatus.OK)
+          && !status.equals(HttpResponseStatus.ACCEPTED)
+          && !status.equals(HttpResponseStatus.CREATED)) {
           this.promise.setFailure(new IOException(
             "Content was not readable. HTTP Status: " + status));
         }
@@ -143,6 +143,13 @@ class EtcdResponseHandler<R> extends SimpleChannelInboundHandler<FullHttpRespons
           this.promise.setFailure(e);
         }
       }
+    }
+  }
+
+  @Override
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception  {
+    if (cause instanceof ReadTimeoutException) {
+      this.promise.setFailure(cause);
     }
   }
 }

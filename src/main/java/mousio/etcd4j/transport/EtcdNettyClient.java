@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 
@@ -65,7 +64,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
   private final EtcdNettyConfig config;
   private final EtcdSecurityContext securityContext;
 
-  protected int lastWorkingUriIndex = 0;
+  protected volatile int lastWorkingUriIndex;
 
   /**
    * Constructor
@@ -121,6 +120,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
                          final EtcdSecurityContext securityContext, final URI... uris) {
     logger.info("Setting up Etcd4j Netty client");
 
+    this.lastWorkingUriIndex = 0;
     this.config = config.clone();
     this.securityContext = securityContext.clone();
     this.uris = uris;
@@ -164,20 +164,21 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @return Promise for the request.
    */
   public <R> EtcdResponsePromise<R> send(final EtcdRequest<R> etcdRequest) throws IOException {
-    final ConnectionState connectionState = new ConnectionState(uris);
-    connectionState.uriIndex = lastWorkingUriIndex;
+    logger.info("Send");
+    ConnectionState connectionState = new ConnectionState(uris, lastWorkingUriIndex);
 
     if (etcdRequest.getPromise() == null) {
-      EtcdResponsePromise<R> responsePromise = new EtcdResponsePromise<>(etcdRequest.getRetryPolicy(), connectionState, new RetryHandler() {
-        @Override
-        public void doRetry() throws IOException {
-          connect(etcdRequest, connectionState);
-        }
-      });
-      etcdRequest.setPromise(responsePromise);
+      etcdRequest.setPromise(new EtcdResponsePromise<R>(
+        etcdRequest.getRetryPolicy(),
+        connectionState,
+        new RetryHandler() {
+          @Override
+          public void doRetry(ConnectionState connectionState) throws IOException {
+            connect(etcdRequest, connectionState);
+          }
+      }));
     }
 
-    connectionState.startTime = new Date().getTime();
     connect(etcdRequest, connectionState);
 
     return etcdRequest.getPromise();
@@ -212,18 +213,22 @@ public class EtcdNettyClient implements EtcdClientImpl {
     URI requestUri = URI.create(etcdRequest.getUrl());
     if (requestUri.getHost() != null && requestUri.getPort() > -1) {
       uri = requestUri;
-    } else if (uris.length == 0 && System.getenv(ENV_ETCD4J_ENDPOINT) != null) {
+    } else if (connectionState.uris.length == 0 && System.getenv(ENV_ETCD4J_ENDPOINT) != null) {
       // read uri from environment variable
       String endpoint_uri = System.getenv(ENV_ETCD4J_ENDPOINT);
-      logger.debug("Will use environment variable " + ENV_ETCD4J_ENDPOINT + " as uri with value " + endpoint_uri);
+      if(logger.isDebugEnabled()) {
+        logger.debug("Will use environment variable " + ENV_ETCD4J_ENDPOINT + " as uri with value " + endpoint_uri);
+      }
       uri = URI.create(endpoint_uri);
     } else {
-      uri = uris[connectionState.uriIndex];
+      uri = connectionState.uris[connectionState.uriIndex];
     }
 
     if(eventLoopGroup.isShuttingDown() || eventLoopGroup.isShutdown()){
       etcdRequest.getPromise().getNettyPromise().cancel(true);
-      logger.debug(String.format("Retry canceled because of closed etcd client"));
+      if(logger.isDebugEnabled()) {
+        logger.debug("Retry canceled because of closed etcd client");
+      }
       return;
     }
 
@@ -235,8 +240,6 @@ public class EtcdNettyClient implements EtcdClientImpl {
     } else {
       connectFuture = bootstrap.clone().connect(uri.getHost(), uri.getPort());
     }
-
-    final Channel channel = connectFuture.channel();
 
     etcdRequest.getPromise().attachNettyPromise((Promise<R>) new DefaultPromise<>(connectFuture.channel().eventLoop()));
 
@@ -272,14 +275,14 @@ public class EtcdNettyClient implements EtcdClientImpl {
         });
 
         if (logger.isDebugEnabled()) {
-          logger.debug("Connected to " + channel.remoteAddress().toString());
+          logger.debug("Connected to {} ({})", f.channel().remoteAddress().toString(), connectionState.uriIndex);
         }
 
         lastWorkingUriIndex = connectionState.uriIndex;
 
         modifyPipeLine(etcdRequest, f.channel().pipeline());
 
-        createAndSendHttpRequest(uri, etcdRequest.getUrl(), etcdRequest, channel)
+        createAndSendHttpRequest(uri, etcdRequest.getUrl(), etcdRequest, f.channel())
           .addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
@@ -290,11 +293,13 @@ public class EtcdNettyClient implements EtcdClientImpl {
             }
           });
 
-        channel.closeFuture().addListener(new ChannelFutureListener() {
+        f.channel().closeFuture().addListener(new ChannelFutureListener() {
           @Override
           public void operationComplete(ChannelFuture future) throws Exception {
             if (logger.isDebugEnabled()) {
-              logger.debug("Connection closed for request " + etcdRequest.getMethod().name() + " " + etcdRequest.getUri());
+              logger.debug("Connection closed for request {} on uri {} ",
+                etcdRequest.getMethod().name(),
+                etcdRequest.getUri());
             }
           }
         });
@@ -312,7 +317,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
   private <R> void modifyPipeLine(final EtcdRequest<R> req, final ChannelPipeline pipeline) {
     final EtcdResponseHandler<R> handler = new EtcdResponseHandler<>(this, req);
 
-    if (req.getTimeout() != -1) {
+    if (req.hasTimeout()) {
       pipeline.addFirst(new ReadTimeoutHandler(req.getTimeout(), req.getTimeoutUnit()));
     }
 
@@ -358,19 +363,12 @@ public class EtcdNettyClient implements EtcdClientImpl {
 
         httpRequest = bodyRequestEncoder.finalizeRequest();
       } else {
-        String getLocation = "";
+        QueryStringEncoder encoder = new QueryStringEncoder(uri);
         for (Map.Entry<String, String> entry : keyValuePairs.entrySet()) {
-          if (!getLocation.isEmpty()) {
-            getLocation += "&";
-          }
-          getLocation += entry.getKey() + "=" + entry.getValue();
+          encoder.addParam(entry.getKey() , entry.getValue());
         }
 
-        if (!uri.contains("?")) {
-          httpRequest.setUri(uri.concat("?").concat(getLocation));
-        } else {
-          httpRequest.setUri(uri);
-        }
+        httpRequest.setUri(encoder.toString());
       }
     }
 

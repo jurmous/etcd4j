@@ -2,17 +2,12 @@ package mousio.etcd4j;
 
 import mousio.client.retry.RetryWithExponentialBackOff;
 import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.responses.EtcdAuthenticationException;
-import mousio.etcd4j.responses.EtcdException;
-import mousio.etcd4j.responses.EtcdKeyAction;
-import mousio.etcd4j.responses.EtcdLeaderStatsResponse;
-import mousio.etcd4j.responses.EtcdKeysResponse;
-import mousio.etcd4j.responses.EtcdSelfStatsResponse;
-import mousio.etcd4j.responses.EtcdStoreStatsResponse;
-import mousio.etcd4j.responses.EtcdVersionResponse;
+import mousio.etcd4j.responses.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -21,23 +16,31 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * Performs tests on a real server at local address. All actions are performed in "etcd4j_test" dir
  */
 public class TestFunctionality {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(TestFunctionality.class);
+
   private EtcdClient etcd;
 
   @Before
   public void setUp() throws Exception {
-    System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "DEBUG");
     this.etcd = new EtcdClient();
     this.etcd.setRetryHandler(new RetryWithExponentialBackOff(20, 4, -1));
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    try {
+      etcd.deleteDir("etcd4j_test").recursive().send().get();
+    } catch (EtcdException | IOException e) {
+    }
+
+    this.etcd.close();
   }
 
   /**
@@ -254,9 +257,8 @@ public class TestFunctionality {
 
   @Test(expected = TimeoutException.class)
   public void testWaitTimeout() throws IOException, EtcdException, EtcdAuthenticationException, InterruptedException, TimeoutException {
-    EtcdResponsePromise<EtcdKeysResponse> p = etcd.get("etcd4j_test/test").waitForChange().timeout(10, TimeUnit.MILLISECONDS).send();
+    etcd.get("etcd4j_test/test").waitForChange().timeout(1, TimeUnit.SECONDS).send().get();
 
-    EtcdKeysResponse r = p.get();
     // get should have thrown TimeoutException
     fail();
   }
@@ -289,15 +291,5 @@ public class TestFunctionality {
         fail();
       }
     }
-  }
-
-  @After
-  public void tearDown() throws Exception {
-    try {
-      etcd.deleteDir("etcd4j_test").recursive().send().get();
-    } catch (EtcdException | IOException e) {
-      // ignore since not all tests create the directory
-    }
-    this.etcd.close();
   }
 }
