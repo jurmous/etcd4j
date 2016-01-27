@@ -22,7 +22,7 @@ public class EtcdClientRule implements TestRule {
   private EtcdClient client;
 
   @Override
-  public Statement apply(Statement statement, Description description) {
+  public Statement apply(final Statement statement, final Description description) {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
