@@ -11,7 +11,7 @@ compileJava {
 }
 
 group = 'org.mousio'
-version = '2.10.0-SNAPSHOT'
+version = '2.10.0'
 
 ext {
     isSnapshot = version.endsWith("-SNAPSHOT")
