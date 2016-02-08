@@ -17,28 +17,48 @@ package mousio.etcd4j;
 
 import io.netty.handler.ssl.SslContext;
 
-public final class EtcdSecurityContext implements Cloneable {
-  public static final EtcdSecurityContext NONE = new EtcdSecurityContext(null, null, null);
+import javax.net.ssl.SSLContext;
 
-  private final SslContext sslContext;
+public final class EtcdSecurityContext implements Cloneable {
+  public static final EtcdSecurityContext NONE = new EtcdSecurityContext(null, null, null, null);
+
+  private final SSLContext sslContext;
+  private final SslContext nettySslContext;
   private final String username;
   private final String password;
 
+  public EtcdSecurityContext(SSLContext sslContext) {
+    this(sslContext, null, null, null);
+  }
+
   public EtcdSecurityContext(SslContext sslContext) {
-    this(sslContext, null, null);
+    this(null, sslContext, null, null);
   }
 
   public EtcdSecurityContext(String username, String password) {
-    this(null, username, password);
+    this(null, null, username, password);
   }
 
   public EtcdSecurityContext(SslContext sslContext, String username, String password) {
+    this(null, sslContext, username, password);
+  }
+
+  public EtcdSecurityContext(SSLContext sslContext, String username, String password) {
+    this(sslContext, null, username, password);
+  }
+
+  private EtcdSecurityContext(SSLContext sslContext, SslContext nettySslContext, String username, String password) {
     this.sslContext = sslContext;
+    this.nettySslContext = nettySslContext;
     this.username = username;
     this.password = password;
   }
 
-  public SslContext sslContext() {
+  public SslContext nettySslContext() {
+    return this.nettySslContext;
+  }
+
+  public SSLContext sslContext() {
     return this.sslContext;
   }
 
@@ -48,6 +68,10 @@ public final class EtcdSecurityContext implements Cloneable {
 
   public String password() {
     return password;
+  }
+
+  public boolean hasNettySsl() {
+    return this.nettySslContext != null;
   }
 
   public boolean hasSsl() {
@@ -70,10 +94,14 @@ public final class EtcdSecurityContext implements Cloneable {
   }
 
   public static EtcdSecurityContext withSslContext(SslContext sslContext) {
-    return new EtcdSecurityContext(sslContext, null, null);
+    return new EtcdSecurityContext(null, sslContext, null, null);
+  }
+
+  public static EtcdSecurityContext withSslContext(SSLContext sslContext) {
+    return new EtcdSecurityContext(sslContext, null, null, null);
   }
 
   public static EtcdSecurityContext withCredential(String username, String password) {
-    return new EtcdSecurityContext(null, username, password);
+    return new EtcdSecurityContext(null, null, username, password);
   }
 }

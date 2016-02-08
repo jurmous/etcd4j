@@ -284,7 +284,7 @@ To create an Etcd client with a custom timeout and Netty event loop:
         .setHostName("www.example.net")
         .setEventLoopGroup(customEventLoop);
 
-    // Set sslContext to null to not connect with ssl    
+    nettySslContext
     try(EtcdClient etcd = new EtcdClient(new EtcdNettyClient(config, sslContext, URI.create(uri)))){
       // Use etcd client here
     }
