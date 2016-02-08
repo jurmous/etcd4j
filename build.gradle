@@ -22,9 +22,9 @@ ext {
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
     versions = [
-        netty   : '4.1.0.Beta8',
+        netty   : '4.1.0.CR2',
         jackson : '2.7.0',
-        slf4j   : '1.7.13',
+        slf4j   : '1.7.14',
         junit   : '4.12',
     ]
 
