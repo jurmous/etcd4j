@@ -24,6 +24,7 @@ import io.netty.handler.codec.base64.Base64;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.CharsetUtil;
@@ -135,8 +136,10 @@ public class EtcdNettyClient implements EtcdClientImpl {
         @Override
         public void initChannel(SocketChannel ch) throws Exception {
           ChannelPipeline p = ch.pipeline();
-          if (securityContext.hasSsl()) {
-            p.addLast(securityContext.sslContext().newHandler(ch.alloc()));
+          if (securityContext.hasNettySsl()) {
+            p.addLast(securityContext.nettySslContext().newHandler(ch.alloc()));
+          } else if (securityContext.hasSsl()) {
+            p.addLast(new SslHandler(securityContext.sslContext().createSSLEngine()));
           }
           p.addLast("codec", new HttpClientCodec());
           if(securityContext.hasCredentials()) {
@@ -164,7 +167,6 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @return Promise for the request.
    */
   public <R> EtcdResponsePromise<R> send(final EtcdRequest<R> etcdRequest) throws IOException {
-    logger.info("Send");
     ConnectionState connectionState = new ConnectionState(uris, lastWorkingUriIndex);
 
     if (etcdRequest.getPromise() == null) {
