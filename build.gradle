@@ -68,6 +68,12 @@ artifacts {
     archives sourcesJar
 }
 
+test { 
+    testLogging { 
+        events "started", "passed", "skipped", "failed", "standardOut", "standardError" 
+    }
+}
+
 jar {
     baseName = "${project.name}"
 

@@ -2,9 +2,9 @@ sudo: false
 language:
 - java
 before_install:
-- ./src/main/bash/etcd_travis_install.sh
+- ./src/main/bash/etcd_install.sh ./etcd-dist
 script:
-- ./src/main/bash/etcd_travis_run.sh
+- ./src/main/bash/etcd_run.sh ./etcd-dist
 - ./gradlew build
 jdk:
 - oraclejdk7
