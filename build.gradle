@@ -11,7 +11,7 @@ compileJava {
 }
 
 group = 'org.mousio'
-version = '2.10.0'
+version = '2.10.1-SNAPSHOT'
 
 ext {
     isSnapshot = version.endsWith("-SNAPSHOT")
@@ -23,7 +23,7 @@ ext {
 
     versions = [
         netty   : '4.1.0.CR2',
-        jackson : '2.7.0',
+        jackson : '2.7.1',
         slf4j   : '1.7.14',
         junit   : '4.12',
     ]
