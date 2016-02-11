@@ -79,6 +79,18 @@ public final class EtcdKeysResponse implements EtcdHeaderAwareResponse {
     }
   }
 
+  public EtcdKeyAction getAction() {
+    return action;
+  }
+
+  public EtcdNode getNode() {
+    return node;
+  }
+
+  public EtcdNode getPrevNode() {
+    return prevNode;
+  }
+
   /**
    * An Etcd node
    */
@@ -127,6 +139,38 @@ public final class EtcdKeysResponse implements EtcdHeaderAwareResponse {
       this.expiration = expiration != null
           ? convertDate(expiration)
           : null;
-    }
-  }
+
+   }
+   public String getKey() {
+     return key;
+   }
+
+   public boolean isDir() {
+     return dir;
+   }
+
+   public Long getCreatedIndex() {
+     return createdIndex;
+   }
+
+   public Long getModifiedIndex() {
+     return modifiedIndex;
+   }
+   
+   public String getValue() {
+     return value;
+   }
+
+   public Date getExpiration() {
+     return expiration;
+   }
+
+   public Long getTTL() {
+     return ttl;
+   }
+
+   public List<EtcdNode> getNodes() {
+     return nodes;
+   }
+}
 }

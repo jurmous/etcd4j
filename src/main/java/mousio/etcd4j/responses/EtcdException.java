@@ -67,4 +67,20 @@ public class EtcdException extends Exception {
   public String toString() {
     return getMessage();
   }
+
+  public String getETCDCause() {
+    return etcdCause;
+  }
+
+  public int getErrorCode() {
+    return errorCode;
+  }
+
+  public Long getIndex() {
+    return index;
+  }
+
+  public String ETCDMessage() {
+    return etcdMessage;
+  }
 }
