@@ -11,7 +11,7 @@ compileJava {
 }
 
 group = 'org.mousio'
-version = '2.10.0-SNAPSHOT'
+version = '2.10.1-SNAPSHOT'
 
 ext {
     isSnapshot = version.endsWith("-SNAPSHOT")
@@ -22,9 +22,9 @@ ext {
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
     versions = [
-        netty   : '4.1.0.Beta8',
-        jackson : '2.7.0',
-        slf4j   : '1.7.13',
+        netty   : '4.1.0.CR2',
+        jackson : '2.7.1',
+        slf4j   : '1.7.14',
         junit   : '4.12',
     ]
 
@@ -66,6 +66,12 @@ artifacts {
     archives jar
     archives javadocJar
     archives sourcesJar
+}
+
+test { 
+    testLogging { 
+        events "started", "passed", "skipped", "failed", "standardOut", "standardError" 
+    }
 }
 
 jar {

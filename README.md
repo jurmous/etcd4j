@@ -14,13 +14,13 @@ This project supports any etcd client which supports the etcd v2 api. This is an
 <dependency>
   <groupId>org.mousio</groupId>
   <artifactId>etcd4j</artifactId>
-  <version>2.9.0</version>
+  <version>2.10.0</version>
 </dependency>
 ```
 
 ## Gradle
 ```
-compile 'org.mousio:etcd4j:2.9.0'
+compile 'org.mousio:etcd4j:2.10.0'
 ```
 
 ## Manually
@@ -284,7 +284,7 @@ To create an Etcd client with a custom timeout and Netty event loop:
         .setHostName("www.example.net")
         .setEventLoopGroup(customEventLoop);
 
-    // Set sslContext to null to not connect with ssl    
+    nettySslContext
     try(EtcdClient etcd = new EtcdClient(new EtcdNettyClient(config, sslContext, URI.create(uri)))){
       // Use etcd client here
     }
