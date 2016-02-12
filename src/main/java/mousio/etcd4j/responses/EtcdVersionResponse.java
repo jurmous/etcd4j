@@ -44,4 +44,12 @@ public final class EtcdVersionResponse implements EtcdResponse {
     this.server = server;
     this.cluster = cluster;
   }
+
+  public String getServer () {
+    return server;
+  }
+
+  public String getCluster () {
+    return cluster;
+  }
 }
