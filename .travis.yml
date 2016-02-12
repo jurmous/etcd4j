@@ -2,7 +2,7 @@ sudo: false
 language:
 - java
 before_install:
-- ./src/main/bash/etcd_install.sh ./etcd-dist
+- ./src/main/bash/etcd_install.sh -p ./etcd-dist
 script:
 - ./src/main/bash/etcd_run.sh ./etcd-dist
 - ./gradlew build
