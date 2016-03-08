@@ -13,3 +13,7 @@ bin/
 # ignore IntelliJ idea folders and settings
 .idea/
 *.iml
+/target/
+
+# ignore vagrant files
+/.vagrant/
