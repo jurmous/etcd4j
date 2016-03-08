@@ -2,10 +2,16 @@
 
 OPTIND=0
 
-while getopts ":b:" opt; do
+while getopts ":db:p:" opt; do
   case $opt in
   	b)
       BIND_ADDRESS=$OPTARG
+      ;;
+    d)
+      DAEMON="true"
+      ;;
+    p)  
+      ETCD_PATH=$OPTARG
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
@@ -15,15 +21,17 @@ while getopts ":b:" opt; do
 done
 shift $((OPTIND-1))
 
-ETCD_ARGS=( '--name' 'etcd4j.etcd' )
-
-if [ $# -eq 1 ]; then
-    ETCD_PATH=$1
-    ETCD_ARGS=(${ETCD_ARGS[@]} '--data-dir' "${ETCD_PATH}/etcd4j.etcd")
-else
-    echo "Installation path is missing"
-    exit -1
+if [ ! "${ETCD_PATH+x}" ]; then
+  echo "Missing ETCD_PATH"
+  exit -1
 fi
+
+ETCD_ARGS=(\
+  '--name' \
+  'etcd4j.etcd' \
+  '--data-dir' \ 
+  "${ETCD_PATH}/etcd4j.etcd"\
+  )
 
 if [ "${BIND_ADDRESS+x}" ]; then
 	ETCD_ARGS=(${ETCD_ARGS[@]} \
@@ -31,4 +39,8 @@ if [ "${BIND_ADDRESS+x}" ]; then
 	    "-advertise-client-urls=http://localhost:2379,http://localhost:4001" )
 fi
 
-${ETCD_PATH}/etcd ${ETCD_ARGS[@]}
+if [  "${DAEMON+x}" ]; then
+  ${ETCD_PATH}/etcd ${ETCD_ARGS[@]} > ${ETCD_PATH}/etcd.log 2>&1 &
+else
+  ${ETCD_PATH}/etcd ${ETCD_ARGS[@]}
+fi
