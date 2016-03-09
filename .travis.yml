@@ -1,13 +1,17 @@
 sudo: false
+addons:
+  apt:
+    packages:
+    - oracle-java8-installer
 language:
-- java
-before_install:
-- ./src/main/bash/etcd_install.sh -p ./etcd-dist
-script:
-- ./src/main/bash/etcd_run.sh -p ./etcd-dist -d
-- ./gradlew build
+  - java
 jdk:
-- oraclejdk7
+  - oraclejdk8
+before_install:
+  - ./src/main/bash/etcd_install.sh -p ./etcd-dist
+script:
+  - ./src/main/bash/etcd_run.sh -p ./etcd-dist -d
+  - ./gradlew build
 env:
   global:
     - CI_DEPLOY_USERNAME=fake
