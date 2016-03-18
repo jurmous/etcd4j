@@ -55,6 +55,7 @@ class EtcdResponseHandler<R> extends SimpleChannelInboundHandler<FullHttpRespons
     failureDecoders.put(HttpResponseStatus.FORBIDDEN, EtcdException.DECODER);
     failureDecoders.put(HttpResponseStatus.PRECONDITION_FAILED, EtcdException.DECODER);
     failureDecoders.put(HttpResponseStatus.INTERNAL_SERVER_ERROR, EtcdException.DECODER);
+    failureDecoders.put(HttpResponseStatus.BAD_REQUEST, EtcdException.DECODER);
   }
 
   protected final Promise<R> promise;
