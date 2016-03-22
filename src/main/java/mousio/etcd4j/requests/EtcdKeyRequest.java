@@ -57,7 +57,7 @@ public class EtcdKeyRequest extends AbstractEtcdRequest<EtcdKeysResponse> {
   public EtcdKeyRequest(EtcdClientImpl clientImpl, HttpMethod method, RetryPolicy retryHandler, String key) {
     super(null, clientImpl, method, retryHandler, EtcdKeysResponse.DECODER);
 
-    if (key.startsWith("/")){
+    if (key != null && key.startsWith("/")){
       key = key.substring(1);
     }
 
