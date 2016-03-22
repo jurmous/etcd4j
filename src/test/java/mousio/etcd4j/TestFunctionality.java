@@ -5,11 +5,13 @@ import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.*;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CancellationException;
@@ -291,5 +293,24 @@ public class TestFunctionality {
         fail();
       }
     }
+  }
+
+  @Ignore
+  @Test
+  public void testGetAll() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
+    List<EtcdKeysResponse.EtcdNode> nodes;
+
+    EtcdClient client = new EtcdClient();
+
+    nodes = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode().getNodes();
+    assertNotNull(nodes);
+    assertEquals(0, nodes.size());
+
+    client.put("etcd4j_testGetAll_1/foo1", "bar").prevExist(false).send().get();
+    client.put("etcd4j_testGetAll_2/foo1", "bar").prevExist(false).send().get();
+
+    nodes = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode().getNodes();
+    assertNotNull(nodes);
+    assertEquals(2, nodes.size());
   }
 }
