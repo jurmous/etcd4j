@@ -60,6 +60,19 @@ public class EtcdKeyPutRequest extends EtcdKeyRequest {
   }
 
   /**
+   * Set Time to live on a refresh request.
+   * Requires previous value to exist
+   *
+   * @param ttl time to live in seconds
+   * @return Itself for chaining
+   */
+  public EtcdKeyPutRequest refresh(Integer ttl) {
+    this.requestParams.put("refresh", "true");
+    this.prevExist(true);
+    return ttl(ttl);
+  }
+
+  /**
    * Set that operation is on a directory
    *
    * @return Itself for chaining
