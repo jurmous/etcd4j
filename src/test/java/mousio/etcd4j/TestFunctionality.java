@@ -174,6 +174,20 @@ public class TestFunctionality {
   }
 
   /**
+   * Refresh test
+   */
+  @Test
+  public void testRefreshTtl() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
+    EtcdKeysResponse initialResponse = etcd.put("etcd4j_test/foo", "bar").ttl(60).send().get();
+    assertEquals(EtcdKeyAction.set, initialResponse.action);
+
+    final EtcdKeysResponse refreshedResponse = etcd.refresh("etcd4j_test/foo", 120).send().get();
+
+    assertEquals(initialResponse.node.createdIndex, refreshedResponse.node.createdIndex);
+    assertTrue("expected ttl to be updated", refreshedResponse.node.ttl > 60);
+  }
+
+  /**
    * Tests redirect by sending a key with too many slashes.
    */
   @Test

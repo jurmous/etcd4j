@@ -112,7 +112,7 @@ public class EtcdClient implements Closeable {
    * Get the version of the Etcd server
    *
    * @return version as String
-   * @deprecated use version() when using etcd 2.1+. 
+   * @deprecated use version() when using etcd 2.1+.
    */
   @Deprecated
   public String getVersion() {
@@ -184,6 +184,18 @@ public class EtcdClient implements Closeable {
    */
   public EtcdKeyPutRequest put(String key, String value) {
     return new EtcdKeyPutRequest(client, key, retryHandler).value(value);
+  }
+
+  /**
+  * Refresh a key with new ttl
+  * (without notifying watchers when using etcd 2.3+)
+  *
+  * @param key to refresh
+  * @param ttl to update key with
+  * @return EtcdKeysRequest
+  */
+  public EtcdKeyPutRequest refresh(String key, Integer ttl) {
+    return new EtcdKeyPutRequest(client, key, retryHandler).refresh(ttl);
   }
 
   /**
