@@ -140,8 +140,19 @@ class EtcdResponseHandler<R> extends SimpleChannelInboundHandler<FullHttpRespons
           this.promise.setSuccess(
             request.getResponseDecoder().decode(headers, content));
         } catch (Exception e) {
-          // Catches both parsed EtcdExceptions and parsing exceptions
-          this.promise.setFailure(e);
+          if (e instanceof EtcdException) {
+            this.promise.setFailure(e);
+          } else {
+            try {
+              // Try to be smart, if an exception is thrown, first try to decode
+              // the content and see if it is an EtcdException, i.e. an error code
+              // not included in failureDecoders
+              this.promise.setFailure(EtcdException.DECODER.decode(headers, content));
+            } catch (Exception e1) {
+              // if it fails again, set the original exception as failure
+              this.promise.setFailure(e);
+            }
+          }
         }
       }
     }
