@@ -40,6 +40,8 @@ public class EtcdNettyConfig implements Cloneable {
 
   private String hostName;
 
+  private boolean managedEventLoopGroup = true;
+
   /**
    * Constructor
    */
@@ -75,11 +77,28 @@ public class EtcdNettyConfig implements Cloneable {
   /**
    * Set a custom event loop group. For use within existing netty architectures
    *
+   * Note:
+   *
+   * When etcd client close, the event loop group will also be closed, if you don't
+   * want this behavior, use {@link EtcdNettyConfig#setEventLoopGroup(EventLoopGroup, boolean)}
+   *
    * @param eventLoopGroup to set.
    * @return itself for chaining.
    */
   public EtcdNettyConfig setEventLoopGroup(EventLoopGroup eventLoopGroup) {
+    return setEventLoopGroup(eventLoopGroup, true);
+  }
+
+  /**
+   * Set a custom event loop group. For use within existing netty architectures
+   *
+   * @param eventLoopGroup eventLoopGroup to set.
+   * @param managed whether event loop group will be closed when etcd client close, true represent yes
+   * @return itself for chaining.
+   */
+  public EtcdNettyConfig setEventLoopGroup(EventLoopGroup eventLoopGroup, boolean managed) {
     this.eventLoopGroup = eventLoopGroup;
+    this.managedEventLoopGroup = managed;
     return this;
   }
 
@@ -91,6 +110,15 @@ public class EtcdNettyConfig implements Cloneable {
    */
   public EventLoopGroup getEventLoopGroup() {
     return eventLoopGroup;
+  }
+
+  /**
+   * Get whether event loop group will be closed when etcd client close, true represent yes
+   *
+   * @return whether etcd client manage event loop group
+   */
+  public boolean isManagedEventLoopGroup() {
+    return managedEventLoopGroup;
   }
 
   /**

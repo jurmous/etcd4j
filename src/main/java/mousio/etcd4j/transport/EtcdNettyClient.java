@@ -389,7 +389,9 @@ public class EtcdNettyClient implements EtcdClientImpl {
   @Override
   public void close() {
     logger.info("Shutting down Etcd4j Netty client");
-    eventLoopGroup.shutdownGracefully();
+    if (config.isManagedEventLoopGroup()) {
+      eventLoopGroup.shutdownGracefully();
+    }
   }
 
   private class HttpBasicAuthHandler extends ChannelOutboundHandlerAdapter {

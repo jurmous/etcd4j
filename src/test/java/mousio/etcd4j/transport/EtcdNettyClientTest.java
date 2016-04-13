@@ -14,6 +14,7 @@ import java.net.URI;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class EtcdNettyClientTest {
 
@@ -38,6 +39,28 @@ public class EtcdNettyClientTest {
     Channel channel = bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel();
 
     assertEquals(100, channel.config().getOption(ChannelOption.CONNECT_TIMEOUT_MILLIS).intValue());
+  }
+
+  @Test
+  public void testManagedEventLoopGroup() throws Exception {
+    NioEventLoopGroup evl = new NioEventLoopGroup();
+
+    URI uri = URI.create("http://localhost:4001");
+
+    EtcdNettyConfig config = new EtcdNettyConfig()
+        .setConnectTimeout(100)
+        .setSocketChannelClass(NioSocketChannel.class)
+        .setMaxFrameSize(1024 * 1024)
+        .setEventLoopGroup(evl, false)
+        .setHostName("localhost");
+
+    EtcdNettyClient client = new EtcdNettyClient(config, uri);
+    client.close();
+
+    assertTrue(!(evl.isShuttingDown() || evl.isShutdown() || evl.isTerminated()));
+    
+    evl.shutdownGracefully();
+    assertTrue(evl.isShuttingDown() || evl.isShutdown() || evl.isTerminated());
   }
 
   @Ignore
