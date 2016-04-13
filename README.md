@@ -65,7 +65,7 @@ try(EtcdClient etcd = new EtcdClient(sslContext,
 Sending a request and retrieve values from response
 ```Java
 try{
-  EtcdKeysResponse response = client.putValue("foo", "bar").send().get();
+  EtcdKeysResponse response = client.put("foo", "bar").send().get();
 
   // Prints out: bar
   System.out.println(response.node.value);
@@ -82,7 +82,7 @@ try{
 
 You can set multiple options on the requests before sending to the server like ttl and prev exist.
 ```Java
-  EtcdKeysResponsePromise promise = client.putValue("foo", "bar").ttl(50).prevExist().send();
+  EtcdKeysResponsePromise promise = client.put("foo", "bar").ttl(50).prevExist().send();
 ```
 
 ## Promises
@@ -90,8 +90,8 @@ You can set multiple options on the requests before sending to the server like t
 All requests return a Promise after sending. You can send multiple requests async before retrieving 
 their values
 ```Java
-  EtcdKeysResponsePromise promise1 = client.putValue("foo", "bar").send();
-  EtcdKeysResponsePromise promise2 = client.putValue("foo", "bar").send();
+  EtcdKeysResponsePromise promise1 = client.put("foo", "bar").send();
+  EtcdKeysResponsePromise promise2 = client.put("foo", "bar").send();
   
   // Call the promise in a blocking way
   try{
@@ -192,7 +192,7 @@ It is possible to set a timeout on all requests. By default there is no timeout.
 ```Java
 
 // Timeout of 1 second on a put value
-EtcdKeysResponsePromise putPromise = client.putValue("foo", "bar").timeout(1, TimeUnit.SECONDS).send();
+EtcdKeysResponsePromise putPromise = client.put("foo", "bar").timeout(1, TimeUnit.SECONDS).send();
 
 try{
   EtcdKeysResponse r = putPromise.get();
@@ -283,6 +283,7 @@ To create an Etcd client with a custom timeout and Netty event loop:
         .setConnectTimeout(100)
         .setHostName("www.example.net")
         .setEventLoopGroup(customEventLoop);
+        // .setEventLoopGroup(customEventLoop, false); // don't close event loop group when etcd client close
 
     nettySslContext
     try(EtcdClient etcd = new EtcdClient(new EtcdNettyClient(config, sslContext, URI.create(uri)))){
