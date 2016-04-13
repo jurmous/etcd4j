@@ -42,6 +42,26 @@ public class EtcdNettyClientTest {
 
   @Ignore
   @Test
+  public void testCustomEtcdNettyClient() throws Exception {
+    NioEventLoopGroup evl = new NioEventLoopGroup();
+
+    URI uri = URI.create("http://localhost:4001");
+
+    EtcdNettyConfig config = new EtcdNettyConfig()
+        .setConnectTimeout(100)
+        .setSocketChannelClass(NioSocketChannel.class)
+        .setMaxFrameSize(1024 * 1024)
+        .setEventLoopGroup(evl)
+        .setHostName("localhost");
+
+    EtcdNettyClient client = new EtcdNettyClient(config, uri);
+    EtcdClient etcdClient = new EtcdClient(client);
+
+    assertNotNull(etcdClient.version());
+  }
+
+  @Ignore
+  @Test
   public void testAuth() throws Exception {
     EtcdClient client = new EtcdClient(
       "test",
