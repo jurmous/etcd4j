@@ -89,14 +89,12 @@ public class EtcdClient implements Closeable {
    * @param baseUri URI to create connection on
    */
   public EtcdClient(EtcdSecurityContext securityContext, URI... baseUri) {
-    this.retryHandler = RetryWithExponentialBackOff.DEFAULT;
-
-    this.client = new EtcdNettyClient(
+    this(new EtcdNettyClient(
       securityContext,
       (baseUri.length == 0)
         ? new URI[] { URI.create("https://127.0.0.1:4001") }
         : baseUri
-    );
+    ));
   }
 
   /**
@@ -106,6 +104,7 @@ public class EtcdClient implements Closeable {
    */
   public EtcdClient(EtcdClientImpl etcdClientImpl) {
     this.client = etcdClientImpl;
+    this.retryHandler = RetryWithExponentialBackOff.DEFAULT;
   }
 
   /**
