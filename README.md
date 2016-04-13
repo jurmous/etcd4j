@@ -65,7 +65,7 @@ try(EtcdClient etcd = new EtcdClient(sslContext,
 Sending a request and retrieve values from response
 ```Java
 try{
-  EtcdKeysResponse response = client.putValue("foo", "bar").send().get();
+  EtcdKeysResponse response = client.put("foo", "bar").send().get();
 
   // Prints out: bar
   System.out.println(response.node.value);
@@ -82,17 +82,17 @@ try{
 
 You can set multiple options on the requests before sending to the server like ttl and prev exist.
 ```Java
-  EtcdKeysResponsePromise promise = client.putValue("foo", "bar").ttl(50).prevExist().send();
+  EtcdKeysResponsePromise promise = client.put("foo", "bar").ttl(50).prevExist().send();
 ```
 
 ## Promises
 
-All requests return a Promise after sending. You can send multiple requests async before retrieving 
+All requests return a Promise after sending. You can send multiple requests async before retrieving
 their values
 ```Java
-  EtcdKeysResponsePromise promise1 = client.putValue("foo", "bar").send();
-  EtcdKeysResponsePromise promise2 = client.putValue("foo", "bar").send();
-  
+  EtcdKeysResponsePromise promise1 = client.put("foo", "bar").send();
+  EtcdKeysResponsePromise promise2 = client.put("foo", "bar").send();
+
   // Call the promise in a blocking way
   try{
     EtcdKeysResponse response = promise1.get();
@@ -102,7 +102,7 @@ their values
   }catch(IOException | TimeoutException e){
     // Handle other types of exceptions
   }
-  
+
   // or listen to it async (Java 8 lambda construction)
   promise2.addListener(promise -> {
     // getNow() returns null on exception
@@ -192,7 +192,7 @@ It is possible to set a timeout on all requests. By default there is no timeout.
 ```Java
 
 // Timeout of 1 second on a put value
-EtcdKeysResponsePromise putPromise = client.putValue("foo", "bar").timeout(1, TimeUnit.SECONDS).send();
+EtcdKeysResponsePromise putPromise = client.put("foo", "bar").timeout(1, TimeUnit.SECONDS).send();
 
 try{
   EtcdKeysResponse r = putPromise.get();
@@ -212,7 +212,7 @@ try{
     // Retry again once
     r = getRequest.send().get();
   }catch(TimeoutException | IOException e){
-    // Fails again... Maybe wait a bit longer or give up 
+    // Fails again... Maybe wait a bit longer or give up
   }catch(Exception e){
     // Handle other types of exceptions
   }
@@ -264,17 +264,17 @@ compile 'org.slf4j:slf4j-simple:1.7.7'
 
 # Custom parameters on EtcdNettyClient
 
-It is possible to control some parameters on the Netty client of etcd4j. 
+It is possible to control some parameters on the Netty client of etcd4j.
 
 You can set the following parameters in a config:
 
-* Netty Event Loop: You can set the Event Loop to use by the client so you can recycle existing 
-event loop groups or use for example Epoll based event loop groups. Be sure to change the socket 
+* Netty Event Loop: You can set the Event Loop to use by the client so you can recycle existing
+event loop groups or use for example Epoll based event loop groups. Be sure to change the socket
 channel class if you not use a NioEventLoopGroup. By default it will create a shared NioEventLoopGroup;
 * Socket channel class: You can set the socket channel class here. Default is NioSocketChannel.class
 * Connect timeout: The timeout of the Netty client itself. Default is 300ms
 * Max Frame size: The max frame size of the packages. Default is 100KiB (100 * 1024)
-* Host name: The name which Host header will report. Default is hostname:port of the server which is 
+* Host name: The name which Host header will report. Default is hostname:port of the server which is
 connected to.
 
 To create an Etcd client with a custom timeout and Netty event loop:
@@ -283,6 +283,7 @@ To create an Etcd client with a custom timeout and Netty event loop:
         .setConnectTimeout(100)
         .setHostName("www.example.net")
         .setEventLoopGroup(customEventLoop);
+        // .setEventLoopGroup(customEventLoop, false); // don't close event loop group when etcd client close
 
     nettySslContext
     try(EtcdClient etcd = new EtcdClient(new EtcdNettyClient(config, sslContext, URI.create(uri)))){
