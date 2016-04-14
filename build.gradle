@@ -25,7 +25,7 @@ ext {
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
     versions = [
-        netty   : '4.1.0.CR6',
+        netty   : '4.1.0.CR7',
         jackson : '2.7.3',
         slf4j   : '1.7.21',
         junit   : '4.12',

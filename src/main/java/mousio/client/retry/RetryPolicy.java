@@ -83,6 +83,7 @@ public abstract class RetryPolicy {
         }
       }
     } else {
+      timer.stop();
       throw new RetryCancelled();
     }
   }
