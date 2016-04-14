@@ -98,6 +98,9 @@ their values
     EtcdKeysResponse response = promise1.get();
     // Do something with response
   }catch(EtcdException e){
+    if(e.isErrorCode(EtcdErrorCode.NodeExist)){
+        // Do something with error code
+    }
     // Do something with the exception returned by etcd
   }catch(IOException | TimeoutException e){
     // Handle other types of exceptions
@@ -105,6 +108,13 @@ their values
 
   // or listen to it async (Java 8 lambda construction)
   promise2.addListener(promise -> {
+    Throwable t = promise.getException();
+    if(t instanceof EtcdException){
+        if(((EtcdException) t).isErrorCode(EtcdErrorCode.NodeExist)){
+            // Do something with error code
+        }
+    }
+
     // getNow() returns null on exception
     EtcdKeysResponse response = promise.getNow();
     if(response != null){
