@@ -28,6 +28,7 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.CharsetUtil;
+import io.netty.util.HashedWheelTimer;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -64,6 +65,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
   //private final String hostName;
   private final EtcdNettyConfig config;
   private final EtcdSecurityContext securityContext;
+  private final HashedWheelTimer timer;
 
   protected volatile int lastWorkingUriIndex;
 
@@ -125,6 +127,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
     this.config = config.clone();
     this.securityContext = securityContext.clone();
     this.uris = uris;
+    this.timer = new HashedWheelTimer();
     this.eventLoopGroup = config.getEventLoopGroup();
     this.bootstrap = new Bootstrap()
       .group(eventLoopGroup)
@@ -167,7 +170,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @return Promise for the request.
    */
   public <R> EtcdResponsePromise<R> send(final EtcdRequest<R> etcdRequest) throws IOException {
-    ConnectionState connectionState = new ConnectionState(uris, lastWorkingUriIndex);
+    ConnectionState connectionState = new ConnectionState(timer, uris, lastWorkingUriIndex);
 
     if (etcdRequest.getPromise() == null) {
       etcdRequest.setPromise(new EtcdResponsePromise<R>(
@@ -389,6 +392,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
   @Override
   public void close() {
     logger.info("Shutting down Etcd4j Netty client");
+    this.timer.stop();
     if (config.isManagedEventLoopGroup()) {
       eventLoopGroup.shutdownGracefully();
     }

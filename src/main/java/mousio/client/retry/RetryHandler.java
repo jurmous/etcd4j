@@ -26,6 +26,7 @@ public interface RetryHandler {
   /**
    * Do the retry
    *
+   * @param connectionState the connection state
    * @throws java.io.IOException if connection fails
    */
   void doRetry(ConnectionState connectionState) throws IOException;
