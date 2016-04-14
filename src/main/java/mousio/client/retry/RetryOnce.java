@@ -22,8 +22,6 @@ import mousio.client.ConnectionState;
  */
 public class RetryOnce extends RetryPolicy {
 
-  public boolean retryAttempted = false;
-
   /**
    * Constructor
    *
@@ -34,11 +32,6 @@ public class RetryOnce extends RetryPolicy {
   }
 
   @Override public boolean shouldRetry(ConnectionState connectionState) {
-    if (!retryAttempted) {
-      retryAttempted = true;
-      return true;
-    } else {
-      return false;
-    }
+    return connectionState.retryCount <= 1;
   }
 }

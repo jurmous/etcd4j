@@ -15,7 +15,6 @@
  */
 package mousio.client.retry;
 
-import io.netty.util.HashedWheelTimer;
 import io.netty.util.Timeout;
 import io.netty.util.TimerTask;
 import mousio.client.ConnectionState;
@@ -30,7 +29,6 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class RetryPolicy {
   private static final Logger logger = LoggerFactory.getLogger(RetryPolicy.class);
-  private static final HashedWheelTimer timer = new HashedWheelTimer();
 
   protected final int startRetryTime;
 
@@ -65,7 +63,7 @@ public abstract class RetryPolicy {
       }
 
       if(state.msBeforeRetry > 0) {
-        timer.newTimeout(new TimerTask() {
+        state.timer.newTimeout(new TimerTask() {
           @Override
           public void run(Timeout timeout) throws Exception {
             try {
@@ -83,7 +81,6 @@ public abstract class RetryPolicy {
         }
       }
     } else {
-      timer.stop();
       throw new RetryCancelled();
     }
   }

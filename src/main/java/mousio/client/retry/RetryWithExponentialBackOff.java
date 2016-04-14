@@ -32,38 +32,43 @@ public class RetryWithExponentialBackOff extends RetryPolicy {
    * @param startMsBeforeRetry milliseconds before retrying base time
    */
   public RetryWithExponentialBackOff(int startMsBeforeRetry) {
-    this(startMsBeforeRetry, -1, -1);
+    this(startMsBeforeRetry, -1, 5000);
   }
 
   /**
    * Constructor
    *
    * @param startMsBeforeRetry milliseconds before retrying base time
-   * @param maxRetryCount      max retry count
+   * @param maxRetryCount      max retry count, if maxRetryCount <= 0, it will retry infinitely
    * @param maxDelay           max delay between retries
    */
   public RetryWithExponentialBackOff(int startMsBeforeRetry, int maxRetryCount, int maxDelay) {
     super(startMsBeforeRetry);
     this.maxRetryCount = maxRetryCount;
     this.maxDelay = maxDelay;
+
+    if (startMsBeforeRetry <= 0) {
+      throw new IllegalArgumentException("RetryWithExponentialBackOff.startMsBeforeRetry must be > 0!");
+    }
+
+    if (maxDelay <= 0) {
+      throw new IllegalArgumentException("RetryWithExponentialBackOff.maxDelay must be > 0!");
+    }
   }
 
   @Override public boolean shouldRetry(ConnectionState state) {
-    if (this.maxRetryCount != -1 && state.retryCount >= this.maxRetryCount) {
+    if (this.maxRetryCount > 0 && state.retryCount > this.maxRetryCount) {
       return false;
     }
 
-    if (state.msBeforeRetry == 0) {
-      state.msBeforeRetry = this.startRetryTime;
-    } else if (maxDelay == -1) {
-      state.msBeforeRetry *= 2;
+    if (state.msBeforeRetry <= 0) {
+      state.msBeforeRetry = startRetryTime;
     } else if (state.msBeforeRetry < maxDelay) {
       state.msBeforeRetry *= 2;
-      if (state.msBeforeRetry > maxDelay) {
-        state.msBeforeRetry = maxDelay;
-      }
-    } else {
-      return false;
+    }
+
+    if (state.msBeforeRetry > maxDelay) {
+      state.msBeforeRetry = maxDelay;
     }
 
     return true;

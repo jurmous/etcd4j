@@ -19,6 +19,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.HashedWheelTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,12 @@ public class EtcdNettyConfig implements Cloneable {
 
   private EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
+  private boolean managedEventLoopGroup = true;
+
+  private HashedWheelTimer timer = new HashedWheelTimer();
+
+  private boolean managedTimer = true;
+
   private Class<? extends SocketChannel> socketChannelClass = NioSocketChannel.class;
 
   private int connectTimeout = 300;
@@ -39,8 +46,6 @@ public class EtcdNettyConfig implements Cloneable {
   private int maxFrameSize = 1024 * 100;
 
   private String hostName;
-
-  private boolean managedEventLoopGroup = true;
 
   /**
    * Constructor
@@ -97,6 +102,9 @@ public class EtcdNettyConfig implements Cloneable {
    * @return itself for chaining.
    */
   public EtcdNettyConfig setEventLoopGroup(EventLoopGroup eventLoopGroup, boolean managed) {
+    if (this.managedEventLoopGroup) { // if i manage it, close the old when new one come
+      this.eventLoopGroup.shutdownGracefully();
+    }
     this.eventLoopGroup = eventLoopGroup;
     this.managedEventLoopGroup = managed;
     return this;
@@ -119,6 +127,51 @@ public class EtcdNettyConfig implements Cloneable {
    */
   public boolean isManagedEventLoopGroup() {
     return managedEventLoopGroup;
+  }
+
+  /**
+   * Set a custom timer use to retry failed request
+   *
+   * @param timer custom timer
+   * @return itself for chaining.
+   */
+  public EtcdNettyConfig setTimer(HashedWheelTimer timer) {
+    setTimer(timer, true);
+    return this;
+  }
+
+  /**
+   * Set a custom timer use to retry failed request
+   *
+   * @param timer custom timer
+   * @param managed whether timer will be closed when etcd client close, true represent yes
+   * @return itself for chaining.
+   */
+  public EtcdNettyConfig setTimer(HashedWheelTimer timer, boolean managed) {
+    if (this.managedTimer) { // if i manage it, close the old when new one come
+      this.timer.stop();
+    }
+    this.timer = timer;
+    this.managedTimer = managed;
+    return this;
+  }
+
+  /**
+   * Get timer
+   *
+   * @return HashedWheelTimer.
+   */
+  public HashedWheelTimer getTimer() {
+    return timer;
+  }
+
+  /**
+   * Get managedTimer
+   *
+   * @return managedTimer
+   */
+  public boolean isManagedTimer() {
+    return managedTimer;
   }
 
   /**
