@@ -395,4 +395,18 @@ public class EtcdKeysResponseParserTest {
     assertEquals(2, action.node.nodes.get(0).nodes.get(0).modifiedIndex.intValue());
     assertEquals("bar", action.node.nodes.get(0).nodes.get(0).value);
   }
+
+  @Test
+  public void testErrorCode() throws Exception {
+    EtcdException e = EtcdException.DECODER.decode(headers, Unpooled.copiedBuffer((
+        "{\n" +
+        "   \"errorCode\": 105,\n" +
+        "   \"message\": \"Key already exists\",\n" +
+        "   \"cause\": \"/foo/bar\",\n" +
+        "   \"index\": 1024\n" +
+        "}").getBytes()));
+
+    assertTrue(e.isErrorCode(EtcdErrorCode.NodeExist));
+    assertNotEquals(e.getErrorCode(), EtcdErrorCode.KeyNotFound);
+  }
 }

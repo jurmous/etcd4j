@@ -76,6 +76,10 @@ public class EtcdException extends Exception {
     return errorCode;
   }
 
+  public boolean isErrorCode(int code) {
+    return errorCode == code;
+  }
+
   public Long getIndex() {
     return index;
   }
