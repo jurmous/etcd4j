@@ -39,7 +39,7 @@ public class RetryWithExponentialBackOff extends RetryPolicy {
    * Constructor
    *
    * @param startMsBeforeRetry milliseconds before retrying base time
-   * @param maxRetryCount      max retry count, if maxRetryCount <= 0, it will retry infinitely
+   * @param maxRetryCount      max retry count, if maxRetryCount &lt;= 0, it will retry infinitely
    * @param maxDelay           max delay between retries
    */
   public RetryWithExponentialBackOff(int startMsBeforeRetry, int maxRetryCount, int maxDelay) {
