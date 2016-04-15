@@ -32,9 +32,13 @@ public class RetryNTimes extends RetryPolicy {
   public RetryNTimes(int msBeforeRetry, int timesToRetry) {
     super(msBeforeRetry);
     this.timesToRetry = timesToRetry;
+
+    if (timesToRetry > 0 && msBeforeRetry <= 0) {
+      throw new IllegalArgumentException("RetryNTimes.msBeforeRetry must be > 0!");
+    }
   }
 
   @Override public boolean shouldRetry(ConnectionState connectionState) {
-    return connectionState.retryCount < timesToRetry;
+    return connectionState.retryCount <= timesToRetry;
   }
 }

@@ -34,9 +34,13 @@ public class RetryWithTimeout extends RetryPolicy {
   public RetryWithTimeout(int msBeforeRetry, int timeoutInMs) {
     super(msBeforeRetry);
     this.timeoutInMs = timeoutInMs;
+
+    if (msBeforeRetry <= 0) {
+      throw new IllegalArgumentException("RetryWithTimeout.msBeforeRetry must be > 0!");
+    }
   }
 
   @Override public boolean shouldRetry(ConnectionState connectionState) {
-    return (new Date().getTime() - connectionState.startTime) < timeoutInMs;
+    return (System.currentTimeMillis() - connectionState.startTime) < timeoutInMs;
   }
 }

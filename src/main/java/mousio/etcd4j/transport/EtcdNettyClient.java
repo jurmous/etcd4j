@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * @author Jurriaan Mous
@@ -111,7 +112,6 @@ public class EtcdNettyClient implements EtcdClientImpl {
     this(config, EtcdSecurityContext.NONE, uris);
   }
 
-
   /**
    * Constructor with custom eventloop group and timeout
    *
@@ -127,7 +127,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
     this.config = config.clone();
     this.securityContext = securityContext.clone();
     this.uris = uris;
-    this.timer = new HashedWheelTimer();
+    this.timer = config.getTimer();
     this.eventLoopGroup = config.getEventLoopGroup();
     this.bootstrap = new Bootstrap()
       .group(eventLoopGroup)
@@ -392,9 +392,12 @@ public class EtcdNettyClient implements EtcdClientImpl {
   @Override
   public void close() {
     logger.info("Shutting down Etcd4j Netty client");
-    this.timer.stop();
     if (config.isManagedEventLoopGroup()) {
       eventLoopGroup.shutdownGracefully();
+    }
+
+    if (config.isManagedTimer()) {
+      timer.stop();
     }
   }
 
