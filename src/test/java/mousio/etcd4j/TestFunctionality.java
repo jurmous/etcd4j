@@ -32,7 +32,7 @@ public class TestFunctionality {
   @Before
   public void setUp() throws Exception {
     this.etcd = new EtcdClient();
-    this.etcd.setRetryHandler(new RetryWithExponentialBackOff(20, 4, -1));
+    this.etcd.setRetryHandler(new RetryWithExponentialBackOff(20, 4, 10000));
   }
 
   @After
@@ -293,7 +293,7 @@ public class TestFunctionality {
   @Test
   public void testIfCleanClose() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
     EtcdClient client = new EtcdClient();
-    client.setRetryHandler(new RetryWithExponentialBackOff(20, 4, -1));
+    client.setRetryHandler(new RetryWithExponentialBackOff(20, 4, 1000));
 
     EtcdResponsePromise<EtcdKeysResponse> p = client.get("etcd4j_test/test").waitForChange().send();
     client.close();

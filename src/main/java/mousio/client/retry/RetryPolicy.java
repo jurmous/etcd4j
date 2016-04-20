@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -61,18 +62,25 @@ public abstract class RetryPolicy {
       if (logger.isDebugEnabled()) {
         logger.debug("Retry {} to send command", state.retryCount);
       }
-
       if(state.msBeforeRetry > 0) {
-        state.timer.newTimeout(new TimerTask() {
-          @Override
-          public void run(Timeout timeout) throws Exception {
-            try {
-              retryHandler.doRetry(state);
-            } catch (IOException e) {
-              failHandler.catchException(e);
+        try {
+          state.timer.newTimeout(new TimerTask() {
+            @Override
+            public void run(Timeout timeout) throws Exception {
+              try {
+                retryHandler.doRetry(state);
+              } catch (IOException e) {
+                failHandler.catchException(e);
+              }
             }
-          }
-        }, state.msBeforeRetry, TimeUnit.MILLISECONDS);
+          }, state.msBeforeRetry, TimeUnit.MILLISECONDS);
+        }catch (IllegalStateException e) {
+          failHandler.catchException(
+              new IOException(
+                  new CancellationException("Etcd client was closed")
+              )
+          );
+        }
       } else {
         try {
           retryHandler.doRetry(state);

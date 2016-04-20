@@ -24,7 +24,7 @@ public class RetryWithExponentialBackOff extends RetryPolicy {
   public static final RetryWithExponentialBackOff DEFAULT =  new RetryWithExponentialBackOff(20, -1, 10000);
 
   private final int maxRetryCount;
-  private final int maxDelay;
+  private final int maxDelayInMs;
 
   /**
    * Constructor
@@ -40,18 +40,18 @@ public class RetryWithExponentialBackOff extends RetryPolicy {
    *
    * @param startMsBeforeRetry milliseconds before retrying base time
    * @param maxRetryCount      max retry count, if maxRetryCount &lt;= 0, it will retry infinitely
-   * @param maxDelay           max delay between retries
+   * @param maxDelayInMs           max delay between retries
    */
-  public RetryWithExponentialBackOff(int startMsBeforeRetry, int maxRetryCount, int maxDelay) {
+  public RetryWithExponentialBackOff(int startMsBeforeRetry, int maxRetryCount, int maxDelayInMs) {
     super(startMsBeforeRetry);
     this.maxRetryCount = maxRetryCount;
-    this.maxDelay = maxDelay;
+    this.maxDelayInMs = maxDelayInMs;
 
     if (startMsBeforeRetry <= 0) {
       throw new IllegalArgumentException("RetryWithExponentialBackOff.startMsBeforeRetry must be > 0!");
     }
 
-    if (maxDelay <= 0) {
+    if (maxDelayInMs <= 0) {
       throw new IllegalArgumentException("RetryWithExponentialBackOff.maxDelay must be > 0!");
     }
   }
@@ -63,12 +63,12 @@ public class RetryWithExponentialBackOff extends RetryPolicy {
 
     if (state.msBeforeRetry <= 0) {
       state.msBeforeRetry = startRetryTime;
-    } else if (state.msBeforeRetry < maxDelay) {
+    } else if (state.msBeforeRetry < maxDelayInMs) {
       state.msBeforeRetry *= 2;
     }
 
-    if (state.msBeforeRetry > maxDelay) {
-      state.msBeforeRetry = maxDelay;
+    if (state.msBeforeRetry > maxDelayInMs) {
+      state.msBeforeRetry = maxDelayInMs;
     }
 
     return true;
