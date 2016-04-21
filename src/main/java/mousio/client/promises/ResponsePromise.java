@@ -244,6 +244,16 @@ public class ResponsePromise<T> {
   }
 
   /**
+   * Cancel the request
+   *
+   * @param throwable the exception to be associated to this promise
+   */
+  public void cancel(Throwable throwable) {
+    this.promise.cancel(true);
+    this.exception = throwable;
+  }
+
+  /**
    * Get exception
    *
    * @return the exception if set. Or null if no exception present
