@@ -43,9 +43,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.channels.ClosedChannelException;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.ThreadFactory;
 
 /**
  * @author Jurriaan Mous
@@ -253,9 +253,14 @@ public class EtcdNettyClient implements EtcdClientImpl {
       public void operationComplete(final ChannelFuture f) throws Exception {
         if (!f.isSuccess()) {
           if (logger.isDebugEnabled()) {
-            logger.debug("Connection failed to " + connectionState.uris[connectionState.uriIndex]);
+            logger.debug("Connection failed to {}", connectionState.uris[connectionState.uriIndex]);
           }
-          etcdRequest.getPromise().handleRetry(f.cause());
+          if (f.cause() instanceof ClosedChannelException) {
+            etcdRequest.getPromise().cancel(new CancellationException("Channel closed"));
+          } else {
+            etcdRequest.getPromise().handleRetry(f.cause());
+          }
+
           return;
         }
 
@@ -303,8 +308,8 @@ public class EtcdNettyClient implements EtcdClientImpl {
           public void operationComplete(ChannelFuture future) throws Exception {
             if (logger.isDebugEnabled()) {
               logger.debug("Connection closed for request {} on uri {} ",
-                etcdRequest.getMethod().name(),
-                etcdRequest.getUri());
+              etcdRequest.getMethod().name(),
+              etcdRequest.getUri());
             }
           }
         });
@@ -392,6 +397,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
   @Override
   public void close() {
     logger.info("Shutting down Etcd4j Netty client");
+
     if (config.isManagedEventLoopGroup()) {
       eventLoopGroup.shutdownGracefully();
     }
