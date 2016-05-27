@@ -25,8 +25,8 @@ ext {
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
     versions = [
-        netty   : '4.1.0.CR7',
-        jackson : '2.7.3',
+        netty   : '4.1.1.Final',
+        jackson : '2.7.4',
         slf4j   : '1.7.21',
         junit   : '4.12',
     ]
@@ -48,8 +48,10 @@ testSets {
 
 dependencies {
     compile "org.slf4j:slf4j-api:$versions.slf4j"
+    compile "io.netty:netty-codec-dns:$versions.netty"
     compile "io.netty:netty-codec-http:$versions.netty"
     compile "io.netty:netty-handler:$versions.netty"
+    compile "io.netty:netty-resolver-dns:$versions.netty"
     compile "com.fasterxml.jackson.core:jackson-core:$versions.jackson"
     compile "com.fasterxml.jackson.core:jackson-databind:$versions.jackson"
     compile "com.fasterxml.jackson.core:jackson-annotations:$versions.jackson"

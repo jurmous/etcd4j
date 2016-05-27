@@ -20,6 +20,7 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.codec.base64.Base64;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
@@ -27,9 +28,10 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.resolver.dns.DnsAddressResolverGroup;
+import io.netty.resolver.dns.DnsServerAddresses;
 import io.netty.util.CharsetUtil;
 import io.netty.util.HashedWheelTimer;
-import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
@@ -42,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.channels.ClosedChannelException;
 import java.util.Map;
@@ -135,6 +138,9 @@ public class EtcdNettyClient implements EtcdClientImpl {
       .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
       .option(ChannelOption.TCP_NODELAY, true)
       .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getConnectTimeout())
+      .resolver(new DnsAddressResolverGroup(
+        NioDatagramChannel.class,
+        DnsServerAddresses.defaultAddresses()))
       .handler(new ChannelInitializer<SocketChannel>() {
         @Override
         public void initChannel(SocketChannel ch) throws Exception {
@@ -145,9 +151,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
             p.addLast(new SslHandler(securityContext.sslContext().createSSLEngine()));
           }
           p.addLast("codec", new HttpClientCodec());
-          if(securityContext.hasCredentials()) {
-            p.addLast("auth", new HttpBasicAuthHandler());
-          }
+          p.addLast("auth", new HttpBasicAuthHandler());
           p.addLast("chunkedWriter", new ChunkedWriteHandler());
           p.addLast("aggregate", new HttpObjectAggregator(config.getMaxFrameSize()));
         }
@@ -211,6 +215,12 @@ public class EtcdNettyClient implements EtcdClientImpl {
    */
   @SuppressWarnings("unchecked")
   protected <R> void connect(final EtcdRequest<R> etcdRequest, final ConnectionState connectionState) throws IOException {
+    if(eventLoopGroup.isShuttingDown() || eventLoopGroup.isShutdown() || eventLoopGroup.isTerminated()){
+      etcdRequest.getPromise().getNettyPromise().cancel(true);
+      logger.debug("Retry canceled because of closed etcd client");
+      return;
+    }
+
     final URI uri;
 
     // when we are called from a redirect, the url in the request may also
@@ -222,31 +232,16 @@ public class EtcdNettyClient implements EtcdClientImpl {
       // read uri from environment variable
       String endpoint_uri = System.getenv(ENV_ETCD4J_ENDPOINT);
       if(logger.isDebugEnabled()) {
-        logger.debug("Will use environment variable " + ENV_ETCD4J_ENDPOINT + " as uri with value " + endpoint_uri);
+        logger.debug("Will use environment variable {} as uri with value {}", ENV_ETCD4J_ENDPOINT, endpoint_uri);
       }
       uri = URI.create(endpoint_uri);
     } else {
       uri = connectionState.uris[connectionState.uriIndex];
     }
 
-    if(eventLoopGroup.isShuttingDown() || eventLoopGroup.isShutdown()){
-      etcdRequest.getPromise().getNettyPromise().cancel(true);
-      if(logger.isDebugEnabled()) {
-        logger.debug("Retry canceled because of closed etcd client");
-      }
-      return;
-    }
-
     // Start the connection attempt.
-    final ChannelFuture connectFuture;
-    // uri may not have port information, work with default port
-    if (uri.getPort() == -1) {
-      connectFuture = bootstrap.clone().connect(uri.getHost(), DEFAULT_PORT);
-    } else {
-      connectFuture = bootstrap.clone().connect(uri.getHost(), uri.getPort());
-    }
-
-    etcdRequest.getPromise().attachNettyPromise((Promise<R>) new DefaultPromise<>(connectFuture.channel().eventLoop()));
+    final ChannelFuture connectFuture = bootstrap.connect(connectAddress(uri));
+    etcdRequest.getPromise().attachNettyPromise(connectFuture.channel().eventLoop().<R>newPromise());
 
     connectFuture.addListener(new GenericFutureListener<ChannelFuture>() {
       @Override
@@ -298,6 +293,10 @@ public class EtcdNettyClient implements EtcdClientImpl {
             public void operationComplete(ChannelFuture future) throws Exception {
               if (!future.isSuccess()) {
                 etcdRequest.getPromise().setException(future.cause());
+                if (!f.channel().eventLoop().inEventLoop()) {
+                  f.channel().eventLoop().shutdownGracefully();
+                }
+
                 f.channel().close();
               }
             }
@@ -399,18 +398,24 @@ public class EtcdNettyClient implements EtcdClientImpl {
     logger.info("Shutting down Etcd4j Netty client");
 
     if (config.isManagedEventLoopGroup()) {
+      logger.debug("Shutting down Netty Loop");
       eventLoopGroup.shutdownGracefully();
     }
 
     if (config.isManagedTimer()) {
+      logger.debug("Shutting down Netty Timer");
       timer.stop();
     }
+  }
+
+  private InetSocketAddress connectAddress(URI uri) {
+    return InetSocketAddress.createUnresolved(uri.getHost(), uri.getPort() == -1 ? DEFAULT_PORT : uri.getPort());
   }
 
   private class HttpBasicAuthHandler extends ChannelOutboundHandlerAdapter {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-      if(msg instanceof HttpRequest) {
+      if (securityContext.hasCredentials() && msg instanceof HttpRequest) {
         addBasicAuthHeader((HttpRequest)msg);
       }
 
