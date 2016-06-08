@@ -184,7 +184,7 @@ public class ResponsePromise<T> {
    * @throws TimeoutException on timeout
    */
   protected boolean waitForPromiseSuccess() throws IOException, TimeoutException {
-    if (!promise.isDone()) {
+    if (!promise.isDone() && !promise.isCancelled()) {
       Promise<T> listeningPromise = this.promise;
       listeningPromise.awaitUninterruptibly();
       if (listeningPromise != this.promise) {
