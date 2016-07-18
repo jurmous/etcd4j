@@ -247,10 +247,12 @@ public class EtcdNettyClient implements EtcdClientImpl {
       @Override
       public void operationComplete(final ChannelFuture f) throws Exception {
         if (!f.isSuccess()) {
+          final Throwable cause = f.cause();
           if (logger.isDebugEnabled()) {
-            logger.debug("Connection failed to {}", connectionState.uris[connectionState.uriIndex]);
+            logger.debug("Connection failed to {}, cause {}", connectionState.uris[connectionState.uriIndex], cause);
           }
-          if (f.cause() instanceof ClosedChannelException) {
+
+          if (cause instanceof ClosedChannelException || cause instanceof IllegalStateException) {
             etcdRequest.getPromise().cancel(new CancellationException("Channel closed"));
           } else {
             etcdRequest.getPromise().handleRetry(f.cause());
