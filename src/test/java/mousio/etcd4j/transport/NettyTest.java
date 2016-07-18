@@ -64,7 +64,6 @@ public class NettyTest {
     });
 
     eventLoopGroup.shutdownGracefully();
-
     p.await();
   }
 }

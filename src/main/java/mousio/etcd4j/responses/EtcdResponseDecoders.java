@@ -22,6 +22,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.handler.codec.http.HttpHeaders;
 
+import java.io.DataInput;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
@@ -51,7 +52,8 @@ public class EtcdResponseDecoders {
 
     @Override
     public T decode(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
-      T value = MAPPER.readValue(new ByteBufInputStream(content), this.type);
+      final DataInput di = new ByteBufInputStream(content);
+      final T value = MAPPER.readValue(di, this.type);
       if(headers != null && EtcdHeaderAwareResponse.class.isAssignableFrom(this.type)) {
         ((EtcdHeaderAwareResponse) value).loadHeaders(headers);
       }
