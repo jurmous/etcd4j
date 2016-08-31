@@ -66,8 +66,8 @@ public class TestFunctionality {
   public void testVersion() {
     EtcdVersionResponse version = etcd.version();
     assertNotNull(version);
-    assertTrue(version.server.startsWith("2."));
-    assertTrue(version.cluster.startsWith("2."));
+    assertTrue(version.server.startsWith("2.") || version.server.startsWith("3."));
+    assertTrue(version.cluster.startsWith("2.") || version.cluster.startsWith("3."));
   }
 
 
