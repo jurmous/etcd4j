@@ -21,6 +21,8 @@ import mousio.client.retry.RetryWithExponentialBackOff;
 import mousio.etcd4j.requests.*;
 import mousio.etcd4j.responses.EtcdAuthenticationException;
 import mousio.etcd4j.responses.EtcdException;
+import mousio.etcd4j.responses.EtcdHealthResponse;
+import mousio.etcd4j.responses.EtcdMembersResponse;
 import mousio.etcd4j.responses.EtcdSelfStatsResponse;
 import mousio.etcd4j.responses.EtcdStoreStatsResponse;
 import mousio.etcd4j.responses.EtcdVersionResponse;
@@ -169,6 +171,32 @@ public class EtcdClient implements Closeable {
   public EtcdStoreStatsResponse getStoreStats() {
     try {
       return new EtcdStoreStatsRequest(this.client, retryHandler).send().get();
+    } catch (IOException | EtcdException | EtcdAuthenticationException | TimeoutException e) {
+      return null;
+    }
+  }
+
+  /**
+   * Get the Members of Etcd
+   *
+   * @return vEtcdMembersResponse
+   */
+  public EtcdMembersResponse getMembers() {
+    try {
+      return new EtcdMembersRequest(this.client,retryHandler).send().get();
+    } catch (IOException | EtcdException | EtcdAuthenticationException | TimeoutException e) {
+      return null;
+    }
+  }
+
+  /**
+   * Get the Members of Etcd
+   *
+   * @return vEtcdMembersResponse
+   */
+  public EtcdHealthResponse getHealth() {
+    try {
+      return new EtcdHealthRequest(this.client,retryHandler).send().get();
     } catch (IOException | EtcdException | EtcdAuthenticationException | TimeoutException e) {
       return null;
     }
