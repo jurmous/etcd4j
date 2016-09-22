@@ -113,6 +113,30 @@ public class TestFunctionality {
     assertNotNull(stats);
   }
 
+  /**
+   * Test Members
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testMembers() {
+    EtcdMembersResponse members = etcd.getMembers();
+    assertNotNull(members);
+    assertTrue(members.getMembers().size() >= 1);
+  }
+
+  /**
+   * Test Health
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testHealth() {
+    EtcdHealthResponse health = etcd.getHealth();
+    assertNotNull(health);
+    assertTrue(health.getHealth().equals("true"));
+  }
+
   @Test
   public void testTimeout() throws IOException, EtcdException, EtcdAuthenticationException {
     try {
