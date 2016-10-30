@@ -5,6 +5,7 @@ plugins {
     id 'osgi'
     id 'org.unbroken-dome.test-sets' version '1.2.0'
     id "com.bmuschko.vagrant" version "2.0"
+    id "com.github.lburgazzoli.karaf" version "0.0.43"
     id 'eclipse'
 }
 
@@ -25,10 +26,15 @@ ext {
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
     versions = [
-        netty   : '4.1.5.Final',
-        jackson : '2.8.3',
+        netty   : '4.1.6.Final',
+        jackson : '2.8.4',
         slf4j   : '1.7.21',
         junit   : '4.12',
+    ]
+
+    osgiVersions = [
+        slf4j   : "[1.7,1.8)",
+        jackson : "[2.8,3.0)"
     ]
 
     if(!project.hasProperty('sonatypeUsername') && !project.hasProperty('sonatypePassword')) {
@@ -44,6 +50,13 @@ repositories {
 
 testSets {
     integration
+}
+
+configurations {
+    karaf {
+        extendsFrom compile
+        exclude group: 'org.slf4j'
+    }
 }
 
 dependencies {
@@ -86,13 +99,39 @@ test {
 jar {
     baseName = "${project.name}"
 
-    manifest.attributes['Bundle-Description'     ] = "${project.name}"
-    manifest.attributes['Bundle-Name'            ] = "${project.name}"
-    manifest.attributes['Bundle-SymbolicName'    ] = "${project.group}-${project.name}"
-    manifest.attributes['Bundle-Version'         ] = project.version.replaceAll('-','.')
-    manifest.attributes['Implementation-Title'   ] = project.name
-    manifest.attributes['Implementation-Version' ] = project.version
-    manifest.attributes['Implementation-Vendor'  ] = 'jurmous'
+    manifest {
+        attributes['Bundle-Description'     ] = "${project.name}"
+        attributes['Bundle-Name'            ] = "${project.name}"
+        attributes['Bundle-SymbolicName'    ] = "${project.group}-${project.name}"
+        attributes['Bundle-Version'         ] = project.version.replaceAll('-','.')
+        attributes['Implementation-Title'   ] = project.name
+        attributes['Implementation-Version' ] = project.version
+        attributes['Implementation-Vendor'  ] = 'jurmous'
+
+        // Tweak the OSGi imports so:
+        // - slf4j do not define a specific import version
+        // - add missing imports for Jackson Afterburner
+        instruction 'Import-Package' , """
+            org.slf4j;version=\"$osgiVersions.slf4j\",
+            com.fasterxml.jackson.databind.ser;version=\"$osgiVersions.jackson\",
+            com.fasterxml.jackson.databind.deser;version=\"$osgiVersions.jackson\",
+            com.fasterxml.jackson.databind.ser.std;version=\"$osgiVersions.jackson\",
+            com.fasterxml.jackson.databind.deser.std;version=\"$osgiVersions.jackson\",
+            com.fasterxml.jackson.module.afterburner.ser;version=\"$osgiVersions.jackson\",
+            com.fasterxml.jackson.module.afterburner.deser;version=\"$osgiVersions.jackson\",
+            *
+        """
+    }
+}
+
+karaf {
+    features {
+        includeProject = true
+        feature {
+            name = 'etcd4j'
+            configurations 'karaf'
+        }
+    }
 }
 
 signing {
