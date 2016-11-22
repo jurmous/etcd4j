@@ -1,5 +1,5 @@
 
-[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/etcd4j)
+[![Gitter chat](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/etcd4j)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.mousio/etcd4j/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.mousio/etcd4j)
 
 Etcd4j is a client library for [etcd](https://github.com/coreos/etcd), a highly available keystore. This library is based on 
