@@ -7,8 +7,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,9 +22,6 @@ import static org.junit.Assert.*;
  * Performs tests on a real server at local address. All actions are performed in "etcd4j_test" dir
  */
 public class TestFunctionality {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(TestFunctionality.class);
-
   private EtcdClient etcd;
 
   @Before
