@@ -1,3 +1,7 @@
+
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/etcd4j)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.mousio/etcd4j/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.mousio/etcd4j)
+
 Etcd4j is a client library for [etcd](https://github.com/coreos/etcd), a highly available keystore. This library is based on 
 Netty 4.1 and Java 7. It supports all key based etcd requests, can be secured with SSL and supports
 defining multiple connection URLs and custom retry policies. It is completely async and works with promises to
