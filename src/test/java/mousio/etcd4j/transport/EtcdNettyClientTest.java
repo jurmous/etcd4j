@@ -8,17 +8,12 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import mousio.client.retry.RetryNTimes;
 import mousio.etcd4j.EtcdClient;
 import mousio.etcd4j.responses.EtcdAuthenticationException;
-import mousio.etcd4j.responses.EtcdException;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.net.URI;
-import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class EtcdNettyClientTest {
 
@@ -103,7 +98,6 @@ public class EtcdNettyClientTest {
         .setHostName("localhost");
 
     assertTrue(config.isManagedEventLoopGroup());
-    assertTrue(config.isManagedTimer());
 
     EtcdNettyClient client = new EtcdNettyClient(config, uri);
     EtcdClient etcdClient = new EtcdClient(client);

@@ -15,8 +15,6 @@
  */
 package mousio.client.retry;
 
-import io.netty.util.Timeout;
-import io.netty.util.TimerTask;
 import mousio.client.ConnectionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,11 +60,12 @@ public abstract class RetryPolicy {
       if (logger.isDebugEnabled()) {
         logger.debug("Retry {} to send command", state.retryCount);
       }
+
       if(state.msBeforeRetry > 0) {
         try {
-          state.timer.newTimeout(new TimerTask() {
+          state.loop.schedule(new Runnable() {
             @Override
-            public void run(Timeout timeout) throws Exception {
+            public void run() {
               try {
                 retryHandler.doRetry(state);
               } catch (IOException e) {
@@ -74,11 +73,9 @@ public abstract class RetryPolicy {
               }
             }
           }, state.msBeforeRetry, TimeUnit.MILLISECONDS);
-        }catch (IllegalStateException e) {
+        } catch (IllegalStateException e) {
           failHandler.catchException(
-              new IOException(
-                  new CancellationException("Etcd client was closed")
-              )
+            new IOException(new CancellationException("Etcd client was closed"))
           );
         }
       } else {

@@ -15,7 +15,7 @@
  */
 package mousio.client;
 
-import io.netty.util.HashedWheelTimer;
+import io.netty.channel.EventLoop;
 
 import java.net.URI;
 
@@ -23,7 +23,7 @@ import java.net.URI;
  * Counts connection retries and current connection index
  */
 public class ConnectionState {
-  public final HashedWheelTimer timer;
+  public EventLoop loop;
   public final URI[] uris;
 
   public int retryCount;
@@ -34,22 +34,11 @@ public class ConnectionState {
   /**
    * Constructor
    *
-   * @param timer the timer
-   * @param uris to connect to
-   */
-  public ConnectionState(HashedWheelTimer timer, URI[] uris) {
-    this(timer, uris, 0);
-  }
-
-  /**
-   * Constructor
-   *
-   * @param timer the timer
    * @param uris to connect to
    * @param uriIndex the uri index to start from
    */
-  public ConnectionState(HashedWheelTimer timer, URI[] uris, int uriIndex) {
-    this.timer = timer;
+  public ConnectionState(URI[] uris, int uriIndex) {
+    this.loop = null;
     this.uris = uris;
     this.uriIndex = uriIndex;
     this.retryCount = 0;

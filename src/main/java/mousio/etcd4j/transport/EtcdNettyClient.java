@@ -31,7 +31,6 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.resolver.dns.DnsAddressResolverGroup;
 import io.netty.resolver.dns.DnsServerAddresses;
 import io.netty.util.CharsetUtil;
-import io.netty.util.HashedWheelTimer;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
@@ -69,7 +68,6 @@ public class EtcdNettyClient implements EtcdClientImpl {
   //private final String hostName;
   private final EtcdNettyConfig config;
   private final EtcdSecurityContext securityContext;
-  private final HashedWheelTimer timer;
 
   protected volatile int lastWorkingUriIndex;
 
@@ -130,7 +128,6 @@ public class EtcdNettyClient implements EtcdClientImpl {
     this.config = config.clone();
     this.securityContext = securityContext.clone();
     this.uris = uris;
-    this.timer = config.getTimer();
     this.eventLoopGroup = config.getEventLoopGroup();
     this.bootstrap = new Bootstrap()
       .group(eventLoopGroup)
@@ -174,7 +171,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @return Promise for the request.
    */
   public <R> EtcdResponsePromise<R> send(final EtcdRequest<R> etcdRequest) throws IOException {
-    ConnectionState connectionState = new ConnectionState(timer, uris, lastWorkingUriIndex);
+    ConnectionState connectionState = new ConnectionState(uris, lastWorkingUriIndex);
 
     if (etcdRequest.getPromise() == null) {
       etcdRequest.setPromise(new EtcdResponsePromise<R>(
@@ -241,6 +238,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
 
     // Start the connection attempt.
     final ChannelFuture connectFuture = bootstrap.connect(connectAddress(uri));
+    etcdRequest.getPromise().getConnectionState().loop = connectFuture.channel().eventLoop();
     etcdRequest.getPromise().attachNettyPromise(connectFuture.channel().eventLoop().<R>newPromise());
 
     connectFuture.addListener(new GenericFutureListener<ChannelFuture>() {
@@ -402,11 +400,6 @@ public class EtcdNettyClient implements EtcdClientImpl {
     if (config.isManagedEventLoopGroup()) {
       logger.debug("Shutting down Netty Loop");
       eventLoopGroup.shutdownGracefully();
-    }
-
-    if (config.isManagedTimer()) {
-      logger.debug("Shutting down Netty Timer");
-      timer.stop();
     }
   }
 
