@@ -3,10 +3,12 @@ plugins {
     id 'maven'
     id 'signing'
     id 'osgi'
-    id 'org.unbroken-dome.test-sets' version '1.2.0'
-    id "com.bmuschko.vagrant" version "2.0"
-    id "com.github.lburgazzoli.karaf" version "0.0.43"
     id 'eclipse'
+    id 'idea'
+    id 'org.unbroken-dome.test-sets' version '1.2.0'
+    id "com.bmuschko.vagrant" version "2.1"
+    id "com.github.lburgazzoli.karaf" version "0.0.44"
+    id 'net.researchgate.release' version '2.5.0'
 }
 
 compileJava {
@@ -15,11 +17,13 @@ compileJava {
 }
 
 group = 'org.mousio'
-version = '2.13.0-SNAPSHOT'
 
 ext {
     isSnapshot = version.endsWith("-SNAPSHOT")
-    isRelease = !isSnapshot
+    isRelease  = !isSnapshot
+    isCI       = Boolean.valueOf("$System.env.CI")
+    isPR       = "false" != System.env.TRAVIS_PULL_REQUEST
+    ciTasks    = (isRelease || isPR) ? ['clean', 'test'] : ['clean', 'test', 'uploadArchives']
 
     mavenDeployUrl = isSnapshot ?
         'https://oss.sonatype.org/content/repositories/snapshots/' :
@@ -28,7 +32,7 @@ ext {
     versions = [
         netty   : '4.1.6.Final',
         jackson : '2.8.5',
-        slf4j   : '1.7.21',
+        slf4j   : '1.7.22',
         junit   : '4.12',
     ]
 
@@ -142,6 +146,10 @@ signing {
     sign configurations.archives
 }
 
+// *****************************************************************************
+// Publish to Sonatype OSS
+// *****************************************************************************
+
 uploadArchives {
     repositories {
         mavenDeployer {
@@ -197,3 +205,14 @@ tasks.withType(Test) {
     reports.html.destination = file("${reporting.baseDir}/${name}")
 }
 
+task ci(dependsOn: project.ciTasks) {
+}
+
+task close(dependsOn: 'closeAndPromoteRepository') {
+}
+
+// *****************************************************************************
+//
+// *****************************************************************************
+
+afterReleaseBuild.dependsOn uploadArchives

@@ -4,16 +4,17 @@ addons:
     packages:
     - oracle-java8-installer
 language:
-  - java
+- java
 jdk:
-  - oraclejdk8
+- oraclejdk8
 before_install:
-  - ./src/main/bash/etcd_install.sh -p ./etcd-dist
+- "./src/main/bash/etcd_install.sh -p ./etcd-dist"
 script:
-  - ./src/main/bash/etcd_run.sh -p ./etcd-dist -d
-  - ./gradlew build
+- "./src/main/bash/etcd_run.sh -p ./etcd-dist -d"
+- "./gradlew ci"
 env:
   global:
-    - CI_DEPLOY_USERNAME=fake
-    - CI_DEPLOY_PASSWORD=fake
-    - CI_TRAVIS=true
+  - CI_TRAVIS=true
+  - CI=true
+  - secure: YY2bUfAX/iIKzcSyfeKgQn6pt8sLFDZTRXs2YwcBFDJfyUI80axlf+a4ynP2hYJPujwsMr87LjIyvIK8F+aQlvud2fCpua8HbH2kPR0B4uML0UkqnSmcJdvu68Eu7KM6IpKd7LSGvJqCw/MnvifLOTy1jc6SAmaNg4ExNVWjn+n84/Z4Vamab9bnGtGp4e4/+njvfHs7FC6gTvJQlcn9ybVmzavcKJQjIKZL7SfXBtqlwFKsb9pM6EBggzHhDcu/elpwGJsqJYJQpcbhtE+IhE2dPAlC+WZHj/TJDZdlbIkZ12xLH+/lnK99LtWs6BDJI72WlpGkZIheYbQS6riRAkqVhX6rWJIRxPAk9Znhg0UgcdeuVN8xq5Dcy+3Lix9iHdSo4vCFtOfaTpgQLb+9dVJxs/Dr4mr0+P0+OPRkqeBFH2csZ+hqWVn9L356KZZBKIsbmovfCXUaEwiOUY+Gcarc36ZDzdT8hHLHIWyKIiwV60cm1zopTuaRiTeLJDH9ve323rt5f+noJ2ksKcmWDb5fu19ewgblekHn8kw27nCZqMVhdzqUZ5dbiFQxiaQjMEoqpt3ttujl0BJc80u11gQa4UQ+fH2Z1tqced9iwiT5Qb9ZgP1Oy/RsTjC/UwD0rGAIZL/xS+wIcnkLEegEBFPeOergOql0kj9cOuj3LaY=
+  - secure: gyNt+/JMdDeRgPdd227k5faN89A5b52llfeL8grjJ8/iYz/c2jBg8fL8X7O4uMhmCmnUGl7h+GO9CraF/m+GKqt4OE4+zd8nZ++4ddIBq2ghWn76CC2KrTKg2sMETzb06EWdqwXEm0WGnHmPtSAOcxqV2iChTbaU72a9PfJtPGNLdJOGm1arD6/kcsNtXJaukL2ArpketAR5IkZoIeCYsXAw7vDpYzDBFmFkrDeghBdHRYt9LXEz+P+iHPbwwsD4E6giHpCNIOgjBDRf8znPAH2wTgUX81NBqv82VZOasVWBsNJ4NpFA9d3CzHinYebta45gOWRl+fkBh/UxLORpPaDN2PR3WDKnVT7i5T0eiqdvl8zIzoCOumK2GVM3TBOipusWh5CGG00uuoxE7qn7mp+y8zjPHEXdl7nF3elY9QeonmLKOkWEI4mj/MmDGyu/+Ful6ivvo9O84hAyzNG/smjFMIqRzVscwsnvFy8/feKLuDnBPr5MMXMS2gtr3wt+DiUDdqoMT+FnHiH+ZQ6wKW2POLNCSwehhHtdGyzRsJBMdvLa13mmKr6mMx5A3NhnNrtqjtTL3w5j31GLialarkFjsZWQHhLOfqucX7/9kt321BJ1AKYw5u8ic5WGwnBdBjtHojhl4IJyg6XVHvtRjYDeRTaU82BRuYNMxrd4Bvc=
