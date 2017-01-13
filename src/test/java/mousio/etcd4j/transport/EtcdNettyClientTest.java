@@ -10,30 +10,38 @@ import mousio.etcd4j.EtcdClient;
 import mousio.etcd4j.responses.EtcdAuthenticationException;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 
 import static org.junit.Assert.*;
 
 public class EtcdNettyClientTest {
+  private static final Logger LOGGER = LoggerFactory.getLogger(EtcdNettyClientTest.class);
   private static final URI ETCD_URI = URI.create("http://localhost:2379");
 
   @Test
   public void testConfig() throws Exception {
-    NioEventLoopGroup evl = new NioEventLoopGroup();
-    EtcdNettyConfig config = new EtcdNettyConfig()
+    try {
+      NioEventLoopGroup evl = new NioEventLoopGroup();
+      EtcdNettyConfig config = new EtcdNettyConfig()
         .setConnectTimeout(100)
         .setSocketChannelClass(NioSocketChannel.class)
         .setMaxFrameSize(1024 * 1024)
         .setEventLoopGroup(evl)
         .setHostName("localhost");
 
-    EtcdNettyClient client = new EtcdNettyClient(config, ETCD_URI);
-    Bootstrap bootstrap = client.getBootstrap();
-    Channel channel = bootstrap.connect(ETCD_URI.getHost(), ETCD_URI.getPort()).sync().channel();
+      EtcdNettyClient client = new EtcdNettyClient(config, ETCD_URI);
+      Bootstrap bootstrap = client.getBootstrap();
+      Channel channel = bootstrap.connect(ETCD_URI.getHost(), ETCD_URI.getPort()).sync().channel();
 
-    assertEquals(evl, bootstrap.config().group());
-    assertEquals(100, channel.config().getOption(ChannelOption.CONNECT_TIMEOUT_MILLIS).intValue());
+      assertEquals(evl, bootstrap.config().group());
+      assertEquals(100, channel.config().getOption(ChannelOption.CONNECT_TIMEOUT_MILLIS).intValue());
+    } catch (Throwable t) {
+      LOGGER.warn("", t);
+      throw t;
+    }
   }
 
   @Test
