@@ -19,13 +19,11 @@ import static org.junit.Assert.*;
 
 public class EtcdNettyClientTest {
   private static final Logger LOGGER = LoggerFactory.getLogger(EtcdNettyClientTest.class);
-  private static final URI ETCD_URI = URI.create("http://localhost:2379");
+  private static final URI ETCD_URI = URI.create("http://127.0.0.1:2379");
 
   @Test
   public void testConfig() throws Exception {
     try {
-      System.setProperty("java.net.preferIPv4Stack" , "true");
-
       NioEventLoopGroup evl = new NioEventLoopGroup();
       EtcdNettyConfig config = new EtcdNettyConfig()
         .setConnectTimeout(100)
@@ -36,7 +34,7 @@ public class EtcdNettyClientTest {
 
       EtcdNettyClient client = new EtcdNettyClient(config, ETCD_URI);
       Bootstrap bootstrap = client.getBootstrap();
-      Channel channel = bootstrap.connect("127.0.0.1", 2379).sync().channel();
+      Channel channel = bootstrap.connect(ETCD_URI.getHost(), ETCD_URI.getPort()).sync().channel();
 
       assertEquals(evl, bootstrap.config().group());
       assertEquals(100, channel.config().getOption(ChannelOption.CONNECT_TIMEOUT_MILLIS).intValue());
