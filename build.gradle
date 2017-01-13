@@ -98,6 +98,8 @@ test {
     testLogging { 
         events "started", "passed", "skipped", "failed", "standardOut", "standardError" 
     }
+
+    systemProperty 'java.net.preferIPv4Stack' , 'true'
 }
 
 jar {
