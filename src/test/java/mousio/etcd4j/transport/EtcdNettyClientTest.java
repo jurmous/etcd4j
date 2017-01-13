@@ -16,13 +16,11 @@ import java.net.URI;
 import static org.junit.Assert.*;
 
 public class EtcdNettyClientTest {
+  private static final URI ETCD_URI = URI.create("http://localhost:2379");
 
   @Test
   public void testConfig() throws Exception {
     NioEventLoopGroup evl = new NioEventLoopGroup();
-
-    URI uri = URI.create("http://localhost:4001");
-
     EtcdNettyConfig config = new EtcdNettyConfig()
         .setConnectTimeout(100)
         .setSocketChannelClass(NioSocketChannel.class)
@@ -30,22 +28,17 @@ public class EtcdNettyClientTest {
         .setEventLoopGroup(evl)
         .setHostName("localhost");
 
-    EtcdNettyClient client = new EtcdNettyClient(config, uri);
+    EtcdNettyClient client = new EtcdNettyClient(config, ETCD_URI);
     Bootstrap bootstrap = client.getBootstrap();
+    Channel channel = bootstrap.connect(ETCD_URI.getHost(), ETCD_URI.getPort()).sync().channel();
 
-    assertEquals(evl, bootstrap.group());
-
-    Channel channel = bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel();
-
+    assertEquals(evl, bootstrap.config().group());
     assertEquals(100, channel.config().getOption(ChannelOption.CONNECT_TIMEOUT_MILLIS).intValue());
   }
 
   @Test
   public void testManagedEventLoopGroup() throws Exception {
     NioEventLoopGroup evl = new NioEventLoopGroup();
-
-    URI uri = URI.create("http://localhost:4001");
-
     EtcdNettyConfig config = new EtcdNettyConfig()
         .setConnectTimeout(100)
         .setSocketChannelClass(NioSocketChannel.class)
@@ -53,7 +46,7 @@ public class EtcdNettyClientTest {
         .setEventLoopGroup(evl, false)
         .setHostName("localhost");
 
-    EtcdNettyClient client = new EtcdNettyClient(config, uri);
+    EtcdNettyClient client = new EtcdNettyClient(config, ETCD_URI);
     client.close();
 
     assertTrue(!(evl.isShuttingDown() || evl.isShutdown() || evl.isTerminated()));
@@ -66,9 +59,6 @@ public class EtcdNettyClientTest {
   @Test
   public void testCustomEtcdNettyClient() throws Exception {
     NioEventLoopGroup evl = new NioEventLoopGroup();
-
-    URI uri = URI.create("http://localhost:4001");
-
     EtcdNettyConfig config = new EtcdNettyConfig()
         .setConnectTimeout(100)
         .setSocketChannelClass(NioSocketChannel.class)
@@ -76,7 +66,7 @@ public class EtcdNettyClientTest {
         .setEventLoopGroup(evl)
         .setHostName("localhost");
 
-    EtcdNettyClient client = new EtcdNettyClient(config, uri);
+    EtcdNettyClient client = new EtcdNettyClient(config, ETCD_URI);
     EtcdClient etcdClient = new EtcdClient(client);
     etcdClient.setRetryHandler(new RetryNTimes(0, 0));
 
@@ -87,9 +77,6 @@ public class EtcdNettyClientTest {
   @Test
   public void testEtcdClientClose() throws Exception {
     NioEventLoopGroup evl = new NioEventLoopGroup();
-
-    URI uri = URI.create("http://localhost:4001");
-
     EtcdNettyConfig config = new EtcdNettyConfig()
         .setConnectTimeout(100)
         .setSocketChannelClass(NioSocketChannel.class)
@@ -99,7 +86,7 @@ public class EtcdNettyClientTest {
 
     assertTrue(config.isManagedEventLoopGroup());
 
-    EtcdNettyClient client = new EtcdNettyClient(config, uri);
+    EtcdNettyClient client = new EtcdNettyClient(config, ETCD_URI);
     EtcdClient etcdClient = new EtcdClient(client);
     etcdClient.setRetryHandler(new RetryNTimes(500, 2));
 
@@ -119,22 +106,14 @@ public class EtcdNettyClientTest {
   @Ignore
   @Test
   public void testAuth() throws Exception {
-    EtcdClient client = new EtcdClient(
-      "test",
-      "test",
-      URI.create("http://localhost:4001"));
-
+    EtcdClient client = new EtcdClient("test", "test", ETCD_URI);
     assertNotNull(client.get("/test/messages").send().get());
   }
 
   @Ignore
   @Test(expected = EtcdAuthenticationException.class)
   public void testAuthFailure() throws Exception {
-    EtcdClient client = new EtcdClient(
-      "test",
-      "test_",
-      URI.create("http://localhost:4001"));
-
+    EtcdClient client = new EtcdClient("test", "test_", ETCD_URI);
     client.get("/test/messages").send().get();
   }
 }

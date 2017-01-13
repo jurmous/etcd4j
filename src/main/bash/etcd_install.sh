@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DEFAULT_ETCD_VERSION="2.2.5"
+DEFAULT_ETCD_VERSION="2.3.7"
 
 function usage {
     cat <<-END >&2
