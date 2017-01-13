@@ -24,6 +24,8 @@ public class EtcdNettyClientTest {
   @Test
   public void testConfig() throws Exception {
     try {
+      System.setProperty("java.net.preferIPv4Stack" , "true");
+
       NioEventLoopGroup evl = new NioEventLoopGroup();
       EtcdNettyConfig config = new EtcdNettyConfig()
         .setConnectTimeout(100)
