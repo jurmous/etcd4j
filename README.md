@@ -1,4 +1,4 @@
-
+[![Travis Build](https://travis-ci.org/jurmous/etcd4j.svg?branch=master)](https://travis-ci.org/jurmous/etcd4j)
 [![Gitter chat](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/etcd4j/Lobby)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.mousio/etcd4j/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.mousio/etcd4j)
 
