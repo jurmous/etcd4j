@@ -198,6 +198,10 @@ uploadArchives {
     }
 }
 
+release {
+    tagTemplate = 'release-${version}'
+}
+
 project.integration {
     dependsOn vagrantUp
     outputs.upToDateWhen { false }
