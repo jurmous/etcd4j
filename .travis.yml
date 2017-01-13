@@ -12,6 +12,9 @@ before_install:
 script:
 - "./src/main/bash/etcd_run.sh -p ./etcd-dist -d"
 - "./gradlew ci"
+after_failure:
+- "cat ./etcd-dist/etcd.log"
+- "cat ./build/reports/test/index.html"
 env:
   global:
   - CI_TRAVIS=true
