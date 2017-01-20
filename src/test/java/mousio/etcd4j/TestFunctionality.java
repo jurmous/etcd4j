@@ -5,7 +5,6 @@ import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.*;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -28,12 +27,21 @@ public class TestFunctionality {
   public void setUp() throws Exception {
     this.etcd = new EtcdClient();
     this.etcd.setRetryHandler(new RetryWithExponentialBackOff(20, 4, 10000));
+
+    try {
+      etcd.deleteDir("/etcd4j_test").recursive().send().get();
+      etcd.deleteDir("/etcd4j_testGetAll_1").recursive().send().get();
+      etcd.deleteDir("/etcd4j_testGetAll_2").recursive().send().get();
+    } catch (EtcdException | IOException e) {
+    }
   }
 
   @After
   public void tearDown() throws Exception {
     try {
-      etcd.deleteDir("etcd4j_test").recursive().send().get();
+      etcd.deleteDir("/etcd4j_test").recursive().send().get();
+      etcd.deleteDir("/etcd4j_testGetAll_1").recursive().send().get();
+      etcd.deleteDir("/etcd4j_testGetAll_2").recursive().send().get();
     } catch (EtcdException | IOException e) {
     }
 
@@ -348,7 +356,6 @@ public class TestFunctionality {
     }
   }
 
-  @Ignore
   @Test
   public void testGetAll() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
     List<EtcdKeysResponse.EtcdNode> nodes;

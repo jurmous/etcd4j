@@ -63,7 +63,6 @@ public class EtcdNettyClientTest {
     assertTrue(evl.isShuttingDown() || evl.isShutdown() || evl.isTerminated());
   }
 
-  @Ignore
   @Test
   public void testCustomEtcdNettyClient() throws Exception {
     NioEventLoopGroup evl = new NioEventLoopGroup();
@@ -81,7 +80,6 @@ public class EtcdNettyClientTest {
     assertNotNull(etcdClient.version());
   }
 
-  @Ignore
   @Test
   public void testEtcdClientClose() throws Exception {
     NioEventLoopGroup evl = new NioEventLoopGroup();

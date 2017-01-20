@@ -72,7 +72,11 @@ public class EtcdKeyRequest extends AbstractEtcdRequest<EtcdKeysResponse> {
 
   @Override
   public String getUri() {
-    return "/v2/keys/" + ((key != null) ? key : "");
+    if (key != null) {
+      return "/v2/keys/" + key;
+    }
+
+    return "/v2/keys/";
   }
 
   @Override
