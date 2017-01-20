@@ -22,7 +22,6 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.timeout.ReadTimeoutException;
 import io.netty.util.concurrent.Promise;
 import mousio.client.exceptions.PrematureDisconnectException;
 import mousio.etcd4j.requests.EtcdRequest;
@@ -160,8 +159,6 @@ class EtcdResponseHandler<R> extends SimpleChannelInboundHandler<FullHttpRespons
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception  {
-    if (cause instanceof ReadTimeoutException) {
-      this.promise.setFailure(cause);
-    }
+    this.promise.setFailure(cause);
   }
 }
