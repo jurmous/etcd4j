@@ -245,6 +245,26 @@ public class TestFunctionality {
   }
 
   /**
+   * Recursive
+   */
+  @Test
+  public void testRecursive() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
+    etcd.put("etcd4j_test/nested/root/key-1", "key1").send().get();
+    etcd.put("etcd4j_test/nested/root/node-1/key-2", "key2").send().get();
+    etcd.put("etcd4j_test/nested/root/node-1/child/key-3", "key3").send().get();
+    etcd.put("etcd4j_test/nested/root/node-2/key-4", "key4").send().get();
+
+    EtcdKeysResponse r;
+
+    r =  etcd.get("etcd4j_test/nested").recursive().send().get();
+    assertEquals(1, r.node.nodes.size());
+    assertEquals(3, r.node.nodes.get(0).nodes.size());
+
+    r = etcd.deleteDir("etcd4j_test/nested").recursive().send().get();
+    assertEquals(r.action, EtcdKeyAction.delete);
+  }
+
+  /**
    * In order key tests
    */
   @Test
