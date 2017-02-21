@@ -5,10 +5,24 @@ plugins {
     id 'osgi'
     id 'eclipse'
     id 'idea'
-    id 'org.unbroken-dome.test-sets' version '1.2.0'
-    id "com.bmuschko.vagrant" version "2.1"
-    id "com.github.lburgazzoli.karaf" version "0.0.44"
+    id 'org.unbroken-dome.test-sets' version '1.3.2'
+    id "com.bmuschko.vagrant" version '2.1'
+    id "com.github.lburgazzoli.karaf" version '0.0.44'
     id 'net.researchgate.release' version '2.5.0'
+    id 'com.github.ben-manes.versions' version '0.14.0'
+}
+
+dependencyUpdates.resolutionStrategy = {
+  componentSelection { rules ->
+    rules.all { ComponentSelection selection ->
+      boolean rejected = ['alpha', 'beta', 'rc', 'cr', 'm'].any { qualifier ->
+        selection.candidate.version ==~ /(?i).*[.-]${qualifier}[.\d-]*/
+      }
+      if (rejected) {
+        selection.reject('Release candidate')
+      }
+    }
+  }
 }
 
 compileJava {
@@ -31,8 +45,8 @@ ext {
 
     versions = [
         netty   : '4.1.8.Final',
-        jackson : '2.8.6',
-        slf4j   : '1.7.22',
+        jackson : '2.8.7',
+        slf4j   : '1.7.23',
         junit   : '4.12',
     ]
 
