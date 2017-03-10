@@ -19,6 +19,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.codec.base64.Base64;
@@ -128,7 +129,9 @@ public class EtcdNettyClient implements EtcdClientImpl {
     this.config = config.clone();
     this.securityContext = securityContext.clone();
     this.uris = uris;
-    this.eventLoopGroup = config.getEventLoopGroup();
+    this.eventLoopGroup = config.getEventLoopGroup() == null
+            ? new NioEventLoopGroup()
+            : config.getEventLoopGroup();
     this.bootstrap = new Bootstrap()
       .group(eventLoopGroup)
       .channel(config.getSocketChannelClass())

@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public class EtcdNettyConfig implements Cloneable {
   private static final Logger logger = LoggerFactory.getLogger(EtcdNettyConfig.class);
 
-  private EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+  private EventLoopGroup eventLoopGroup = null;
 
   private boolean managedEventLoopGroup = true;
 
@@ -97,7 +97,7 @@ public class EtcdNettyConfig implements Cloneable {
    * @return itself for chaining.
    */
   public EtcdNettyConfig setEventLoopGroup(EventLoopGroup eventLoopGroup, boolean managed) {
-    if (this.managedEventLoopGroup) { // if i manage it, close the old when new one come
+    if (this.eventLoopGroup != null && this.managedEventLoopGroup) { // if i manage it, close the old when new one come
       this.eventLoopGroup.shutdownGracefully();
     }
     this.eventLoopGroup = eventLoopGroup;
