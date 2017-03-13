@@ -21,6 +21,8 @@ import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.handler.codec.http.HttpHeaders;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.DataInput;
 import java.io.IOException;
@@ -30,6 +32,8 @@ import java.nio.charset.Charset;
  * @author Luca Burgazzoli
  */
 public class EtcdResponseDecoders {
+  private static final Logger LOGGER = LoggerFactory.getLogger(EtcdResponseDecoders.class);
+
   protected static final CharSequence X_ETCD_CLUSTER_ID = "X-Etcd-Cluster-Id";
   protected static final CharSequence X_ETCD_INDEX = "X-Etcd-Index";
   protected static final CharSequence X_RAFT_INDEX = "X-Raft-Index";
@@ -52,13 +56,19 @@ public class EtcdResponseDecoders {
 
     @Override
     public T decode(HttpHeaders headers, ByteBuf content) throws EtcdException, IOException {
-      final DataInput di = new ByteBufInputStream(content);
-      final T value = MAPPER.readValue(di, this.type);
-      if(headers != null && EtcdHeaderAwareResponse.class.isAssignableFrom(this.type)) {
-        ((EtcdHeaderAwareResponse) value).loadHeaders(headers);
-      }
+      try {
+        final DataInput di = new ByteBufInputStream(content);
+        final T value = MAPPER.readValue(di, this.type);
 
-      return value;
+        if (headers != null && EtcdHeaderAwareResponse.class.isAssignableFrom(this.type)) {
+          ((EtcdHeaderAwareResponse) value).loadHeaders(headers);
+        }
+
+        return value;
+      } catch (NoSuchMethodError e) {
+        LOGGER.warn("Jackson failed to deserialize JSON, please check you have Jackson > 2.8.0 in your classpath", e);
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -68,8 +78,6 @@ public class EtcdResponseDecoders {
       return content.toString(Charset.defaultCharset());
     }
   }
-
-
 
   public abstract static class StringToObjectDecoder<T> implements EtcdResponseDecoder<T> {
     @Override
