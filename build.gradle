@@ -45,7 +45,7 @@ ext {
 
     versions = [
         netty   : '4.1.9.Final',
-        jackson : '2.8.7',
+        jackson : '2.8.8',
         slf4j   : '1.7.23',
         junit   : '4.12',
     ]
