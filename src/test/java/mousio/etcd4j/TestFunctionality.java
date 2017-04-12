@@ -1,13 +1,7 @@
 package mousio.etcd4j;
 
-import mousio.client.retry.RetryWithExponentialBackOff;
-import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.responses.*;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -15,7 +9,28 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.*;
+import mousio.client.retry.RetryWithExponentialBackOff;
+import mousio.etcd4j.promises.EtcdResponsePromise;
+import mousio.etcd4j.responses.EtcdAuthenticationException;
+import mousio.etcd4j.responses.EtcdException;
+import mousio.etcd4j.responses.EtcdHealthResponse;
+import mousio.etcd4j.responses.EtcdKeyAction;
+import mousio.etcd4j.responses.EtcdKeysResponse;
+import mousio.etcd4j.responses.EtcdLeaderStatsResponse;
+import mousio.etcd4j.responses.EtcdMembersResponse;
+import mousio.etcd4j.responses.EtcdSelfStatsResponse;
+import mousio.etcd4j.responses.EtcdStoreStatsResponse;
+import mousio.etcd4j.responses.EtcdVersionResponse;
+import mousio.etcd4j.transport.EtcdNettyClient;
+import mousio.etcd4j.transport.EtcdNettyConfig;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Performs tests on a real server at local address. All actions are performed in "etcd4j_test" dir
@@ -264,7 +279,7 @@ public class TestFunctionality {
 
     EtcdKeysResponse r;
 
-    r =  etcd.get("etcd4j_test/nested").recursive().send().get();
+    r =  etcd.get("etcd4j_test/nested").recursive().timeout(10, TimeUnit.SECONDS).send().get();
     assertEquals(1, r.node.nodes.size());
     assertEquals(3, r.node.nodes.get(0).nodes.size());
 
@@ -372,5 +387,25 @@ public class TestFunctionality {
     nodes = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode().getNodes();
     assertNotNull(nodes);
     assertEquals(2, nodes.size());
+  }
+
+  @Test
+  public void testGetHugeDir() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
+    EtcdNettyConfig config = new EtcdNettyConfig();
+    config.setMaxFrameSize(1024 * 1024); // Desired max size
+
+    EtcdNettyClient nettyClient = new EtcdNettyClient(config, URI.create("http://localhost:4001"));
+
+    EtcdClient client = new EtcdClient(nettyClient);
+
+    for (int i = 0; i < 2000; i++) {
+      client.put("/etcd4j_test/huge-dir/node-" + i, "bar").send().get();
+    }
+
+    List<EtcdKeysResponse.EtcdNode> nodes;
+
+    nodes = client.getDir("/etcd4j_test/huge-dir/").send().get().getNode().getNodes();
+    assertNotNull(nodes);
+    assertEquals(2000, nodes.size());
   }
 }
