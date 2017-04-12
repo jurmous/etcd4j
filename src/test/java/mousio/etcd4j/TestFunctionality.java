@@ -283,6 +283,10 @@ public class TestFunctionality {
     assertEquals(1, r.node.nodes.size());
     assertEquals(3, r.node.nodes.get(0).nodes.size());
 
+    r =  etcd.getDir("etcd4j_test/nested").recursive().timeout(10, TimeUnit.SECONDS).send().get();
+    assertEquals(1, r.node.nodes.size());
+    assertEquals(3, r.node.nodes.get(0).nodes.size());
+    
     r = etcd.deleteDir("etcd4j_test/nested").recursive().send().get();
     assertEquals(r.action, EtcdKeyAction.delete);
   }
