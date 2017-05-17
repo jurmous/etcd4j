@@ -383,14 +383,14 @@ public class TestFunctionality {
 
     nodes = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode().getNodes();
     assertNotNull(nodes);
-    assertEquals(0, nodes.size());
+    assertEquals(1, nodes.size());
 
     client.put("etcd4j_testGetAll_1/foo1", "bar").prevExist(false).send().get();
     client.put("etcd4j_testGetAll_2/foo1", "bar").prevExist(false).send().get();
 
     nodes = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode().getNodes();
     assertNotNull(nodes);
-    assertEquals(2, nodes.size());
+    assertEquals(3, nodes.size());
   }
 
   @Test
