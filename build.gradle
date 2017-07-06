@@ -48,6 +48,8 @@ ext {
         jackson : '2.8.8',
         slf4j   : '1.7.23',
         junit   : '4.12',
+        assertj : '3.8.0',
+        restito : '0.9.0',
     ]
 
     osgiVersions = [
@@ -90,6 +92,8 @@ dependencies {
 
     testCompile "junit:junit:$versions.junit"
     testCompile "org.slf4j:slf4j-simple:$versions.slf4j"
+    testCompile "com.xebialabs.restito:restito:$versions.restito"
+    testCompile "org.assertj:assertj-core:$versions.assertj"
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {

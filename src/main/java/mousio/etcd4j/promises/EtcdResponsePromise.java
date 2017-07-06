@@ -55,9 +55,7 @@ public class EtcdResponsePromise<T> extends ResponsePromise<T> {
    * @throws TimeoutException             on Timeout
    */
   @Override public T get() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
-    if (!waitForPromiseSuccess()) {
-      return this.get();
-    }
+    waitForPromiseSuccess();
 
     if (response != null) {
       return response;
