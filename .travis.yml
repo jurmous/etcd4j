@@ -1,20 +1,23 @@
-sudo: false
+sudo: required
+services:
+  - docker
 addons:
   apt:
     packages:
     - oracle-java8-installer
 language:
-- java
+  - java
 jdk:
-- oraclejdk8
-before_install:
-- "./src/main/bash/etcd_install.sh -p ./etcd-dist"
+  - oraclejdk8
+#before_install:
+#  - "./src/main/bash/etcd_install.sh -p ./etcd-dist"
 script:
-- "./src/main/bash/etcd_run.sh -p ./etcd-dist -d"
-- "./gradlew ci"
+#  - "./src/main/bash/etcd_run.sh -p ./etcd-dist -d"
+  - "./gradlew ci"
 after_failure:
-- "cat ./etcd-dist/etcd.log"
-- "cat ./build/reports/test/index.html"
+#  - "cat ./etcd-dist/etcd.log"
+  - "cat ./build/reports/test/index.html"
+  - "cat ./build/reports/dockerTest/index.html"
 env:
   global:
   - CI_TRAVIS=true

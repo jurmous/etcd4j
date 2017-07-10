@@ -1,0 +1,75 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.bmuschko:gradle-docker-plugin:3.0.8"
+    }
+}
+
+apply plugin:  com.bmuschko.gradle.docker.DockerRemoteApiPlugin
+
+// *****************************************************************************
+//
+// *****************************************************************************
+
+import com.bmuschko.gradle.docker.tasks.image.DockerPullImage
+import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerRemoveContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerStopContainer
+
+task pullImage(type: DockerPullImage) {
+    repository = 'quay.io/coreos/etcd'
+    tag = 'v2.3.7'
+}
+
+task createContainer(type: DockerCreateContainer) {
+    dependsOn pullImage
+    targetImageId {
+        pullImage.getImageId()
+    }
+
+    portBindings = [
+        '2379:2379',
+        '4001:4001'
+    ]
+    cmd = [
+        '-debug',
+        '-advertise-client-urls',
+        'http://localhost:2379,http://localhost:4001',
+        '-listen-client-urls',
+        'http://0.0.0.0:2379,http://0.0.0.0:4001'
+    ]
+}
+
+task startContainer(type: DockerStartContainer) {
+    dependsOn createContainer
+    targetContainerId {
+        createContainer.getContainerId()
+    }
+}
+
+task stopContainer(type: DockerStopContainer) {
+    targetContainerId {
+        createContainer.getContainerId()
+    }
+}
+
+task removeContainer(type: DockerRemoveContainer) {
+    dependsOn stopContainer
+    targetContainerId {
+        createContainer.getContainerId()
+    }
+}
+
+// *****************************************************************************
+//
+// *****************************************************************************
+
+task dockerTest(type: Test) {
+    dependsOn startContainer
+    finalizedBy removeContainer
+}

@@ -38,29 +38,35 @@ import static org.junit.Assert.fail;
 public class TestFunctionality {
   private EtcdClient etcd;
 
+  protected void cleanup() {
+    try {
+      etcd.deleteDir("/etcd4j_test").recursive().send().get();
+    } catch (Exception e) {
+    }
+    try {
+      etcd.deleteDir("/etcd4j_testGetAll_1").recursive().send().get();
+    } catch (Exception e) {
+    }
+    try {
+      etcd.deleteDir("/etcd4j_testGetAll_2").recursive().send().get();
+    } catch (Exception e) {
+    }
+  }
+
   @Before
   public void setUp() throws Exception {
     this.etcd = new EtcdClient();
     this.etcd.setRetryHandler(new RetryWithExponentialBackOff(20, 4, 10000));
 
-    try {
-      etcd.deleteDir("/etcd4j_test").recursive().send().get();
-      etcd.deleteDir("/etcd4j_testGetAll_1").recursive().send().get();
-      etcd.deleteDir("/etcd4j_testGetAll_2").recursive().send().get();
-    } catch (EtcdException | IOException e) {
-    }
+    cleanup();
   }
 
   @After
   public void tearDown() throws Exception {
-    try {
-      etcd.deleteDir("/etcd4j_test").recursive().send().get();
-      etcd.deleteDir("/etcd4j_testGetAll_1").recursive().send().get();
-      etcd.deleteDir("/etcd4j_testGetAll_2").recursive().send().get();
-    } catch (EtcdException | IOException e) {
-    }
+    cleanup();
 
     this.etcd.close();
+    this.etcd = null;
   }
 
   /**
@@ -377,20 +383,23 @@ public class TestFunctionality {
 
   @Test
   public void testGetAll() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
+    EtcdKeysResponse.EtcdNode root;
     List<EtcdKeysResponse.EtcdNode> nodes;
 
     EtcdClient client = new EtcdClient();
 
-    nodes = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode().getNodes();
+    root = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode();
+    nodes = root.getNodes();
     assertNotNull(nodes);
-    assertEquals(1, nodes.size());
+    assertTrue(root.isDir());
 
     client.put("etcd4j_testGetAll_1/foo1", "bar").prevExist(false).send().get();
     client.put("etcd4j_testGetAll_2/foo1", "bar").prevExist(false).send().get();
 
-    nodes = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode().getNodes();
+    root = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode();
+    nodes =  root.getNodes();
     assertNotNull(nodes);
-    assertEquals(3, nodes.size());
+    assertEquals(2, nodes.size());
   }
 
   @Test
