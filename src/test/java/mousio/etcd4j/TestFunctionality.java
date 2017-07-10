@@ -26,6 +26,8 @@ import mousio.etcd4j.transport.EtcdNettyConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -36,6 +38,8 @@ import static org.junit.Assert.fail;
  * Performs tests on a real server at local address. All actions are performed in "etcd4j_test" dir
  */
 public class TestFunctionality {
+  private static final Logger LOGGER = LoggerFactory.getLogger(TestFunctionality.class);
+
   private EtcdClient etcd;
 
   protected void cleanup() {
@@ -397,7 +401,11 @@ public class TestFunctionality {
     client.put("etcd4j_testGetAll_2/foo1", "bar").prevExist(false).send().get();
 
     root = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode();
-    nodes =  root.getNodes();
+    nodes = root.getNodes();
+
+    LOGGER.info("Nodes size: {}", nodes.size());
+    LOGGER.info("Nodes {}", nodes);
+
     assertNotNull(nodes);
     assertEquals(2, nodes.size());
   }
