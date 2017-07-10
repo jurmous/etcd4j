@@ -44,15 +44,15 @@ public class TestFunctionality {
 
   protected void cleanup() {
     try {
-      etcd.deleteDir("/etcd4j_test").recursive().send().get();
-    } catch (Exception e) {
-    }
-    try {
-      etcd.deleteDir("/etcd4j_testGetAll_1").recursive().send().get();
-    } catch (Exception e) {
-    }
-    try {
-      etcd.deleteDir("/etcd4j_testGetAll_2").recursive().send().get();
+      for (EtcdKeysResponse.EtcdNode node: etcd.getAll().send().get().getNode().getNodes()) {
+        if (node.isDir()) {
+          LOGGER.info("Delete dir {}", node.key);
+          etcd.deleteDir(node.key).recursive().send().get();
+        } else {
+          LOGGER.info("Delete entry {}", node.key);
+          etcd.delete(node.key).send().get();
+        }
+      }
     } catch (Exception e) {
     }
   }
@@ -173,6 +173,10 @@ public class TestFunctionality {
     } catch (TimeoutException e) {
       // Should time out
     }
+    try {
+      etcd.deleteDir("etcd4j_test/fooTO").recursive().send().get();
+    } catch (Exception e) {
+    }
   }
 
   /**
@@ -180,31 +184,35 @@ public class TestFunctionality {
    */
   @Test
   public void testKey() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
-    EtcdKeysResponse response = etcd.put("etcd4j_test/foo", "bar").send().get();
-    assertEquals(EtcdKeyAction.set, response.action);
+    try {
+      EtcdKeysResponse response = etcd.put("etcd4j_test/foo", "bar").send().get();
+      assertEquals(EtcdKeyAction.set, response.action);
 
-    response = etcd.put("etcd4j_test/foo2", "bar").prevExist(false).send().get();
-    assertEquals(EtcdKeyAction.create, response.action);
+      response = etcd.put("etcd4j_test/foo2", "bar").prevExist(false).send().get();
+      assertEquals(EtcdKeyAction.create, response.action);
 
-    response = etcd.put("etcd4j_test/foo", "bar1").ttl(40).prevExist(true).send().get();
-    assertEquals(EtcdKeyAction.update, response.action);
-    assertNotNull(response.node.expiration);
+      response = etcd.put("etcd4j_test/foo", "bar1").ttl(40).prevExist(true).send().get();
+      assertEquals(EtcdKeyAction.update, response.action);
+      assertNotNull(response.node.expiration);
 
-    response = etcd.put("etcd4j_test/foo", "bar2").prevValue("bar1").send().get();
-    assertEquals(EtcdKeyAction.compareAndSwap, response.action);
+      response = etcd.put("etcd4j_test/foo", "bar2").prevValue("bar1").send().get();
+      assertEquals(EtcdKeyAction.compareAndSwap, response.action);
 
-    response = etcd.put("etcd4j_test/foo", "bar3").prevIndex(response.node.modifiedIndex).send().get();
-    assertEquals(EtcdKeyAction.compareAndSwap, response.action);
+      response = etcd.put("etcd4j_test/foo", "bar3").prevIndex(response.node.modifiedIndex).send().get();
+      assertEquals(EtcdKeyAction.compareAndSwap, response.action);
 
-    response = etcd.get("etcd4j_test/foo").consistent().send().get();
-    assertEquals("bar3", response.node.value);
+      response = etcd.get("etcd4j_test/foo").consistent().send().get();
+      assertEquals("bar3", response.node.value);
 
-    // Test slash before key
-    response = etcd.get("/etcd4j_test/foo").consistent().send().get();
-    assertEquals("bar3", response.node.value);
+      // Test slash before key
+      response = etcd.get("/etcd4j_test/foo").consistent().send().get();
+      assertEquals("bar3", response.node.value);
 
-    response = etcd.delete("etcd4j_test/foo").send().get();
-    assertEquals(EtcdKeyAction.delete, response.action);
+      response = etcd.delete("etcd4j_test/foo").send().get();
+      assertEquals(EtcdKeyAction.delete, response.action);
+    } finally {
+      etcd.deleteDir("etcd4j_test").recursive().send().get();
+    }
   }
 
   /**
