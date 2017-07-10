@@ -403,7 +403,6 @@ public class TestFunctionality {
     root = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode();
     nodes = root.getNodes();
 
-    LOGGER.info("Nodes size: {}", nodes.size());
     LOGGER.info("Nodes {}", nodes);
 
     assertNotNull(nodes);

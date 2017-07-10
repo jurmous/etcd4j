@@ -15,13 +15,13 @@
  */
 package mousio.etcd4j.responses;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.netty.handler.codec.http.HttpHeaders;
-
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.netty.handler.codec.http.HttpHeaders;
 
 import static mousio.etcd4j.EtcdUtil.convertDate;
 import static mousio.etcd4j.EtcdUtil.getHeaderPropertyAsLong;
@@ -172,5 +172,20 @@ public final class EtcdKeysResponse implements EtcdHeaderAwareResponse {
    public List<EtcdNode> getNodes() {
      return nodes;
    }
-}
+
+
+      @Override
+      public String toString() {
+          return "EtcdNode{" +
+              "key='" + key + '\'' +
+              ", value='" + value + '\'' +
+              ", dir=" + dir +
+              ", createdIndex=" + createdIndex +
+              ", modifiedIndex=" + modifiedIndex +
+              ", expiration=" + expiration +
+              ", ttl=" + ttl +
+              ", nodes=" + nodes +
+              '}';
+      }
+  }
 }
