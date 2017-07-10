@@ -16,7 +16,7 @@ script:
   - "./gradlew ci"
 after_failure:
 #  - "cat ./etcd-dist/etcd.log"
-  - "cat ./build/reports/test/index.html"
+#  - "cat ./build/reports/test/index.html"
   - "cat ./build/reports/dockerTest/index.html"
 env:
   global:
