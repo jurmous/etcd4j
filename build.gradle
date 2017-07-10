@@ -8,7 +8,7 @@ plugins {
 }
 
 apply from: 'gradle/docker.gradle'
-apply from: 'gradle/versions.gradle'
+apply from: 'gradle/versions-checker.gradle'
 
 compileJava {
     sourceCompatibility = 1.7
@@ -33,6 +33,7 @@ ext {
         jackson : '2.8.9',
         slf4j   : '1.7.25',
         junit   : '4.12',
+        logback : '1.2.3'
     ]
 
     osgiVersions = [
@@ -70,7 +71,7 @@ dependencies {
     compile "com.fasterxml.jackson.module:jackson-module-afterburner:$versions.jackson"
 
     testCompile "junit:junit:$versions.junit"
-    testCompile "org.slf4j:slf4j-simple:$versions.slf4j"
+    testRuntime "ch.qos.logback:logback-classic:$versions.logback"
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {

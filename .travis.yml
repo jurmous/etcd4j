@@ -17,6 +17,7 @@ script:
 after_failure:
 #  - "cat ./etcd-dist/etcd.log"
 #  - "cat ./build/reports/test/index.html"
+  - "cat ./build/etcd4j-test.log"
   - "cat ./build/reports/dockerTest/index.html"
 env:
   global:
