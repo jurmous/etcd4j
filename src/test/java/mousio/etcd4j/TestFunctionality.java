@@ -394,6 +394,9 @@ public class TestFunctionality {
 
     root = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode();
     nodes = root.getNodes();
+
+    LOGGER.info("Nodes (1) {}", nodes);
+
     assertNotNull(nodes);
     assertTrue(root.isDir());
 
@@ -403,7 +406,7 @@ public class TestFunctionality {
     root = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode();
     nodes = root.getNodes();
 
-    LOGGER.info("Nodes {}", nodes);
+    LOGGER.info("Nodes (2) {}", nodes);
 
     assertNotNull(nodes);
     assertEquals(2, nodes.size());
