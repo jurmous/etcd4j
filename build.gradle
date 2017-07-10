@@ -33,6 +33,8 @@ ext {
         jackson : '2.8.9',
         slf4j   : '1.7.25',
         junit   : '4.12',
+        assertj : '3.8.0',
+        restito : '0.9.0',
         logback : '1.2.3'
     ]
 
@@ -71,6 +73,9 @@ dependencies {
     compile "com.fasterxml.jackson.module:jackson-module-afterburner:$versions.jackson"
 
     testCompile "junit:junit:$versions.junit"
+    testCompile "org.slf4j:slf4j-simple:$versions.slf4j"
+    testCompile "com.xebialabs.restito:restito:$versions.restito"
+    testCompile "org.assertj:assertj-core:$versions.assertj"
     testRuntime "ch.qos.logback:logback-classic:$versions.logback"
 }
 

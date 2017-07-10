@@ -159,9 +159,7 @@ public class ResponsePromise<T> {
    * @throws Exception on fail
    */
   public T get() throws Exception {
-    if (!waitForPromiseSuccess()) {
-      return this.get();
-    }
+    waitForPromiseSuccess();
 
     if (response != null) {
       return response;
@@ -179,20 +177,18 @@ public class ResponsePromise<T> {
   /**
    * Wait for promise to be done
    *
-   * @return true if success, false if fail
    * @throws IOException      on IOException
    * @throws TimeoutException on timeout
    */
-  protected boolean waitForPromiseSuccess() throws IOException, TimeoutException {
-    if (!promise.isDone() && !promise.isCancelled()) {
+  protected void waitForPromiseSuccess() throws IOException, TimeoutException {
+    while(!promise.isDone() && !promise.isCancelled()) {
       Promise<T> listeningPromise = this.promise;
       listeningPromise.awaitUninterruptibly();
-      if (listeningPromise != this.promise) {
-        return false;
+      if (listeningPromise == this.promise) {
+        this.handlePromise(promise);
+        break;
       }
-      this.handlePromise(promise);
     }
-    return true;
   }
 
   /**
