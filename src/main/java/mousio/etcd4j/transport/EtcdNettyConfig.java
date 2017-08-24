@@ -38,7 +38,7 @@ public class EtcdNettyConfig implements Cloneable {
 
   private int connectTimeout = 300;
 
-  private int maxFrameSize = 1024 * 100;
+  private int maxFrameSize = 1024 * 1024 * 100;
 
   private String hostName;
 
