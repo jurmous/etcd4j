@@ -5,6 +5,7 @@ plugins {
     id 'osgi'
     id "com.github.lburgazzoli.karaf" version '0.0.49'
     id 'net.researchgate.release' version '2.6.0'
+    id 'com.adarshr.test-logger' version '1.1.2'
 }
 
 apply from: 'gradle/docker.gradle'
@@ -95,11 +96,11 @@ artifacts {
     archives sourcesJar
 }
 
-test { 
-    testLogging { 
-        events "started", "passed", "skipped", "failed", "standardOut", "standardError" 
-    }
+testlogger {
+    theme 'mocha'
+}
 
+test { 
     systemProperty 'java.net.preferIPv4Stack' , 'true'
 }
 
