@@ -30,7 +30,7 @@ ext {
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
     versions = [
-        netty   : '4.1.17.Final',
+        netty   : '4.1.19.Final',
         jackson : '2.8.10',
         slf4j   : '1.7.25',
         junit   : '4.12',
