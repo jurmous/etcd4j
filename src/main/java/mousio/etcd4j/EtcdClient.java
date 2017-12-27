@@ -291,9 +291,6 @@ public class EtcdClient implements Closeable {
     ObjectNode jNode = JsonNodeFactory.instance.objectNode();
     dataTree.getNode().getNodes().forEach(node->iterateOverNodes(jNode, node));
 
-    Arrays.stream(path.split("/"))
-            .forEach(p->jNode.get(p));
-
     return jNode.at(path);
   }
 
