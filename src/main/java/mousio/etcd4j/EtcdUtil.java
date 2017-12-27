@@ -15,6 +15,8 @@
  */
 package mousio.etcd4j;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.handler.codec.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,8 @@ public class EtcdUtil {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(EtcdUtil.class);
 
+  private static final ObjectMapper mapper = new ObjectMapper();
+
   public static Long getHeaderPropertyAsLong(HttpHeaders headers, String key) {
     String headerValue = headers.get(key);
     if (headerValue != null) {
@@ -40,6 +44,16 @@ public class EtcdUtil {
     }
 
     return null;
+  }
+
+  public static String printJson(JsonNode jsonNode) {
+    try {
+      Object json = mapper.readValue(jsonNode.toString(), Object.class);
+      return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+    } catch (Exception e) {
+      LOGGER.error("unable to print json", e);
+      return null;
+    }
   }
 
   public static Date convertDate(String date) {

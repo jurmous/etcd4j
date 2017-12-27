@@ -1,26 +1,12 @@
 package mousio.etcd4j;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.wnameless.json.flattener.FlattenMode;
+import com.github.wnameless.json.flattener.JsonFlattener;
 import mousio.client.retry.RetryWithExponentialBackOff;
 import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.responses.EtcdAuthenticationException;
-import mousio.etcd4j.responses.EtcdException;
-import mousio.etcd4j.responses.EtcdHealthResponse;
-import mousio.etcd4j.responses.EtcdKeyAction;
-import mousio.etcd4j.responses.EtcdKeysResponse;
-import mousio.etcd4j.responses.EtcdLeaderStatsResponse;
-import mousio.etcd4j.responses.EtcdMembersResponse;
-import mousio.etcd4j.responses.EtcdSelfStatsResponse;
-import mousio.etcd4j.responses.EtcdStoreStatsResponse;
-import mousio.etcd4j.responses.EtcdVersionResponse;
+import mousio.etcd4j.responses.*;
 import mousio.etcd4j.transport.EtcdNettyClient;
 import mousio.etcd4j.transport.EtcdNettyConfig;
 import org.junit.After;
@@ -29,10 +15,18 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static org.junit.Assert.*;
 
 /**
  * Performs tests on a real server at local address. All actions are performed in "etcd4j_test" dir
@@ -438,5 +432,63 @@ public class TestFunctionality {
     nodes = client.getDir("/etcd4j_test/huge-dir/").send().get().getNode().getNodes();
     assertNotNull(nodes);
     assertEquals(2000, nodes.size());
+  }
+
+  @Test
+  public void testPutJson() throws EtcdAuthenticationException, TimeoutException, EtcdException, IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    File testJson = new File("src/test/resources/test_data.json");
+    JsonNode toEtcd = mapper.readTree(testJson);
+    etcd.putAsJson("/etcd4j_test/put-json", toEtcd);
+
+    EtcdKeysResponse widget = etcd.get("/etcd4j_test/put-json").send().get();
+    assertEquals(widget.getNode().getNodes().size(), 1);
+
+    EtcdKeysResponse widgets = etcd.get("/etcd4j_test/put-json/widget").send().get();
+    assertEquals(widgets.getNode().getNodes().size(), 4);
+  }
+
+  @Test
+  public void testGetJson() throws EtcdAuthenticationException, TimeoutException, EtcdException, IOException {
+    etcd.put("/etcd4j_test/get-json/key1", "value").send().get();
+    etcd.put("/etcd4j_test/get-json/key2", "value").send().get();
+    etcd.putDir("/etcd4j_test/get-json/key3").send().get();
+    etcd.put("/etcd4j_test/get-json/key3/sub-key", "value").send().get();
+
+    JsonNode asJson = etcd.getAsJson("/etcd4j_test/get-json");
+    assertEquals(asJson.get("key1").asText(), "value");
+    assertEquals(asJson.get("key2").asText(), "value");
+    assertEquals(asJson.get("key3").at("/sub-key").asText(), "value");
+  }
+
+  @Test
+  public void testGetAndPut() throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+    EtcdNettyConfig config = new EtcdNettyConfig();
+    EtcdNettyClient nettyClient = new EtcdNettyClient(config, URI.create("http://localhost:4001"));
+    config.setMaxFrameSize(1024 * 1024); // Desired max size
+    EtcdClient client = new EtcdClient(nettyClient);
+
+    File testJson = new File("src/test/resources/test_data.json");
+    JsonNode toEtcd = mapper.readTree(testJson);
+    client.putAsJson("/etcd4j_test/get-put", toEtcd);
+
+    JsonNode fromEtcd = client.getAsJson("/etcd4j_test/get-put");
+
+    // flatten both and compare
+    Map<String, Object> rootFlat = new JsonFlattener(EtcdUtil.printJson(toEtcd))
+            .withFlattenMode(FlattenMode.NORMAL)
+            .withSeparator('/')
+            .flattenAsMap();
+
+    Map<String, Object> testFlat = new JsonFlattener(EtcdUtil.printJson(fromEtcd))
+            .withFlattenMode(FlattenMode.NORMAL)
+            .withSeparator('/')
+            .flattenAsMap();
+
+    assertEquals(rootFlat.size(), testFlat.size());
+    for (Map.Entry<String, Object> entry : rootFlat.entrySet()) {
+      assertNotNull(testFlat.get(entry.getKey()));
+    }
   }
 }
