@@ -36,7 +36,8 @@ ext {
         junit   : '4.12',
         assertj : '3.8.0',
         restito : '0.9.2',
-        logback : '1.2.3'
+        logback : '1.2.3',
+        flat    : '0.4.1'
     ]
 
     osgiVersions = [
@@ -72,6 +73,7 @@ dependencies {
     compile "com.fasterxml.jackson.core:jackson-databind:$versions.jackson"
     compile "com.fasterxml.jackson.core:jackson-annotations:$versions.jackson"
     compile "com.fasterxml.jackson.module:jackson-module-afterburner:$versions.jackson"
+    compile "com.github.wnameless:json-flattener:$versions.flat"
 
     testCompile "junit:junit:$versions.junit"
     testCompile "org.slf4j:slf4j-simple:$versions.slf4j"
