@@ -45,6 +45,42 @@ task createContainer(type: DockerCreateContainer) {
     ]
 }
 
+task createContainerSsl(type: DockerCreateContainer) {
+    dependsOn pullImage
+    targetImageId {
+        pullImage.getImageId()
+    }
+
+    portBindings = [
+            '2378:2379',
+            '4002:4001'
+    ]
+    binds = [
+            "${rootDir}/src/test/resources/certs":'/tmp/ssl'
+    ]
+    cmd = [
+            '-debug',
+            '-advertise-client-urls',
+            'https://localhost:2379,https://localhost:4001',
+            '-listen-client-urls',
+            'https://0.0.0.0:2379,https://0.0.0.0:4001',
+            '-trusted-ca-file',
+            '/tmp/ssl/host.cert',
+            '-cert-file',
+            '/tmp/ssl/client.cert',
+            '-key-file',
+            '/tmp/ssl/host.key',
+            '-peer-trusted-ca-file',
+            '/tmp/ssl/host.cert',
+            '-peer-cert-file',
+            '/tmp/ssl/client.cert',
+            '-peer-key-file',
+            '/tmp/ssl/host.key',
+            '-client-cert-auth',
+            '-peer-client-cert-auth',
+    ]
+}
+
 task startContainer(type: DockerStartContainer) {
     dependsOn createContainer
     targetContainerId {
@@ -65,11 +101,31 @@ task removeContainer(type: DockerRemoveContainer) {
     }
 }
 
+task startContainerSsl(type: DockerStartContainer) {
+    dependsOn createContainerSsl
+    targetContainerId {
+        createContainerSsl.getContainerId()
+    }
+}
+
+task stopContainerSsl(type: DockerStopContainer) {
+    targetContainerId {
+        createContainerSsl.getContainerId()
+    }
+}
+
+task removeContainerSsl(type: DockerRemoveContainer) {
+    dependsOn stopContainerSsl
+    targetContainerId {
+        createContainerSsl.getContainerId()
+    }
+}
+
 // *****************************************************************************
 //
 // *****************************************************************************
 
 task dockerTest(type: Test) {
-    dependsOn startContainer
-    finalizedBy removeContainer
+    dependsOn startContainer, startContainerSsl
+    finalizedBy removeContainer, removeContainerSsl
 }
