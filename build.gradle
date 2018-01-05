@@ -23,7 +23,7 @@ ext {
     isRelease  = !isSnapshot
     isCI       = Boolean.valueOf("$System.env.CI")
     isPR       = "false" != System.env.TRAVIS_PULL_REQUEST
-    ciTasks    = (isRelease || isPR) ? ['clean', 'test'] : ['clean', 'dockerTest', 'uploadArchives']
+    ciTasks    = isRelease ? ['clean', 'test'] : (isPR ? ['clean', 'dockerTest'] : ['clean', 'dockerTest', 'uploadArchives'])
 
     mavenDeployUrl = isSnapshot ?
         'https://oss.sonatype.org/content/repositories/snapshots/' :
