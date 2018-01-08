@@ -1,21 +1,14 @@
 package mousio.etcd4j;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.wnameless.json.flattener.FlattenMode;
-import com.github.wnameless.json.flattener.JsonFlattener;
 import mousio.client.retry.RetryWithExponentialBackOff;
 import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.responses.EtcdAuthenticationException;
@@ -311,7 +304,7 @@ public class TestFunctionality {
     r =  etcd.getDir("etcd4j_test/nested").recursive().timeout(10, TimeUnit.SECONDS).send().get();
     assertEquals(1, r.node.nodes.size());
     assertEquals(3, r.node.nodes.get(0).nodes.size());
-    
+
     r = etcd.deleteDir("etcd4j_test/nested").recursive().send().get();
     assertEquals(r.action, EtcdKeyAction.delete);
   }
@@ -445,107 +438,5 @@ public class TestFunctionality {
     nodes = client.getDir("/etcd4j_test/huge-dir/").send().get().getNode().getNodes();
     assertNotNull(nodes);
     assertEquals(2000, nodes.size());
-  }
-
-  @Test
-  public void testPutJson() throws EtcdAuthenticationException, TimeoutException, EtcdException, IOException {
-    ObjectMapper mapper = new ObjectMapper();
-    File testJson = new File("src/test/resources/test_data.json");
-    JsonNode toEtcd = mapper.readTree(testJson);
-    EtcdUtil.putAsJson("/etcd4j_test/put-json", toEtcd, etcd);
-
-    EtcdKeysResponse widget = etcd.get("/etcd4j_test/put-json").send().get();
-    assertEquals(widget.getNode().getNodes().size(), 1);
-
-    EtcdKeysResponse widgets = etcd.get("/etcd4j_test/put-json/widget").send().get();
-    assertEquals(widgets.getNode().getNodes().size(), 4);
-  }
-
-  @Test
-  public void testGetJson() throws EtcdAuthenticationException, TimeoutException, EtcdException, IOException {
-    etcd.put("/etcd4j_test/get-json/key1", "value").send().get();
-    etcd.put("/etcd4j_test/get-json/key2", "value").send().get();
-    etcd.putDir("/etcd4j_test/get-json/key3").send().get();
-    etcd.put("/etcd4j_test/get-json/key3/sub-key", "value").send().get();
-
-    JsonNode asJson = EtcdUtil.getAsJson("/etcd4j_test/get-json", etcd);
-    assertEquals(asJson.get("key1").asText(), "value");
-    assertEquals(asJson.get("key2").asText(), "value");
-    assertEquals(asJson.get("key3").at("/sub-key").asText(), "value");
-  }
-
-  @Test
-  public void testUpdateJson() throws EtcdAuthenticationException, TimeoutException, EtcdException, IOException {
-    ObjectMapper mapper = new ObjectMapper();
-    File testJson = new File("src/test/resources/test_data.json");
-    JsonNode toEtcd = mapper.readTree(testJson);
-
-    // load original and check
-    EtcdUtil.putAsJson("/etcd4j_test/put-json", toEtcd, etcd);
-    assertEquals(etcd.get("/etcd4j_test/put-json/widget/image/name").send().get().getNode().getValue(), "sun1");
-
-    // update a fraction of the original json
-    ObjectNode imageSubSection = (ObjectNode) toEtcd.at("/widget/image");
-    imageSubSection.put("name", "moon");
-
-    // update that fraction in etcd and check
-    EtcdUtil.putAsJson("/etcd4j_test/put-json/widget/image", imageSubSection, etcd);
-    assertEquals(etcd.get("/etcd4j_test/put-json/widget/image/name").send().get().getNode().getValue(), "moon");
-
-    // verify the rest of the json is intact
-    JsonNode fromEtcd = EtcdUtil.getAsJson("/etcd4j_test/put-json", etcd);
-    assertEquals(EtcdUtil.printJson(fromEtcd.at("/widget/window")),
-            EtcdUtil.printJson(EtcdUtil.getAsJson("/etcd4j_test/put-json/widget/window", etcd)));
-    assertEquals(EtcdUtil.printJson(fromEtcd.at("/widget/text")),
-            EtcdUtil.printJson(EtcdUtil.getAsJson("/etcd4j_test/put-json/widget/text", etcd)));
-  }
-
-  @Test
-  public void testGetAndPut() throws Exception {
-    ObjectMapper mapper = new ObjectMapper();
-    EtcdNettyConfig config = new EtcdNettyConfig();
-    EtcdNettyClient nettyClient = new EtcdNettyClient(config, URI.create("http://localhost:4001"));
-    config.setMaxFrameSize(1024 * 1024); // Desired max size
-    EtcdClient client = new EtcdClient(nettyClient);
-
-    File testJson = new File("src/test/resources/test_data.json");
-    JsonNode toEtcd = mapper.readTree(testJson);
-    EtcdUtil.putAsJson("/etcd4j_test/get-put", toEtcd, client);
-
-    JsonNode fromEtcd = EtcdUtil.getAsJson("/etcd4j_test/get-put", client);
-
-    // flatten both and compare
-    Map<String, Object> rootFlat = new JsonFlattener(EtcdUtil.printJson(toEtcd))
-            .withFlattenMode(FlattenMode.MONGODB)
-            .withSeparator('/')
-            .flattenAsMap();
-
-    Map<String, Object> testFlat = new JsonFlattener(EtcdUtil.printJson(fromEtcd))
-            .withFlattenMode(FlattenMode.MONGODB)
-            .withSeparator('/')
-            .flattenAsMap();
-
-    assertEquals(rootFlat.size(), testFlat.size());
-    for (Map.Entry<String, Object> entry : rootFlat.entrySet()) {
-      assertNotNull(testFlat.get(entry.getKey()));
-    }
-  }
-
-  @Test
-  public void testGetJsonArray() throws EtcdAuthenticationException, TimeoutException, EtcdException, IOException {
-    ObjectMapper mapper = new ObjectMapper();
-    // store json
-    File testJson = new File("src/test/resources/test_data.json");
-    JsonNode toEtcd = mapper.readTree(testJson);
-    EtcdUtil.putAsJson("/etcd4j_test/arrays", toEtcd, etcd);
-
-    // retrieve json
-    JsonNode fromEtcd = EtcdUtil.getAsJson("/etcd4j_test/arrays", etcd);
-    JsonNode arrayData = fromEtcd.at("/widget/text/data");
-
-    assertTrue(!arrayData.isValueNode());
-    assertEquals(arrayData.size(), 2);
-    assertEquals(arrayData.at("/0").asText(), "Click Here");
-    assertEquals(arrayData.at("/1").asText(), "Or here");
   }
 }
