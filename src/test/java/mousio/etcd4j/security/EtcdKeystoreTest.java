@@ -8,6 +8,7 @@ import mousio.etcd4j.responses.EtcdKeysResponse;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -22,6 +23,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertNotNull;
 
+@Ignore
 public class EtcdKeystoreTest {
     private static String KEYSTORE_PATH = "keystore.jks";
     private static final String KEYSTORE_PASS = "password";
