@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.wnameless.json.flattener.FlattenMode;
 import com.github.wnameless.json.flattener.JsonFlattener;
+import com.github.wnameless.json.flattener.KeyTransformer;
 import com.github.wnameless.json.unflattener.JsonUnflattener;
 import io.netty.handler.codec.http.HttpHeaders;
 import mousio.etcd4j.requests.EtcdKeyGetRequest;
@@ -131,7 +132,12 @@ public class EtcdUtil {
     Map<String, Object> flattened = new JsonFlattener(EtcdUtil.jsonToString(data))
             .withFlattenMode(FlattenMode.MONGODB)
             .withSeparator('/')
-            .withKeyTransformer(s -> s.replaceAll("\\.", "__DOT__"))
+            .withKeyTransformer(new KeyTransformer() {
+              @Override
+              public String transform(String s) {
+                return s.replaceAll("\\.", "__DOT__");
+              }
+            })
             .flattenAsMap();
 
     // clean previous data and replace it with new json structure
@@ -159,7 +165,12 @@ public class EtcdUtil {
   private static JsonNode dotNotationToStandardJson(JsonNode etcdJson) throws IOException {
     String unflattened = new JsonUnflattener(jsonToString(flattenJson(etcdJson, "")))
             .withFlattenMode(FlattenMode.MONGODB)
-            .withKeyTransformer(s -> s.replaceAll("__DOT__", "\\."))
+            .withKeyTransformer(new KeyTransformer() {
+              @Override
+              public String transform(String s) {
+                return s.replaceAll("__DOT__", "\\.");
+              }
+            })
             .unflatten();
     return mapper.readTree(unflattened);
   }
