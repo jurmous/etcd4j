@@ -23,6 +23,7 @@
       "vOffset": 100,
       "alignment": "center",
       "onMouseUp": "sun1.opacity = (sun1.opacity / 100) * 90;"
-    }
+    },
+    "10.200.1.198": "{\"ip\":\"10.200.1.198\",\"cluster_id\":\"1.0.0.1\"}"
   }
 }

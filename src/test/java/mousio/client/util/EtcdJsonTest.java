@@ -80,7 +80,7 @@ public class EtcdJsonTest {
         assertEquals(widget.getNode().getNodes().size(), 1);
 
         EtcdKeysResponse widgets = etcd.get("/etcd4j_test/put-json/widget").send().get();
-        assertEquals(widgets.getNode().getNodes().size(), 4);
+        assertEquals(widgets.getNode().getNodes().size(), 5);
     }
 
     @Test
