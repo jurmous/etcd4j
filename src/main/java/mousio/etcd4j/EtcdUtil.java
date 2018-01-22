@@ -113,8 +113,12 @@ public class EtcdUtil {
 
     ObjectNode jNode = JsonNodeFactory.instance.objectNode();
 
-    for (EtcdNode node: dataTree.getNode().getNodes()) {
-      iterateOverNodes(jNode, node);
+    if (dataTree.getNode().getNodes().isEmpty()) {
+      iterateOverNodes(jNode, dataTree.getNode());
+    } else {
+      for (EtcdNode node : dataTree.getNode().getNodes()) {
+        iterateOverNodes(jNode, node);
+      }
     }
 
     return dotNotationToStandardJson(jNode.at(path));
@@ -132,12 +136,6 @@ public class EtcdUtil {
     Map<String, Object> flattened = new JsonFlattener(EtcdUtil.jsonToString(data))
             .withFlattenMode(FlattenMode.MONGODB)
             .withSeparator('/')
-            .withKeyTransformer(new KeyTransformer() {
-              @Override
-              public String transform(String s) {
-                return s.replaceAll("\\.", "__DOT__");
-              }
-            })
             .flattenAsMap();
 
     // clean previous data and replace it with new json structure
@@ -163,16 +161,20 @@ public class EtcdUtil {
    * @throws IOException
    */
   private static JsonNode dotNotationToStandardJson(JsonNode etcdJson) throws IOException {
-    String unflattened = new JsonUnflattener(jsonToString(flattenJson(etcdJson, "")))
-            .withFlattenMode(FlattenMode.MONGODB)
-            .withKeyTransformer(new KeyTransformer() {
-              @Override
-              public String transform(String s) {
-                return s.replaceAll("__DOT__", "\\.");
-              }
-            })
-            .unflatten();
-    return mapper.readTree(unflattened);
+    if (!etcdJson.isValueNode()) {
+      String unflattened = new JsonUnflattener(jsonToString(flattenJson(etcdJson, "")))
+              .withFlattenMode(FlattenMode.MONGODB)
+              .withKeyTransformer(new KeyTransformer() {
+                @Override
+                public String transform(String s) {
+                  return s.replaceAll("__DOT__", "\\.");
+                }
+              })
+              .unflatten();
+      return mapper.readTree(unflattened);
+    } else {
+      return etcdJson;
+    }
   }
 
   /**
@@ -197,6 +199,7 @@ public class EtcdUtil {
 
       while (iterator.hasNext()) {
         String key = iterator.next();
+        key = key.replaceAll("\\.", "__DOT__");
         if (jsonNodes.get(key)==null) {
           if (iterator.hasNext()) {
             jsonNodes = jsonNodes.putObject(key);

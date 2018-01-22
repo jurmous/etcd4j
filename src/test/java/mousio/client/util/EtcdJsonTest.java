@@ -206,6 +206,12 @@ public class EtcdJsonTest {
     }
 
     @Test
+    public void testFetchJsonValue() throws EtcdAuthenticationException, TimeoutException, EtcdException, IOException {
+        JsonNode asJson = EtcdUtil.getAsJson("/etcd4j_test/widget/text/alignment", etcd);
+        assertEquals(asJson.asText(), "center");
+    }
+
+    @Test
     public void testAssignValueToObject() throws EtcdAuthenticationException, TimeoutException, EtcdException, IOException {
         String newJson = "{\n" +
                 "   \"test\":\"value\"\n" +
