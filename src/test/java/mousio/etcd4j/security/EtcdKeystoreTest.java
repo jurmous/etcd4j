@@ -18,7 +18,6 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyStore;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertNotNull;

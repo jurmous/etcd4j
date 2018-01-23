@@ -56,7 +56,7 @@ task createContainerSsl(type: DockerCreateContainer) {
             '4002:4001'
     ]
     binds = [
-            "${rootDir}/src/test/resources/certs":'/tmp/ssl'
+            "${rootDir}/src/test/resources/certs":'/tmp/ssl:Z'
     ]
     cmd = [
             '-debug',
