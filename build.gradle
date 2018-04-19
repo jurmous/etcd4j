@@ -4,8 +4,8 @@ plugins {
     id 'signing'
     id 'osgi'
     id "com.github.lburgazzoli.karaf" version '0.0.49'
-    id 'net.researchgate.release' version '2.6.0'
-    id 'com.adarshr.test-logger' version '1.1.2'
+    id 'net.researchgate.release' version '2.7.0'
+    id 'com.adarshr.test-logger' version '1.2.0'
 }
 
 apply from: 'gradle/docker.gradle'
@@ -30,14 +30,15 @@ ext {
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
     versions = [
-        netty   : '4.1.20.Final',
-        jackson : '2.8.10',
-        slf4j   : '1.7.25',
-        junit   : '4.12',
-        assertj : '3.9.0',
-        restito : '0.9.3',
-        logback : '1.2.3',
-        flat    : '0.4.1'
+        netty               : '4.1.23.Final',
+        jackson             : '2.8.11',
+        jackson_databind    : '2.8.11.1',
+        slf4j               : '1.7.25',
+        junit               : '4.12',
+        assertj             : '3.9.1',
+        restito             : '0.9.3',
+        logback             : '1.2.3',
+        flat                : '0.5.0'
     ]
 
     osgiVersions = [
@@ -54,6 +55,7 @@ ext {
 repositories {
     mavenLocal()
     mavenCentral()
+    jcenter()
 }
 
 configurations {
@@ -70,7 +72,7 @@ dependencies {
     compile "io.netty:netty-handler:$versions.netty"
     compile "io.netty:netty-resolver-dns:$versions.netty"
     compile "com.fasterxml.jackson.core:jackson-core:$versions.jackson"
-    compile "com.fasterxml.jackson.core:jackson-databind:$versions.jackson"
+    compile "com.fasterxml.jackson.core:jackson-databind:$versions.jackson_databind"
     compile "com.fasterxml.jackson.core:jackson-annotations:$versions.jackson"
     compile "com.fasterxml.jackson.module:jackson-module-afterburner:$versions.jackson"
     compile "com.github.wnameless:json-flattener:$versions.flat"

@@ -19,9 +19,16 @@ apply plugin:  com.github.benmanes.gradle.versions.VersionsPlugin
 dependencyUpdates.resolutionStrategy = {
     componentSelection { rules ->
         rules.all { ComponentSelection selection ->
-            boolean rejected = ['alpha', 'beta', 'rc', 'cr', 'm', 'pr'].any { qualifier ->
-                selection.candidate.version ==~ /(?i).*[.-]${qualifier}[.\d-]*/
+            def qualifiers = ['alpha', 'beta', 'rc', 'cr', 'm', 'pr']
+
+            boolean rejected = qualifiers.any { 
+                qualifier -> selection.candidate.version ==~ /(?i).*[.-]${qualifier}[.\d-]*/
             }
+
+            if (selection.candidate.group.startWith('com.fasterxml') && selection.candidate.version.startsWith('2.9')) {
+                reject = true
+            }
+
             if (rejected) {
                 selection.reject('Release candidate')
             }
