@@ -260,4 +260,11 @@ public class EtcdJsonTest {
         assertEquals(updatedConfig.at("/widget/test").asText(), "value");
     }
 
+    @Test
+    public void testGetLargeNumbers() throws EtcdAuthenticationException, TimeoutException, EtcdException, IOException {
+        JsonNode toEtcd = EtcdUtil.stringToJson("{\"number\": \"16161651321274258257474247745577454547774545785547\"}");
+        EtcdUtil.putAsJson("/etcd4j_test/put-json", toEtcd, etcd);
+        JsonNode asJson = EtcdUtil.getAsJson("/etcd4j_test/put-json", etcd);
+        assertEquals("Infinity", asJson.get("number").toString());
+    }
 }

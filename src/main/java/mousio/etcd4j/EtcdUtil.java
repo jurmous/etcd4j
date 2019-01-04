@@ -15,6 +15,7 @@
  */
 package mousio.etcd4j;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -55,6 +56,7 @@ public class EtcdUtil {
 
   static {
     mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+    mapper.configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true);
   }
 
   public static Long getHeaderPropertyAsLong(HttpHeaders headers, String key) {
