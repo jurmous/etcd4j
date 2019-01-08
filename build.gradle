@@ -3,13 +3,12 @@ plugins {
     id 'maven'
     id 'signing'
     id 'osgi'
-    id "com.github.lburgazzoli.karaf" version '0.0.49'
+    id "com.github.lburgazzoli.karaf" version '0.5.1'
     id 'net.researchgate.release' version '2.7.0'
-    id 'com.adarshr.test-logger' version '1.2.0'
     id "io.codearte.nexus-staging" version "0.11.0"
+    id 'com.adarshr.test-logger' version '1.6.0'
 }
 
-apply from: 'gradle/docker.gradle'
 apply from: 'gradle/versions-checker.gradle'
 
 compileJava {
@@ -31,15 +30,16 @@ ext {
         'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 
     versions = [
-        netty               : '4.1.23.Final',
+        netty               : '4.1.32.Final',
         jackson             : '2.8.11',
         jackson_databind    : '2.8.11.1',
         slf4j               : '1.7.25',
         junit               : '4.12',
-        assertj             : '3.9.1',
+        assertj             : '3.11.1',
         restito             : '0.9.3',
         logback             : '1.2.3',
-        flat                : '0.5.0'
+        flat                : '0.6.0',
+        testcontainers      : '1.10.5'
     ]
 
     osgiVersions = [
@@ -79,7 +79,7 @@ dependencies {
     compile "com.github.wnameless:json-flattener:$versions.flat"
 
     testCompile "junit:junit:$versions.junit"
-    testCompile "org.slf4j:slf4j-simple:$versions.slf4j"
+    testCompile "org.testcontainers:testcontainers:$versions.testcontainers"
     testCompile "com.xebialabs.restito:restito:$versions.restito"
     testCompile "org.assertj:assertj-core:$versions.assertj"
     testRuntime "ch.qos.logback:logback-classic:$versions.logback"
@@ -87,12 +87,12 @@ dependencies {
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
     from 'build/docs/javadoc'
-    classifier = 'javadoc'
+    archiveClassifier = 'javadoc'
 }
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
-    classifier = 'sources'
+    archiveClassifier = 'sources'
 }
 
 artifacts {
@@ -102,6 +102,8 @@ artifacts {
 }
 
 testlogger {
+    showStandardStreams false
+    slowThreshold 30000
     theme 'mocha'
 }
 
@@ -110,7 +112,7 @@ test {
 }
 
 jar {
-    baseName = "${project.name}"
+    archiveBaseName = "${project.name}"
 
     manifest {
         attributes['Bundle-Description'     ] = "${project.name}"

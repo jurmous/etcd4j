@@ -1,5 +1,15 @@
 package mousio.etcd4j.security;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeoutException;
+
 import mousio.client.exceptions.SecurityContextException;
 import mousio.etcd4j.EtcdClient;
 import mousio.etcd4j.responses.EtcdAuthenticationException;
@@ -8,21 +18,14 @@ import mousio.etcd4j.responses.EtcdKeysResponse;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-//import org.junit.Ignore;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runners.model.TestTimedOutException;
 
-import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeoutException;
-
 import static org.junit.Assert.assertNotNull;
 
-//@Ignore
 public class EtcdKeystoreTest {
     private static String KEYSTORE_PATH = "keystore.jks";
     private static final String KEYSTORE_PASS = "password";
@@ -77,6 +80,7 @@ public class EtcdKeystoreTest {
         SecurityContextBuilder.forKeystoreAndTruststore(stream, KS_PASSWORD, stream, KS_PASSWORD, "SunX509");
     }
 
+    @Ignore
     @Test
     public void testSslCliAgainstSslEtcd() throws SecurityContextException, URISyntaxException, IOException, EtcdAuthenticationException, TimeoutException, EtcdException {
         // expected to work only on a secured etcd
@@ -92,6 +96,7 @@ public class EtcdKeystoreTest {
         cleanup(etcd);
     }
 
+    @Ignore
     @Test
     public void testSslCliAgainstRegularEtcd() throws SecurityContextException, URISyntaxException, IOException, EtcdAuthenticationException, TimeoutException, EtcdException {
         expectedEx.expect(IOException.class);
@@ -108,6 +113,7 @@ public class EtcdKeystoreTest {
         etcd.put("/test", "1234").send().get();
     }
 
+    @Ignore
     @Test(timeout = 1000)
     public void testCliAgainstSslEtcd() throws URISyntaxException, IOException, EtcdAuthenticationException, TimeoutException, EtcdException {
         expectedEx.expect(TestTimedOutException.class);

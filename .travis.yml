@@ -1,19 +1,27 @@
 sudo: required
+install: true
+language: java
+
 services:
   - docker
-addons:
-  apt:
-    packages:
-    - oracle-java8-installer
-language:
-  - java
-jdk:
-  - oraclejdk8
+
+before_install:
+  - curl -s "https://get.sdkman.io" | bash
+  - source "$HOME/.sdkman/bin/sdkman-init.sh"
+  - sdk version
+  - mkdir -p "$HOME/.sdkman/etc"
+  - echo "sdkman_auto_answer=true" > "$HOME/.sdkman/etc/config"
+  - echo "sdkman_auto_selfupdate=true" >> "$HOME/.sdkman/etc/config"
+  - sdk install java 8.0.192-zulu
+
 script:
-  - "./gradlew ci"
+  - sdk use java 8.0.192-zulu
+  - java -version
+  - ./gradlew ci
 after_failure:
   - "cat ./build/etcd4j-test.log"
   - "cat ./build/reports/dockerTest/index.html"
+  -
 env:
   global:
   - CI_TRAVIS=true

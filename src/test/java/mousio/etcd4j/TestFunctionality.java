@@ -1,7 +1,6 @@
 package mousio.etcd4j;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -21,10 +20,13 @@ import mousio.etcd4j.responses.EtcdMembersResponse;
 import mousio.etcd4j.responses.EtcdSelfStatsResponse;
 import mousio.etcd4j.responses.EtcdStoreStatsResponse;
 import mousio.etcd4j.responses.EtcdVersionResponse;
-import mousio.etcd4j.transport.EtcdNettyClient;
-import mousio.etcd4j.transport.EtcdNettyConfig;
+import mousio.etcd4j.support.EtcdCluster;
+import mousio.etcd4j.support.EtcdClusterFactory;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +42,19 @@ import static org.junit.Assert.fail;
 public class TestFunctionality {
   private static final Logger LOGGER = LoggerFactory.getLogger(TestFunctionality.class);
 
+  private static EtcdCluster CLUSTER;
   private EtcdClient etcd;
+
+  @BeforeClass
+  public static void setUpCluster() {
+    CLUSTER = EtcdClusterFactory.buildCluster(TestFunctionality.class.getName(), 1, false);
+    CLUSTER.start();
+  }
+
+  @AfterClass
+  public static void tearDownCluster() {
+    CLUSTER.close();
+  }
 
   protected void cleanup() {
     try {
@@ -59,7 +73,7 @@ public class TestFunctionality {
 
   @Before
   public void setUp() throws Exception {
-    this.etcd = new EtcdClient();
+    this.etcd = new EtcdClient(CLUSTER.endpoints());
     this.etcd.setRetryHandler(new RetryWithExponentialBackOff(20, 4, 10000));
 
     cleanup();
@@ -165,6 +179,7 @@ public class TestFunctionality {
     assertTrue(health.getHealth().equals("true"));
   }
 
+  @Ignore
   @Test
   public void testTimeout() throws IOException, EtcdException, EtcdAuthenticationException {
     try {
@@ -376,11 +391,10 @@ public class TestFunctionality {
 
   @Test
   public void testIfCleanClose() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
-    EtcdClient client = new EtcdClient();
-    client.setRetryHandler(new RetryWithExponentialBackOff(20, 4, 1000));
+    etcd.setRetryHandler(new RetryWithExponentialBackOff(20, 4, 1000));
 
-    EtcdResponsePromise<EtcdKeysResponse> p = client.get("etcd4j_test/test").waitForChange().send();
-    client.close();
+    EtcdResponsePromise<EtcdKeysResponse> p = etcd.get("etcd4j_test/test").waitForChange().send();
+    etcd.close();
 
     try {
       p.get();
@@ -398,9 +412,7 @@ public class TestFunctionality {
     EtcdKeysResponse.EtcdNode root;
     List<EtcdKeysResponse.EtcdNode> nodes;
 
-    EtcdClient client = new EtcdClient();
-
-    root = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode();
+    root = etcd.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode();
     nodes = root.getNodes();
 
     LOGGER.info("Nodes (1) {}", nodes);
@@ -408,35 +420,15 @@ public class TestFunctionality {
     assertNotNull(nodes);
     assertTrue(root.isDir());
 
-    client.put("etcd4j_testGetAll_1/foo1", "bar").prevExist(false).send().get();
-    client.put("etcd4j_testGetAll_2/foo1", "bar").prevExist(false).send().get();
+    etcd.put("etcd4j_testGetAll_1/foo1", "bar").prevExist(false).send().get();
+    etcd.put("etcd4j_testGetAll_2/foo1", "bar").prevExist(false).send().get();
 
-    root = client.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode();
+    root = etcd.getAll().timeout(30, TimeUnit.SECONDS).send().get().getNode();
     nodes = root.getNodes();
 
     LOGGER.info("Nodes (2) {}", nodes);
 
     assertNotNull(nodes);
     assertEquals(2, nodes.size());
-  }
-
-  @Test
-  public void testGetHugeDir() throws IOException, EtcdException, EtcdAuthenticationException, TimeoutException {
-    EtcdNettyConfig config = new EtcdNettyConfig();
-    config.setMaxFrameSize(1024 * 1024); // Desired max size
-
-    EtcdNettyClient nettyClient = new EtcdNettyClient(config, URI.create("http://localhost:4001"));
-
-    EtcdClient client = new EtcdClient(nettyClient);
-
-    for (int i = 0; i < 2000; i++) {
-      client.put("/etcd4j_test/huge-dir/node-" + i, "bar").send().get();
-    }
-
-    List<EtcdKeysResponse.EtcdNode> nodes;
-
-    nodes = client.getDir("/etcd4j_test/huge-dir/").send().get().getNode().getNodes();
-    assertNotNull(nodes);
-    assertEquals(2000, nodes.size());
   }
 }

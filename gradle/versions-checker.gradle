@@ -1,15 +1,15 @@
 buildscript {
-    repositories {
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
     }
-    dependencies {
-        classpath "com.github.ben-manes:gradle-versions-plugin:0.17.0"
-    }
+  }
+  dependencies {
+    classpath "com.github.ben-manes:gradle-versions-plugin:0.20.0"
+  }
 }
 
-apply plugin:  com.github.benmanes.gradle.versions.VersionsPlugin
+apply plugin: com.github.benmanes.gradle.versions.VersionsPlugin
 
 // *****************************************************************************
 //

@@ -15,6 +15,15 @@
  */
 package mousio.etcd4j;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeoutException;
+import javax.xml.bind.DatatypeConverter;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,15 +44,6 @@ import mousio.etcd4j.responses.EtcdKeysResponse.EtcdNode;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.xml.bind.DatatypeConverter;
-import java.util.Date;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeoutException;
 
 /**
  * @author lburgazzoli
@@ -106,6 +106,10 @@ public class EtcdUtil {
    * @param path root path (i.e. /path1/path2)
    * @param etcdClient EtcdClient
    * @return JsonNode
+   * @throws IOException
+   * @throws EtcdAuthenticationException
+   * @throws TimeoutException
+   * @throws EtcdException
    */
   public static JsonNode getAsJson(String path, EtcdClient etcdClient)
           throws IOException, EtcdAuthenticationException, TimeoutException, EtcdException {
@@ -131,6 +135,10 @@ public class EtcdUtil {
    * @param path root path (i.e. /path1/path2)
    * @param data JsonNode
    * @param etcdClient EtcdClient
+   * @throws IOException
+   * @throws EtcdAuthenticationException
+   * @throws TimeoutException
+   * @throws EtcdException
    */
   public static void putAsJson(String path, JsonNode data, EtcdClient etcdClient)
           throws IOException, EtcdAuthenticationException, TimeoutException, EtcdException {
@@ -221,6 +229,7 @@ public class EtcdUtil {
    * @param currentPath auxiliary variable used for recursion, initially empty string
    * @return flattened json using dot notation
    */
+  @SuppressWarnings("unchecked")
   private static ObjectNode flattenJson(JsonNode node, String currentPath) {
     ObjectNode transformed = JsonNodeFactory.instance.objectNode();
     Iterator<Map.Entry<String, JsonNode>> fields = node.fields();

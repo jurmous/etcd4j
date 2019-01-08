@@ -1,5 +1,10 @@
 package mousio.client.util;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.TimeoutException;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -11,29 +16,39 @@ import mousio.etcd4j.EtcdUtil;
 import mousio.etcd4j.responses.EtcdAuthenticationException;
 import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.responses.EtcdKeysResponse;
+import mousio.etcd4j.support.EtcdCluster;
+import mousio.etcd4j.support.EtcdClusterFactory;
 import mousio.etcd4j.transport.EtcdNettyClient;
 import mousio.etcd4j.transport.EtcdNettyConfig;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.util.Map;
-import java.util.concurrent.TimeoutException;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 
 public class EtcdJsonTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(EtcdJsonTest.class);
 
+    private static EtcdCluster CLUSTER;
     private EtcdClient etcd;
+
+    @BeforeClass
+    public static void setUpCluster() {
+        CLUSTER = EtcdClusterFactory.buildCluster(EtcdJsonTest.class.getName(), 1, false);
+        CLUSTER.start();
+    }
+
+    @AfterClass
+    public static void tearDownCluster() {
+        CLUSTER.close();
+    }
 
     protected void cleanup() {
         try {
@@ -52,7 +67,7 @@ public class EtcdJsonTest {
 
     @Before
     public void setUp() throws Exception {
-        this.etcd = new EtcdClient();
+        this.etcd = new EtcdClient(this.CLUSTER.endpoints());
         this.etcd.setRetryHandler(new RetryWithExponentialBackOff(20, 4, 10000));
 
         File file = new File("src/test/resources/test_data.json");
@@ -108,14 +123,17 @@ public class EtcdJsonTest {
     public void testGetAndPut() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         EtcdNettyConfig config = new EtcdNettyConfig();
-        EtcdNettyClient nettyClient = new EtcdNettyClient(config, URI.create("http://localhost:4001"));
         config.setMaxFrameSize(1024 * 1024); // Desired max size
-        EtcdClient client = new EtcdClient(nettyClient);
+
+        this.etcd.close();
+
+        EtcdNettyClient nettyClient = new EtcdNettyClient(config, CLUSTER.endpoints());
+        this.etcd = new EtcdClient(nettyClient);
 
         File testJson = new File("src/test/resources/test_data.json");
         JsonNode original = mapper.readTree(testJson);
 
-        JsonNode fromEtcd = EtcdUtil.getAsJson("/etcd4j_test", client);
+        JsonNode fromEtcd = EtcdUtil.getAsJson("/etcd4j_test", this.etcd );
 
         // flatten both and compare
         Map<String, Object> rootFlat = new JsonFlattener(EtcdUtil.jsonToString(original))
