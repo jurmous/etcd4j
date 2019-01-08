@@ -87,12 +87,12 @@ dependencies {
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
     from 'build/docs/javadoc'
-    archiveClassifier = 'javadoc'
+    classifier = 'javadoc'
 }
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
-    archiveClassifier = 'sources'
+    classifier = 'sources'
 }
 
 artifacts {
@@ -112,7 +112,7 @@ test {
 }
 
 jar {
-    archiveBaseName = "${project.name}"
+    baseName = "${project.name}"
 
     manifest {
         attributes['Bundle-Description'     ] = "${project.name}"
