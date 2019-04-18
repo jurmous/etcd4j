@@ -16,6 +16,7 @@
 package mousio.etcd4j.transport;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
@@ -422,11 +423,14 @@ public class EtcdNettyClient implements EtcdClientImpl {
     }
 
     private void addBasicAuthHeader(HttpRequest request) {
-      final String auth = Base64.encode(
-        Unpooled.copiedBuffer(
-          securityContext.username() + ":" + securityContext.password(),
-          CharsetUtil.UTF_8)
-        ).toString(CharsetUtil.UTF_8);
+      ByteBuf byteBuf = Base64.encode(
+              Unpooled.copiedBuffer( securityContext.username() + ":" + securityContext.password(), CharsetUtil.UTF_8));
+      final String auth;
+      try {
+        auth = byteBuf.toString(CharsetUtil.UTF_8);
+      } finally {
+        byteBuf.release();
+      }
 
       request.headers().add(HttpHeaderNames.AUTHORIZATION, "Basic " + auth);
     }
