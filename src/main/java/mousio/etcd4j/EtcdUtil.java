@@ -194,14 +194,16 @@ public class EtcdUtil {
    */
   private static void iterateOverNodes(ObjectNode json, EtcdNode node) {
     if (node.isDir()) {
-      for(EtcdNode n: node.getNodes())
+      for(EtcdNode n: node.getNodes()) {
         iterateOverNodes(json, n);
+      }
     } else {
       List<String> keyPath = new ArrayList<>();
 
       for (String key: node.getKey().split("/")) {
-        if (!key.isEmpty())
+        if (!key.isEmpty()) {
           keyPath.add(key);
+        }
       }
 
       ObjectNode jsonNodes = json;

@@ -175,6 +175,7 @@ public class EtcdNettyClient implements EtcdClientImpl {
    * @param etcdRequest Etcd Request to send
    * @return Promise for the request.
    */
+  @Override
   public <R> EtcdResponsePromise<R> send(final EtcdRequest<R> etcdRequest) throws IOException {
     ConnectionState connectionState = new ConnectionState(uris, lastWorkingUriIndex);
 
