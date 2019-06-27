@@ -100,6 +100,13 @@ public class ResponsePromise<T> {
    * @param listener to add
    */
   public void addListener(IsSimplePromiseResponseHandler<T> listener) {
+
+    if (listener == null) {
+      return;
+    }
+
+    boolean shouldInvoke = false;
+
     try {
       lock.lock();
 
@@ -110,11 +117,15 @@ public class ResponsePromise<T> {
       handlers.add(listener);
 
       if (response != null || exception != null) {
-        listener.onResponse(this);
+        shouldInvoke = true;
       }
 
     } finally {
       lock.unlock();
+    }
+
+    if (shouldInvoke) {
+      listener.onResponse(this);
     }
   }
 
@@ -142,19 +153,25 @@ public class ResponsePromise<T> {
    * @param promise to handle
    */
   protected void handlePromise(Promise<T> promise) {
+
     if (!promise.isSuccess()) {
       this.setException(promise.cause());
     } else {
+
+      List<IsSimplePromiseResponseHandler<T>> copy = null;
+
       try {
         lock.lock();
         this.response = promise.getNow();
         if (handlers != null) {
-          for (IsSimplePromiseResponseHandler<T> h : handlers) {
-            h.onResponse(this);
-          }
+          copy = new LinkedList<>(handlers);
         }
       } finally {
         lock.unlock();
+      }
+
+      for (IsSimplePromiseResponseHandler<T> h : copy) {
+        h.onResponse(this);
       }
     }
   }
@@ -165,17 +182,23 @@ public class ResponsePromise<T> {
    * @param exception to set.
    */
   public void setException(Throwable exception) {
+
+    List<IsSimplePromiseResponseHandler<T>> copy = null;
+
     try {
       lock.lock();
       this.exception = exception;
-
       if (handlers != null) {
-        for (IsSimplePromiseResponseHandler<T> h : handlers) {
-          h.onResponse(this);
-        }
+        copy = new LinkedList<>(handlers);
       }
     } finally {
       lock.unlock();
+    }
+
+    if (copy != null) {
+      for (IsSimplePromiseResponseHandler<T> h : copy) {
+        h.onResponse(this);
+      }
     }
   }
 
