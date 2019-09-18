@@ -43,8 +43,8 @@ ext {
 
     versions = [
         netty               : '4.1.32.Final',
-        jackson             : '2.8.11',
-        jackson_databind    : '2.8.11.1',
+        jackson             : '2.9.9',
+        jackson_databind    : '2.9.9',
         slf4j               : '1.7.25',
         junit               : '4.12',
         assertj             : '3.11.1',
@@ -56,7 +56,7 @@ ext {
 
     osgiVersions = [
         slf4j   : "[1.7,1.8)",
-        jackson : "[2.8,3.0)"
+        jackson : "[2.9,3.0)"
     ]
 
     if(!project.hasProperty('sonatypeUsername') && !project.hasProperty('sonatypePassword')) {
