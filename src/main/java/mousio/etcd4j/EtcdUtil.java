@@ -16,13 +16,13 @@
 package mousio.etcd4j;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
-import javax.xml.bind.DatatypeConverter;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -98,7 +98,7 @@ public class EtcdUtil {
   }
 
   public static Date convertDate(String date) {
-    return DatatypeConverter.parseDateTime(date).getTime();
+    return Date.from(Instant.parse(date));
   }
 
   /**
