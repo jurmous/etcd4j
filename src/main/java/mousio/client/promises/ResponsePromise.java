@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A Response promise
@@ -44,6 +46,7 @@ public class ResponsePromise<T> {
   private List<IsSimplePromiseResponseHandler<T>> handlers;
   private final GenericFutureListener<Promise<T>> promiseHandler;
   private final ConnectionFailHandler connectionFailHandler;
+  private final Lock lock;
 
   /**
    * Constructor
@@ -56,6 +59,8 @@ public class ResponsePromise<T> {
     this.connectionState = connectionState;
     this.retryHandler = retryHandler;
     this.retryPolicy = retryPolicy;
+    // add a lock to deal with concurrent operations for handlers
+    this.lock = new ReentrantLock();
 
     promiseHandler = new GenericFutureListener<Promise<T>>() {
       @Override
@@ -95,13 +100,31 @@ public class ResponsePromise<T> {
    * @param listener to add
    */
   public void addListener(IsSimplePromiseResponseHandler<T> listener) {
-    if (handlers == null) {
-      handlers = new LinkedList<>();
+
+    if (listener == null) {
+      return;
     }
 
-    handlers.add(listener);
+    boolean shouldInvoke = false;
 
-    if (response != null || exception != null) {
+    try {
+      lock.lock();
+
+      if (handlers == null) {
+        handlers = new LinkedList<>();
+      }
+
+      handlers.add(listener);
+
+      if (response != null || exception != null) {
+        shouldInvoke = true;
+      }
+
+    } finally {
+      lock.unlock();
+    }
+
+    if (shouldInvoke) {
       listener.onResponse(this);
     }
   }
@@ -112,8 +135,15 @@ public class ResponsePromise<T> {
    * @param listener to remove
    */
   public void removeListener(IsSimplePromiseResponseHandler<T> listener) {
-    if (handlers != null) {
-      handlers.remove(listener);
+    try {
+      lock.lock();
+
+      if (handlers != null) {
+        handlers.remove(listener);
+      }
+
+    } finally {
+      lock.unlock();
     }
   }
 
@@ -123,14 +153,25 @@ public class ResponsePromise<T> {
    * @param promise to handle
    */
   protected void handlePromise(Promise<T> promise) {
+
     if (!promise.isSuccess()) {
       this.setException(promise.cause());
     } else {
-      this.response = promise.getNow();
-      if (handlers != null) {
-        for (IsSimplePromiseResponseHandler<T> h : handlers) {
-          h.onResponse(this);
+
+      List<IsSimplePromiseResponseHandler<T>> copy = null;
+
+      try {
+        lock.lock();
+        this.response = promise.getNow();
+        if (handlers != null) {
+          copy = new LinkedList<>(handlers);
         }
+      } finally {
+        lock.unlock();
+      }
+
+      for (IsSimplePromiseResponseHandler<T> h : copy) {
+        h.onResponse(this);
       }
     }
   }
@@ -141,10 +182,21 @@ public class ResponsePromise<T> {
    * @param exception to set.
    */
   public void setException(Throwable exception) {
-    this.exception = exception;
 
-    if (handlers != null) {
-      for (IsSimplePromiseResponseHandler<T> h : handlers) {
+    List<IsSimplePromiseResponseHandler<T>> copy = null;
+
+    try {
+      lock.lock();
+      this.exception = exception;
+      if (handlers != null) {
+        copy = new LinkedList<>(handlers);
+      }
+    } finally {
+      lock.unlock();
+    }
+
+    if (copy != null) {
+      for (IsSimplePromiseResponseHandler<T> h : copy) {
         h.onResponse(this);
       }
     }
