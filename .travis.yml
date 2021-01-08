@@ -2,20 +2,12 @@ sudo: required
 install: true
 language: java
 
+jdk: openjdk8
+
 services:
   - docker
 
-before_install:
-  - curl -s "https://get.sdkman.io" | bash
-  - source "$HOME/.sdkman/bin/sdkman-init.sh"
-  - sdk version
-  - mkdir -p "$HOME/.sdkman/etc"
-  - echo "sdkman_auto_answer=true" > "$HOME/.sdkman/etc/config"
-  - echo "sdkman_auto_selfupdate=true" >> "$HOME/.sdkman/etc/config"
-  - sdk install java 8.0.242.hs-adpt
-
 script:
-  - sdk use java 8.0.242.hs-adpt
   - java -version
   - ./gradlew ci
 

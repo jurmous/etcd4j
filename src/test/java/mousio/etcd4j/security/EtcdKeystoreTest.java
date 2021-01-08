@@ -2,22 +2,38 @@ package mousio.etcd4j.security;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.concurrent.TimeoutException;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 
 import mousio.client.exceptions.SecurityContextException;
 import mousio.etcd4j.EtcdClient;
+import mousio.etcd4j.EtcdSecurityContext;
 import mousio.etcd4j.responses.EtcdAuthenticationException;
 import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.responses.EtcdKeysResponse;
+import mousio.etcd4j.support.EtcdCluster;
+import mousio.etcd4j.support.EtcdClusterFactory;
+
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,6 +53,8 @@ public class EtcdKeystoreTest {
     private static final String KS_PASSWORD = "dummy_password";
     private static final String KS_LOCATION = "dummy_ks";
     private static final String TS_LOCATION = "dummy_ts";
+    
+    private static EtcdCluster CLUSTER;
 
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
@@ -44,6 +62,17 @@ public class EtcdKeystoreTest {
     static {
         KEYSTORE_PATH = new File("src/test/resources/certs/keystore.jks").getAbsolutePath();
         TRUSTSTORE_PATH = new File("src/test/resources/certs/truststore.jks").getAbsolutePath();
+    }
+
+    @BeforeClass
+    public static void setUpCluster() {
+        CLUSTER = EtcdClusterFactory.buildCluster(EtcdKeystoreTest.class.getName(), 1, true);
+        CLUSTER.start();
+    }
+
+    @AfterClass
+    public static void tearDownCluster() {
+        CLUSTER.close();
     }
 
     protected void cleanup(EtcdClient etcd) {
@@ -80,16 +109,41 @@ public class EtcdKeystoreTest {
         SecurityContextBuilder.forKeystoreAndTruststore(stream, KS_PASSWORD, stream, KS_PASSWORD, "SunX509");
     }
 
-    @Ignore
     @Test
     public void testSslCliAgainstSslEtcd() throws SecurityContextException, URISyntaxException, IOException, EtcdAuthenticationException, TimeoutException, EtcdException {
         // expected to work only on a secured etcd
+        URI[] endpoints = CLUSTER.endpoints();
+
         EtcdClient etcd = new EtcdClient(SecurityContextBuilder.forKeystoreAndTruststore(
                 KEYSTORE_PATH,
                 KEYSTORE_PASS,
                 TRUSTSTORE_PATH,
                 TRUSTSTORE_PASS
-        ), new URI(SECURED_ETCD_SERVICE));
+        ), endpoints);
+
+        etcd.put("/test", "1234").send().get();
+        assertNotNull(etcd.version());
+        cleanup(etcd);
+    }
+    
+    @Test
+    public void testSSLContextClientModeSetSslEtcd() throws SecurityContextException, URISyntaxException, IOException, EtcdAuthenticationException, TimeoutException, EtcdException, NoSuchAlgorithmException, KeyStoreException, CertificateException, KeyManagementException {
+        // expected to work only on a secured etcd using SSLContext with Custom TrustManager
+        URI[] endpoints = CLUSTER.endpoints();
+
+        SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+
+        KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+        ks.load(new FileInputStream(TRUSTSTORE_PATH), TRUSTSTORE_PASS.toCharArray());
+
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(ks);
+        TrustManager[] trustManagers = tmf.getTrustManagers();
+
+        sslContext.init(null, trustManagers, null);
+        EtcdSecurityContext securityContext = new EtcdSecurityContext(sslContext);
+
+        EtcdClient etcd = new EtcdClient(securityContext, endpoints);
 
         etcd.put("/test", "1234").send().get();
         assertNotNull(etcd.version());

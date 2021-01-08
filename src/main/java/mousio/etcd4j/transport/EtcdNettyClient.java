@@ -52,6 +52,8 @@ import java.nio.channels.ClosedChannelException;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 
+import javax.net.ssl.SSLEngine;
+
 /**
  * @author Jurriaan Mous
  * @author Luca Burgazzoli
@@ -150,7 +152,9 @@ public class EtcdNettyClient implements EtcdClientImpl {
           if (securityContext.hasNettySsl()) {
             p.addLast(securityContext.nettySslContext().newHandler(ch.alloc()));
           } else if (securityContext.hasSsl()) {
-            p.addLast(new SslHandler(securityContext.sslContext().createSSLEngine()));
+            SSLEngine sslEngine =  securityContext.sslContext().createSSLEngine();
+            sslEngine.setUseClientMode(true);
+            p.addLast(new SslHandler(sslEngine));
           }
           p.addLast("codec", new HttpClientCodec());
           p.addLast("auth", new HttpBasicAuthHandler());
